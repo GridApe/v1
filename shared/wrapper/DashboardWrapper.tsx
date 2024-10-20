@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Menu } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Sidebar from '../Sidebar'
+import { usePathname } from 'next/navigation'
 
 export default function DashboardWrapper({
   children,
@@ -13,6 +14,7 @@ export default function DashboardWrapper({
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const pathname = usePathname()
 
   useEffect(() => {
     const checkMobile = () => {
@@ -56,7 +58,17 @@ export default function DashboardWrapper({
             >
               <Menu className="h-4 w-4" />
             </Button>
-            {children}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={pathname}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                {children}
+              </motion.div>
+            </AnimatePresence>
           </div>
         </motion.main>
         <AnimatePresence>

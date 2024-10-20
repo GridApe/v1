@@ -4,36 +4,43 @@ import { ChevronDownIcon, LockClosedIcon } from '@radix-ui/react-icons'
 import { BarChartIcon, FileTextIcon, LayoutTemplateIcon, PuzzleIcon, SendIcon, UsersIcon } from 'lucide-react'
 import React from 'react'
 import { motion } from 'framer-motion'
+import Link from 'next/link' // Import Link from Next.js
 
 interface SidebarItem {
   name: string
   icon: React.ElementType
+  path?: string // Add path for navigation
   locked?: boolean
-  subitems?: string[]
+  subitems?: { name: string; path: string }[] // Update subitems to include path
   expandable?: boolean
 }
 
 export const SidebarItems: React.FC = () => {
   const items: SidebarItem[] = [
-    { name: 'Analytics', icon: BarChartIcon, locked: true },
-    { name: 'Landing page', icon: FileTextIcon, locked: true },
+    { name: 'Analytics', icon: BarChartIcon, locked: true, path: '/analytics' },
+    { name: 'Landing page', icon: FileTextIcon, locked: true, path: '/landing' },
     {
       name: 'Template',
       icon: LayoutTemplateIcon,
-      subitems: ['All templates', 'Saved templates', 'My files', 'Gallery'],
+      subitems: [
+        { name: 'All templates', path: '/templates/all' },
+        { name: 'Saved templates', path: '/templates/saved' },
+        { name: 'My files', path: '/templates/my-files' },
+        { name: 'Gallery', path: '/templates/gallery' },
+      ],
       expandable: true,
     },
     {
       name: 'Campaigns',
       icon: SendIcon,
-      subitems: ['All campaigns'],
+      subitems: [{ name: 'All campaigns', path: '/campaigns/all' }],
       expandable: true,
     },
-    { name: 'Integration', icon: PuzzleIcon, locked: true },
+    { name: 'Integration', icon: PuzzleIcon, locked: true, path: '/integration' },
     {
       name: 'Audience',
       icon: UsersIcon,
-      subitems: ['All contacts'],
+      subitems: [{ name: 'All contacts', path: '/audience/all' }],
       expandable: true,
     },
   ]
@@ -62,9 +69,11 @@ export const SidebarItems: React.FC = () => {
               <CollapsibleContent>
                 <div className="ml-8 mt-2 space-y-1">
                   {item.subitems?.map((subitem) => (
-                    <Button key={subitem} variant="ghost" className="w-full justify-start text-white hover:bg-indigo-700 hover:text-white">
-                      {subitem}
-                    </Button>
+                    <Link key={subitem.name} href={subitem.path} passHref>
+                      <Button variant="ghost" className="w-full justify-start text-white hover:bg-indigo-700 hover:text-white">
+                        {subitem.name}
+                      </Button>
+                    </Link>
                   ))}
                 </div>
               </CollapsibleContent>
