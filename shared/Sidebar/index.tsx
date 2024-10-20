@@ -8,7 +8,7 @@ import { motion } from 'framer-motion'
 export default function Sidebar() {
   return (
     <motion.div
-      className="w-64 relative bg-[#2E3192] h-screen p-4 flex flex-col overflow-hidden"
+      className="w-64 relative text-center bg-[#2E3192] h-screen p-4 flex flex-col overflow-hidden"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}

@@ -15,7 +15,7 @@ export const UpgradePlanCard: React.FC<UpgradePlanCardProps> = ({ emailSent, con
     animate={{ opacity: 1, y: 0 }}
     transition={{ delay: 0.3 }}
   >
-    <h3 className="font-semibold mb-2">Your plan</h3>
+    <h3 className="font-semibold mb-2 text-left">Your plan</h3>
     <div className="space-y-4">
       <div>
         <div className="flex justify-between items-center mb-1">
