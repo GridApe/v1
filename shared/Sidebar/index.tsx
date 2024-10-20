@@ -1,9 +1,9 @@
 import { Button } from "@/components/ui/button"
-import { CreateButton } from "../buttons/CreateButton"
 import { Logo } from "../Logo"
 import { SidebarItems } from "./SidebarItems"
 import { UpgradePlanCard } from "./UpgradePlanCard"
 import { motion } from 'framer-motion'
+import { CreateEmailModal } from "../Modal/CreateEmailModal"
 
 export default function Sidebar() {
   return (
@@ -16,7 +16,7 @@ export default function Sidebar() {
       <div className="absolute bg-[#3639A0] w-96 h-96 rounded-full bottom-0 -left-1/2 translate-x-1/2 -z-10"></div>
       <div className="absolute bg-[#3639A0] w-96 h-96 rounded-full bottom-3/4 -right-1/2 -translate-x-1/2 -z-10"></div>
       <Logo />
-      <CreateButton />
+      <CreateEmailModal />
       <div className="mt-8 mb-auto overflow-auto">
         <SidebarItems />
       </div>
