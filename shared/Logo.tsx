@@ -8,10 +8,10 @@ export const Logo: React.FC = () => (
     transition={{ delay: 0.1 }}
   >
     <img
-      src='/public/logo.svg'
+      src='/logo.svg'
       alt="Logo"
-      className="w-10 h-10"
+      className="w-14 h-14"
     />
-    <span className="text-white font-semibold text-lg">Griddape</span>
+    <span className="text-white font-semibold text-lg sr-only">Gridape</span>
   </motion.div>
 )
