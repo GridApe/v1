@@ -39,8 +39,8 @@ export default function DashboardWrapper({
           </motion.div>
         )}
       </AnimatePresence>
-      <main className="flex-1 overflow-auto bg-background">
-        <div className="container mx-auto p-6">
+      <main className="flex-1 overflow-auto bg-[#2E3192]">
+        <div className="container mx-auto p-6 bg-[#fffae9de] rounded-xl">
           <Button
             variant="outline"
             size="icon"
