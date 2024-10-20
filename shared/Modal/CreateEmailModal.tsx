@@ -28,7 +28,7 @@ export function CreateEmailModal() {
             actionText="Use AI"
           />
         </div>
-      </DialogContent>
+      </DialogContent> 
     </Dialog>
   )
 }
