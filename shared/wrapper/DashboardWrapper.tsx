@@ -49,7 +49,7 @@ export default function DashboardWrapper({
           }}
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
         >
-          <div className="container mx-auto p-6 bg-[#fffae9de] rounded-s-3xl">
+          <div className="container mx-auto min-h-svh p-6 bg-[#fffae9de] rounded-s-3xl">
             <Button
               variant="outline"
               size="icon"
