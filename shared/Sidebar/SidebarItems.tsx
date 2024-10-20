@@ -4,7 +4,7 @@ import { ChevronDownIcon, LockClosedIcon } from '@radix-ui/react-icons'
 import { BarChartIcon, FileTextIcon, LayoutTemplateIcon, PuzzleIcon, SendIcon, UsersIcon } from 'lucide-react'
 import React from 'react'
 import { motion } from 'framer-motion'
-import Link from 'next/link' // Import Link from Next.js
+import Link from 'next/link'
 
 interface SidebarItem {
   name: string
@@ -17,7 +17,7 @@ interface SidebarItem {
 
 export const SidebarItems: React.FC = () => {
   const items: SidebarItem[] = [
-    { name: 'Analytics', icon: BarChartIcon, locked: true, path: '/analytics' },
+    { name: 'Analytics', icon: BarChartIcon, path: '/' },
     { name: 'Landing page', icon: FileTextIcon, locked: true, path: '/landing' },
     {
       name: 'Template',
@@ -59,7 +59,21 @@ export const SidebarItems: React.FC = () => {
               <Button variant="ghost" className="w-full justify-between text-white hover:bg-indigo-700 hover:text-white">
                 <div className="flex items-center">
                   <item.icon className="w-5 h-5 mr-3" />
-                  <span>{item.name}</span>
+                  
+                {item.locked ? <Button variant="ghost" className="w-full justify-between text-white hover:bg-indigo-700 hover:text-white" disabled>
+                  <div className="flex items-center">
+                    <span>{item.name}</span>
+                  </div>
+                </Button>
+                : (
+                  <Link href={item.path || '#'} passHref>
+                  <Button variant="ghost" className="w-full justify-between text-white hover:bg-indigo-700 hover:text-white">
+                    <div className="flex items-center">
+                      <span>{item.name}</span>
+                    </div>
+                  </Button>
+                </Link>
+                )}
                 </div>
                 {item.locked && <LockClosedIcon className="w-4 h-4" />}
                 {item.expandable && <ChevronDownIcon className="w-4 h-4" />}

@@ -2,7 +2,7 @@ import { Banner } from "@/shared/Banner";
 
 export default function Home() {
   return (
-    <div className="h-screen min-h-screen">
+    <div className="">
       <Banner name="Collins" />
     </div>
   );
