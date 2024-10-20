@@ -45,7 +45,7 @@ const mockContacts: Contact[] = [
 ];
 
 export default function AudiencePage() {
-  const [contacts, setContacts] = useState<Contact[]>(mockContacts);
+  const [contacts] = useState<Contact[]>(mockContacts);
   const [activeTab, setActiveTab] = useState("all-contacts");
 
   const containerVariants = {
