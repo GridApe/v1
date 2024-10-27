@@ -14,6 +14,7 @@ export default function DashboardWrapper({
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const [loading, setLoading] = useState(true) // Loading state
   const pathname = usePathname()
 
   useEffect(() => {
@@ -25,6 +26,22 @@ export default function DashboardWrapper({
     window.addEventListener('resize', checkMobile)
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
+
+  // useEffect(() => {
+  //   const timer = setTimeout(() => {
+  //     setLoading(false)
+  //   }, 1000)
+
+  //   return () => clearTimeout(timer)
+  // }, [pathname])
+
+  // if (loading) {
+  //   return (
+  //     <div className="flex items-center justify-center h-screen bg-[#fffae9de]">
+  //       <div className="loader">Loading...</div>
+  //     </div>
+  //   )
+  // }
 
   return (
     <div className="flex h-screen overflow-hidden">

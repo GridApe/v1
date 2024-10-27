@@ -2,6 +2,8 @@ import type { Metadata } from "next"
 import localFont from "next/font/local"
 import "./globals.css"
 import DashboardWrapper from "@/shared/wrapper/DashboardWrapper"
+import { Toaster } from "@/components/ui/toaster"
+import { ToastProvider } from "@/components/ui/toast"
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -29,9 +31,12 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <ToastProvider>
         <DashboardWrapper>
           {children}
         </DashboardWrapper>
+          <Toaster />
+          </ToastProvider>
       </body>
     </html>
   )
