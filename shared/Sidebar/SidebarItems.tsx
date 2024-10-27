@@ -24,6 +24,7 @@ export const SidebarItems: React.FC = () => {
       icon: LayoutTemplateIcon,
       subitems: [
         { name: 'All templates', path: '/templates/all' },
+        { name: 'Create Template', path: '/templates/create' },
         { name: 'Saved templates', path: '/templates/saved' },
         { name: 'My files', path: '/templates/my-files' },
         { name: 'Gallery', path: '/templates/gallery' },
