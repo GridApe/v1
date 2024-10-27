@@ -28,7 +28,7 @@ export default function EmailTemplateEditor() {
   }, [])
 
   const saveDesign = useCallback(() => {
-    emailEditorRef.current?.editor?.saveDesign((design: any) => {
+    emailEditorRef.current?.editor?.saveDesign((design: string) => {
       console.log('Design JSON:', design)
       setJsonData(JSON.stringify(design, null, 2))
       toast({
@@ -58,7 +58,10 @@ export default function EmailTemplateEditor() {
   }, [templateName, toast])
 
   const togglePreview = useCallback(() => {
-    emailEditorRef.current?.editor?.togglePreview()
+    emailEditorRef.current?.editor?.showPreview({
+        device: 'desktop',
+        
+    })
     setPreviewMode((prev) => !prev)
   }, [])
 
@@ -73,7 +76,7 @@ export default function EmailTemplateEditor() {
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to load design. Please check your JSON data.",
+        description: `Failed to load design. Please check your JSON data. ${error}`,
         variant: "destructive",
       })
     }
@@ -107,11 +110,6 @@ export default function EmailTemplateEditor() {
             
             style={{ width: '100%' }}
             options={{
-              features: {
-                stockImages: {
-                  enabled: true,
-                },
-              },
               appearance: {
                 theme: 'dark',
               },
