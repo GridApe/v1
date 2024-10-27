@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
-import { useState, useRef, useCallback } from "react"
-import { motion } from "framer-motion"
+import { useState, useRef, useCallback, useEffect } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import EmailEditor, { EditorRef, EmailEditorProps } from 'react-email-editor'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,7 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Toast } from "@/components/ui/toast"
-import { Save, Eye, Upload, Download, Undo, Redo } from "lucide-react"
+import { Loader2, Save, Eye, Upload, Download, Undo, Redo } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
 export default function EmailTemplateEditor() {
@@ -18,17 +19,22 @@ export default function EmailTemplateEditor() {
   const [templateName, setTemplateName] = useState<string>("")
   const [previewMode, setPreviewMode] = useState<boolean>(false)
   const [jsonData, setJsonData] = useState<string>("")
+  const [isLoading, setIsLoading] = useState<boolean>(true)
+  const [canUndo, setCanUndo] = useState<boolean>(false)
+  const [canRedo, setCanRedo] = useState<boolean>(false)
   const { toast } = useToast()
+  
 
-  const onReady: EmailEditorProps['onReady'] = useCallback((unlayer: { addEventListener: (arg0: string, arg1: () => void) => void }) => {
-    // You can listen to any event using unlayer.addEventListener('event', callback)
+  const onReady: EmailEditorProps['onReady'] = useCallback((unlayer: any) => {
+    setIsLoading(false)
     unlayer.addEventListener('design:updated', () => {
-      console.log('Design updated')
+      setCanUndo(unlayer.isUndoable())
+      setCanRedo(unlayer.isRedoable())
     })
   }, [])
 
   const saveDesign = useCallback(() => {
-    emailEditorRef.current?.editor?.saveDesign((design: string) => {
+    emailEditorRef.current?.editor?.saveDesign((design: any) => {
       console.log('Design JSON:', design)
       setJsonData(JSON.stringify(design, null, 2))
       toast({
@@ -58,12 +64,13 @@ export default function EmailTemplateEditor() {
   }, [templateName, toast])
 
   const togglePreview = useCallback(() => {
-    emailEditorRef.current?.editor?.showPreview({
-        device: 'desktop',
-        
-    })
+    if (previewMode) {
+      emailEditorRef.current?.editor?.hidePreview()
+    } else {
+      emailEditorRef.current?.editor?.showPreview({device: 'desktop'})
+    }
     setPreviewMode((prev) => !prev)
-  }, [])
+  }, [previewMode])
 
   const loadDesign = useCallback(() => {
     try {
@@ -90,6 +97,23 @@ export default function EmailTemplateEditor() {
     emailEditorRef.current?.editor?.redo()
   }, [])
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey) {
+        if (e.key === 'z') {
+          e.preventDefault()
+          undoAction()
+        } else if (e.key === 'y') {
+          e.preventDefault()
+          redoAction()
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [undoAction, redoAction])
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -103,15 +127,38 @@ export default function EmailTemplateEditor() {
           <CardTitle>Template Editor</CardTitle>
           <CardDescription>Create your email template using drag and drop</CardDescription>
         </CardHeader>
-        <CardContent className=" ">
+        <CardContent className="relative min-h-[500px]">
+          <AnimatePresence>
+            {isLoading && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-10"
+              >
+                <Loader2 className="h-8 w-8 animate-spin" />
+              </motion.div>
+            )}
+          </AnimatePresence>
           <EmailEditor
             ref={emailEditorRef}
             onReady={onReady}
-            
+            minHeight={500}
             style={{ width: '100%' }}
             options={{
               appearance: {
                 theme: 'dark',
+              },
+              features: {
+                stockImages: true,
+              },
+              tools: {
+                button: {
+                  enabled: true,
+                },
+                text: {
+                  enabled: true,
+                },
               },
             }}
           />
@@ -139,15 +186,17 @@ export default function EmailTemplateEditor() {
                     />
                   </div>
                 </div>
-                <Button onClick={saveDesign}>Save Design</Button>
-                <Button onClick={exportHtml}>Export HTML</Button>
+                <div className="flex justify-end gap-2">
+                  <Button onClick={saveDesign}>Save Design</Button>
+                  <Button onClick={exportHtml}>Export HTML</Button>
+                </div>
               </DialogContent>
             </Dialog>
             <Button onClick={togglePreview}>
               <Eye className="mr-2 h-4 w-4" /> {previewMode ? "Edit" : "Preview"}
             </Button>
-            <Button onClick={undoAction}><Undo className="mr-2 h-4 w-4" /> Undo</Button>
-            <Button onClick={redoAction}><Redo className="mr-2 h-4 w-4" /> Redo</Button>
+            <Button onClick={undoAction} disabled={!canUndo}><Undo className="mr-2 h-4 w-4" /> Undo</Button>
+            <Button onClick={redoAction} disabled={!canRedo}><Redo className="mr-2 h-4 w-4" /> Redo</Button>
           </div>
           <div className="flex flex-wrap gap-2">
             <Dialog>
