@@ -1,12 +1,9 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState } from "react";
+import { motion } from "framer-motion";
 import {
-  Bell,
-  Search,
   Pencil,
-  X,
   Trash2,
   MoreHorizontal,
   Check,
@@ -15,10 +12,8 @@ import {
   Eye,
   Settings,
   AlertCircle,
-  ChevronDown,
   Plus,
   ArrowUp,
-  ArrowUp01,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,7 +42,6 @@ import {
 } from "@/components/ui/table";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface DNSRecord {
