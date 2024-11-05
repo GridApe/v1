@@ -34,7 +34,7 @@ export const SidebarItems: React.FC = () => {
     {
       name: 'Campaigns',
       icon: SendIcon,
-      subitems: [{ name: 'All campaigns', path: '/campaigns/all' }],
+      subitems: [{ name: 'All campaigns', path: '/campaigns/all' }, { name: 'Create campaign', path: '/campaign/create' }],
       expandable: true,
     },
     { name: 'Integration', icon: PuzzleIcon, locked: true, path: '/integration' },
