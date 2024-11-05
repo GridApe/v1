@@ -1,4 +1,5 @@
 "use client";
+
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -14,6 +15,10 @@ import {
   Eye,
   Settings,
   AlertCircle,
+  ChevronDown,
+  Plus,
+  ArrowUp,
+  ArrowUp01,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,8 +36,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
-  DialogClose,
 } from "@/components/ui/dialog";
 import {
   Table,
@@ -46,12 +49,17 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
 
 interface DNSRecord {
   type: string;
   hostname: string;
   value: string;
+}
+
+interface DomainVerificationSteps {
+  title: string;
+  description: string;
+  records: DNSRecord[];
 }
 
 interface EmailStats {
@@ -61,143 +69,185 @@ interface EmailStats {
   clicked: number;
 }
 
-interface EmailTemplate {
+interface Domain {
   id: string;
-  subject: string;
-  content: string;
-  lastModified: Date;
+  brandName: string;
+  domainAddress: string;
+  isVerified: boolean;
 }
 
 export default function EmailDashboard() {
-  const [activeTab, setActiveTab] = useState("profile");
+  const [activeTab, setActiveTab] = useState("domains");
   const [showVerifyModal, setShowVerifyModal] = useState(false);
-  const [showPreviewModal, setShowPreviewModal] = useState(false);
-  const [currentTemplate, setCurrentTemplate] = useState<EmailTemplate | null>(
-    null
-  );
-  const [emailStats, setEmailStats] = useState<EmailStats>({
-    sent: 1250,
-    delivered: 1200,
-    opened: 850,
-    clicked: 425,
+  const [showAddDomainModal, setShowAddDomainModal] = useState(false);
+  const [showDNSSteps, setShowDNSSteps] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState("");
+  const [newDomain, setNewDomain] = useState({
+    brandName: "",
+    domainAddress: "",
   });
-
-  const [emailTemplates] = useState<EmailTemplate[]>([
+  const [domains, setDomains] = useState<Domain[]>([
     {
       id: "1",
-      subject: "Welcome Email",
-      content: "Dear {name},\n\nWelcome to our platform...",
-      lastModified: new Date(),
+      brandName: "Emsa",
+      domainAddress: "emsang.com",
+      isVerified: true,
     },
   ]);
 
-  const calculateDeliveryRate = useCallback((stats: EmailStats) => {
-    return ((stats.delivered / stats.sent) * 100).toFixed(1);
-  }, []);
+  const [emailStats] = useState<EmailStats>({
+    sent: 3189,
+    delivered: 3100,
+    opened: 2109,
+    clicked: 1500,
+  });
 
-  const calculateOpenRate = useCallback((stats: EmailStats) => {
-    return ((stats.opened / stats.delivered) * 100).toFixed(1);
-  }, []);
+  const dnsSteps: DomainVerificationSteps[] = [
+    {
+      title: "Go to your DNS Provider",
+      description:
+        "Go to DNS provider that you use to manage emsang.com and the following DNS records.",
+      records: [],
+    },
+    {
+      title: "Add DNS Records for sending",
+      description:
+        "TXT records are required to send and receive email with Gridape.",
+      records: [
+        {
+          type: "TXT",
+          hostname: "emsang.com",
+          value: "Lorem ipsum dolor sit amet et amet",
+        },
+        {
+          type: "TXT",
+          hostname: "gridape.domainkeyemsang.com",
+          value:
+            "Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor",
+        },
+      ],
+    },
+    {
+      title: "Add DNS Records for tracking",
+      description:
+        "TXT records are required to send and receive email with Gridape.",
+      records: [
+        {
+          type: "CNAME",
+          hostname: "email.emsang.com",
+          value: "gridape.org",
+        },
+      ],
+    },
+  ];
 
-  const renderEmailPreview = (template: EmailTemplate) => {
-    return (
-      <div className="bg-white p-6 rounded-lg shadow-sm">
-        <div className="border-b pb-4 mb-4">
-          <h3 className="font-semibold">Subject: {template.subject}</h3>
-        </div>
-        <div className="prose max-w-none">
-          {template.content.split("\n").map((paragraph, idx) => (
-            <p key={idx}>{paragraph}</p>
-          ))}
-        </div>
-      </div>
-    );
+  const handleCopyValue = async (value: string) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      // Could add toast notification here
+    } catch (err) {
+      console.error("Failed to copy value:", err);
+    }
   };
 
-  const PerformanceCards = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Emails Sent</CardTitle>
-          <Mail className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">
-            {emailStats.sent.toLocaleString()}
-          </div>
-          <p className="text-xs text-muted-foreground">Last 30 days</p>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Delivery Rate</CardTitle>
-          <Check className="h-4 w-4 text-green-500" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">
-            {calculateDeliveryRate(emailStats)}%
-          </div>
-          <p className="text-xs text-muted-foreground">+2.1% from last month</p>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Open Rate</CardTitle>
-          <Eye className="h-4 w-4 text-blue-500" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">
-            {calculateOpenRate(emailStats)}%
-          </div>
-          <p className="text-xs text-muted-foreground">+5.4% from last month</p>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Click Rate</CardTitle>
-          <Settings className="h-4 w-4 text-purple-500" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">
-            {((emailStats.clicked / emailStats.opened) * 100).toFixed(1)}%
-          </div>
-          <p className="text-xs text-muted-foreground">+1.2% from last month</p>
-        </CardContent>
-      </Card>
-    </div>
+  const handleVerifyDomain = (e: React.FormEvent) => {
+    e.preventDefault();
+    setShowVerifyModal(false);
+    setShowDNSSteps(true);
+  };
+
+  const handleAddDomain = (e: React.FormEvent) => {
+    e.preventDefault();
+    const newDomainEntry: Domain = {
+      id: (domains.length + 1).toString(),
+      ...newDomain,
+      isVerified: false,
+    };
+    setDomains([...domains, newDomainEntry]);
+    setNewDomain({ brandName: "", domainAddress: "" });
+    setShowAddDomainModal(false);
+    setShowVerifyModal(true);
+  };
+
+  const PerformanceCard = ({
+    title,
+    value,
+    icon,
+    percentage,
+  }: {
+    title: string;
+    value: number;
+    icon: React.ReactNode;
+    percentage: number;
+  }) => (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">{title}</CardTitle>
+        {icon}
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold">{value.toLocaleString()}</div>
+        <p className="text-xs text-muted-foreground">
+          <span className="text-green-500 inline-block"><ArrowUp /></span> {percentage}%
+        </p>
+      </CardContent>
+    </Card>
   );
 
   return (
-    <div className="min-h-screen  ">
+    <div className="min-h-screen">
+
       <main className="container mx-auto px-4 py-6">
-        {/* <div className="mb-6">
-          <h1 className="text-sm text-muted-foreground">Email Management</h1>
-        </div> */}
+        <div className="mb-8">
+          <h1 className="text-sm text-muted-foreground">Settings</h1>
+        </div>
 
-        <PerformanceCards />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <PerformanceCard
+            title="Emails Sent"
+            value={emailStats.sent}
+            icon={<Mail className="h-4 w-4 text-muted-foreground" />}
+            percentage={100}
+          />
+          <PerformanceCard
+            title="Delivered"
+            value={emailStats.delivered}
+            icon={<Check className="h-4 w-4 text-green-500" />}
+            percentage={97}
+          />
+          <PerformanceCard
+            title="Opened"
+            value={emailStats.opened}
+            icon={<Eye className="h-4 w-4 text-blue-500" />}
+            percentage={68}
+          />
+          <PerformanceCard
+            title="Clicked"
+            value={emailStats.clicked}
+            icon={<Settings className="h-4 w-4 text-purple-500" />}
+            percentage={71}
+          />
+        </div>
 
-        <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="border-b bg-transparent p-0 h-auto flex justify-start overflow-x-auto">
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="space-y-6"
+        >
+          <TabsList className="border-b bg-transparent p-0 flex justify-start h-auto">
             <TabsTrigger
               value="profile"
-              className="rounded-none border-b-2 border-transparent px-4 py-2 data-[state=active]:border-[#1E0E4E] data-[state=active]:bg-transparent whitespace-nowrap"
+              className="rounded-none border-b-2 border-transparent px-4 py-2 data-[state=active]:border-[#1E0E4E] data-[state=active]:bg-transparent"
             >
               Profile
             </TabsTrigger>
             <TabsTrigger
               value="domains"
-              className="rounded-none border-b-2 border-transparent px-4 py-2 data-[state=active]:border-[#1E0E4E] data-[state=active]:bg-transparent whitespace-nowrap"
+              className="rounded-none border-b-2 border-transparent px-4 py-2 data-[state=active]:border-[#1E0E4E] data-[state=active]:bg-transparent"
             >
               Domains
             </TabsTrigger>
-            <TabsTrigger
-              value="templates"
-              className="rounded-none border-b-2 border-transparent px-4 py-2 data-[state=active]:border-[#1E0E4E] data-[state=active]:bg-transparent whitespace-nowrap"
-            >
-              Templates
-            </TabsTrigger>
           </TabsList>
-
           <TabsContent value="profile" className="space-y-8">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -296,143 +346,152 @@ export default function EmailDashboard() {
               </div>
             </motion.div>
           </TabsContent>
-
           <TabsContent value="domains">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               className="space-y-8"
             >
-              <div>
-                <h2 className="text-xl font-semibold text-[#1E0E4E] mb-2">
-                  Sending email
-                </h2>
-                <p className="text-muted-foreground mb-6">
-                  Add a verified email domain to control how your emails will be
-                  send to your customer. Start sending campaigns once you verify
-                  your domain ownership, start connecting with your customers
-                  through gridape.
-                </p>
-                <Button
-                  onClick={() => setShowVerifyModal(true)}
-                  className="bg-[#1E0E4E] hover:bg-[#1E0E4E]/90"
-                >
-                  Verify Domain
-                </Button>
-              </div>
+              {showDNSSteps ? (
+                <div className="space-y-8">
+                  <div>
+                    <h2 className="text-2xl font-bold text-[#1E0E4E] mb-4">
+                      Now follow these steps to verify your domain
+                    </h2>
+                  </div>
 
-              <div>
-                <h2 className="text-xl font-semibold text-[#1E0E4E] mb-6">
-                  Existing domain
-                </h2>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Brand Name</TableHead>
-                      <TableHead>Domain Address</TableHead>
-                      <TableHead></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell className="font-medium">
-                        <div className="flex items-center gap-2">
-                          <Check className="h-4 w-4 text-green-500" />
-                          Emsa
-                        </div>
-                      </TableCell>
-                      <TableCell>emsang.com</TableCell>
-                      <TableCell>
-                        <div className="flex justify-end gap-2">
-                          <Button variant="ghost" size="icon">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </div>
-            </motion.div>
-          </TabsContent>
+                  {dnsSteps.map((step, index) => (
+                    <div key={index} className="space-y-4">
+                      <h3 className="text-lg font-semibold text-[#1E0E4E]">
+                        {index + 1}. {step.title}
+                      </h3>
+                      <p className="text-muted-foreground">
+                        {step.description}
+                      </p>
 
-          <TabsContent value="templates">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="space-y-8"
-            >
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {emailTemplates.map((template) => (
-                  <Card
-                    key={template.id}
-                    className="hover:shadow-lg transition-shadow"
-                  >
-                    <CardHeader>
-                      <CardTitle className="text-lg">
-                        {template.subject}
-                      </CardTitle>
-                      <p className="text-sm text-muted-foreground">
-                        Last modified:{" "}
-                        {template.lastModified.toLocaleDateString()}
-                      </p>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground line-clamp-3">
-                        {template.content}
-                      </p>
-                      <div className="flex justify-end gap-2 mt-4">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setCurrentTemplate(template);
-                            setShowPreviewModal(true);
-                          }}
-                        >
-                          <Eye className="h-4 w-4 mr-2" />
-                          Preview
-                        </Button>
-                        <Button
-                          size="sm"
-                          className="bg-[#1E0E4E] hover:bg-[#1E0E4E]/90"
-                        >
-                          <Pencil className="h-4 w-4 mr-2" />
-                          Edit
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+                      {step.records.length > 0 && (
+                        <div className="bg-white rounded-lg border p-4">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Type</TableHead>
+                                <TableHead>Hostname</TableHead>
+                                <TableHead>Enter this value</TableHead>
+                                <TableHead></TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {step.records.map((record, recordIndex) => (
+                                <TableRow key={recordIndex}>
+                                  <TableCell className="font-mono">
+                                    {record.type}
+                                  </TableCell>
+                                  <TableCell className="font-mono">
+                                    {record.hostname}
+                                  </TableCell>
+                                  <TableCell className="font-mono max-w-md truncate">
+                                    {record.value}
+                                  </TableCell>
+                                  <TableCell>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() =>
+                                        handleCopyValue(record.value)
+                                      }
+                                    >
+                                      <Copy className="h-4 w-4" />
+                                    </Button>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <>
+                  <div>
+                    <h2 className="text-xl font-semibold text-[#1E0E4E] mb-2">
+                      Sending email
+                    </h2>
+                    <p className="text-muted-foreground mb-6">
+                      Add a verified email domain to control how your emails
+                      will be send to your customer. Start sending campaigns
+                      once you verify your domain ownership, start connecting
+                      with your customers through gridape.
+                    </p>
+                    <div className="flex gap-4">
+                      <Button
+                        onClick={() => setShowAddDomainModal(true)}
+                        className="bg-[#1E0E4E] hover:bg-[#1E0E4E]/90"
+                      >
+                        <Plus className="mr-2 h-4 w-4" /> Add Domain
+                      </Button>
+                      <Button
+                        onClick={() => setShowVerifyModal(true)}
+                        variant="outline"
+                      >
+                        Verify Domain
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h2 className="text-xl font-semibold text-[#1E0E4E] mb-6">
+                      Existing domains
+                    </h2>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Brand Name</TableHead>
+                          <TableHead>Domain Address</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead></TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {domains.map((domain) => (
+                          <TableRow key={domain.id}>
+                            <TableCell className="font-medium">
+                              {domain.brandName}
+                            </TableCell>
+                            <TableCell>{domain.domainAddress}</TableCell>
+                            <TableCell>
+                              {domain.isVerified ? (
+                                <span className="flex items-center text-green-500">
+                                  <Check className="mr-2 h-4 w-4" /> Verified
+                                </span>
+                              ) : (
+                                <span className="flex items-center text-yellow-500">
+                                  <AlertCircle className="mr-2 h-4 w-4" />{" "}
+                                  Pending
+                                </span>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex justify-end gap-2">
+                                <Button variant="ghost" size="icon">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                                <Button variant="ghost" size="icon">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </>
+              )}
             </motion.div>
           </TabsContent>
         </Tabs>
-
-        <Dialog open={showPreviewModal} onOpenChange={setShowPreviewModal}>
-          <DialogContent className="sm:max-w-[700px]">
-            <DialogHeader>
-              <DialogTitle>Email Preview</DialogTitle>
-              <DialogDescription>
-                Preview how your email will appear to recipients
-              </DialogDescription>
-            </DialogHeader>
-            <div className="mt-4">
-              {currentTemplate && renderEmailPreview(currentTemplate)}
-            </div>
-            <div className="flex justify-end gap-4">
-              <Button
-                variant="ghost"
-                onClick={() => setShowPreviewModal(false)}
-              >
-                Close
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
 
         <Dialog open={showVerifyModal} onOpenChange={setShowVerifyModal}>
           <DialogContent className="sm:max-w-[500px]">
@@ -443,10 +502,16 @@ export default function EmailDashboard() {
                 verify. A confirmation link will be sent to you.
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4 py-4">
+            <form onSubmit={handleVerifyDomain} className="space-y-4 py-4">
               <div className="space-y-2">
                 <Label htmlFor="verifyEmail">Email address</Label>
-                <Input id="verifyEmail" type="email" />
+                <Input
+                  id="verifyEmail"
+                  type="email"
+                  value={verificationEmail}
+                  onChange={(e) => setVerificationEmail(e.target.value)}
+                  required
+                />
               </div>
               <div className="text-sm">
                 Already have a domain?{" "}
@@ -454,15 +519,75 @@ export default function EmailDashboard() {
                   Connect here
                 </Button>
               </div>
-            </div>
-            <div className="flex justify-end gap-4">
-              <Button variant="ghost" onClick={() => setShowVerifyModal(false)}>
-                Cancel
-              </Button>
-              <Button className="bg-[#1E0E4E] hover:bg-[#1E0E4E]/90">
-                Send email
-              </Button>
-            </div>
+              <div className="flex justify-end gap-4 pt-4">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setShowVerifyModal(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  className="bg-[#1E0E4E] hover:bg-[#1E0E4E]/90"
+                >
+                  Send email
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={showAddDomainModal} onOpenChange={setShowAddDomainModal}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Add a new domain</DialogTitle>
+              <DialogDescription>
+                Enter the details of the new domain you want to add.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleAddDomain} className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="brandName">Brand Name</Label>
+                <Input
+                  id="brandName"
+                  value={newDomain.brandName}
+                  onChange={(e) =>
+                    setNewDomain({ ...newDomain, brandName: e.target.value })
+                  }
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="domainAddress">Domain Address</Label>
+                <Input
+                  id="domainAddress"
+                  value={newDomain.domainAddress}
+                  onChange={(e) =>
+                    setNewDomain({
+                      ...newDomain,
+                      domainAddress: e.target.value,
+                    })
+                  }
+                  required
+                />
+              </div>
+              <div className="flex justify-end gap-4 pt-4">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setShowAddDomainModal(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  className="bg-[#1E0E4E] hover:bg-[#1E0E4E]/90"
+                >
+                  Add Domain
+                </Button>
+              </div>
+            </form>
           </DialogContent>
         </Dialog>
       </main>
