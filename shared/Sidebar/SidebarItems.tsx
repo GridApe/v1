@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { ChevronDownIcon, LockClosedIcon } from '@radix-ui/react-icons'
-import { BarChartIcon, FileTextIcon, LayoutTemplateIcon, PuzzleIcon, SendIcon, UsersIcon } from 'lucide-react'
+import { BarChartIcon, CogIcon, FileTextIcon, LayoutTemplateIcon, PuzzleIcon, SendIcon, UsersIcon } from 'lucide-react'
 import React from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
@@ -34,7 +34,7 @@ export const SidebarItems: React.FC = () => {
     {
       name: 'Campaigns',
       icon: SendIcon,
-      subitems: [{ name: 'All campaigns', path: '/campaigns/all' }],
+      subitems: [{ name: 'All campaigns', path: '/campaigns/all' }, { name: 'Create campaign', path: '/campaign/create' }],
       expandable: true,
     },
     { name: 'Integration', icon: PuzzleIcon, locked: true, path: '/integration' },
@@ -44,6 +44,9 @@ export const SidebarItems: React.FC = () => {
       subitems: [{ name: 'All contacts', path: '/audience/all' }],
       expandable: true,
     },
+    { name: 'Settings', icon: CogIcon, path: '/settings' },
+
+    
   ]
 
   return (
