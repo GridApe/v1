@@ -2,8 +2,6 @@
 
 import { motion } from "framer-motion";
 import {
-  Search,
-  Bell,
   MoreVertical,
   Mail,
   MousePointerClick,
@@ -94,7 +92,7 @@ export default function Dashboard() {
         {[
           { icon: Mail, label: "Create email", color: "text-blue-600" },
           { icon: MousePointerClick, label: "Create campaigns", color: "text-purple-600" }
-        ].map((action, index) => (
+        ].map((action) => (
           <motion.div
             key={action.label}
             whileHover={{ scale: 1.02 }}
