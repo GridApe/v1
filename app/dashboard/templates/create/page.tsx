@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
 import { useState, useRef, useCallback, useEffect } from "react"
@@ -11,7 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Toast } from "@/components/ui/toast"
-import { Loader2, Save, Eye, Upload, Download, Undo, Redo } from "lucide-react"
+import { Loader2, Save, Eye, Upload, Download, Undo, Redo, Image as ImageIcon, Variable } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
 export default function EmailTemplateEditor() {
@@ -22,8 +21,11 @@ export default function EmailTemplateEditor() {
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [canUndo, setCanUndo] = useState<boolean>(false)
   const [canRedo, setCanRedo] = useState<boolean>(false)
+  const [showVariableDialog, setShowVariableDialog] = useState<boolean>(false)
+  const [variableName, setVariableName] = useState<string>("")
+  const [variableDescription, setVariableDescription] = useState<string>("")
+  const [variables, setVariables] = useState<{ name: string; description: string }[]>([])
   const { toast } = useToast()
-  
 
   const onReady: EmailEditorProps['onReady'] = useCallback((unlayer: any) => {
     setIsLoading(false)
@@ -31,7 +33,43 @@ export default function EmailTemplateEditor() {
       setCanUndo(unlayer.isUndoable())
       setCanRedo(unlayer.isRedoable())
     })
-  }, [])
+
+    // Register custom variable tool
+    unlayer.registerTool({
+      name: 'variable',
+      label: 'Variable',
+      icon: 'fa-tag',
+      supportedDisplayModes: ['web', 'email'],
+      options: {
+        default: {
+          title: null,
+        },
+        text: {
+          title: 'Text',
+          position: 1,
+          options: {
+            variable: {
+              label: 'Variable',
+              defaultValue: '',
+              widget: 'dropdown',
+              data: {
+                options: variables.map(v => ({ value: `{{${v.name}}}`, label: v.name }))
+              }
+            }
+          }
+        }
+      },
+      values: {},
+      renderer: {
+        Viewer: (props: any) => {
+          return <span>{props.values.variable}</span>
+        },
+        Export: (props: any) => {
+          return <span>{props.values.variable}</span>
+        },
+      }
+    })
+  }, [variables])
 
   const saveDesign = useCallback(() => {
     emailEditorRef.current?.editor?.saveDesign((design: any) => {
@@ -67,7 +105,7 @@ export default function EmailTemplateEditor() {
     if (previewMode) {
       emailEditorRef.current?.editor?.hidePreview()
     } else {
-      emailEditorRef.current?.editor?.showPreview({device: 'desktop'})
+      emailEditorRef.current?.editor?.showPreview("desktop")
     }
     setPreviewMode((prev) => !prev)
   }, [previewMode])
@@ -96,6 +134,34 @@ export default function EmailTemplateEditor() {
   const redoAction = useCallback(() => {
     emailEditorRef.current?.editor?.redo()
   }, [])
+
+  const handleImageUpload = useCallback((file: File, onSuccess: (url: string) => void) => {
+    // Here you would typically upload the file to your server or a file storage service
+    // For this example, we'll create a local object URL
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const dataUrl = e.target?.result as string
+      onSuccess(dataUrl)
+      toast({
+        title: "Image Uploaded",
+        description: "Your image has been successfully uploaded.",
+      })
+    }
+    reader.readAsDataURL(file)
+  }, [toast])
+
+  const addVariable = useCallback(() => {
+    if (variableName) {
+      setVariables(prev => [...prev, { name: variableName, description: variableDescription }])
+      setVariableName("")
+      setVariableDescription("")
+      setShowVariableDialog(false)
+      toast({
+        title: "Variable Added",
+        description: `Variable {{${variableName}}} has been added to the template.`,
+      })
+    }
+  }, [variableName, variableDescription, toast])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -159,7 +225,23 @@ export default function EmailTemplateEditor() {
                 text: {
                   enabled: true,
                 },
+                variable: {
+                  enabled: true,
+                },
               },
+              customJS: [
+                `https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/all.min.js`,
+              ],
+            }}
+            projectId={1} // Replace with your actual Unlayer project ID
+            onLoad={() => {
+              emailEditorRef.current?.editor?.addEventListener('image:added', (file: File, done: (arg0: { progress: number; url: string }) => void) => {
+                if (file) {
+                  handleImageUpload(file, (url) => {
+                    done({ progress: 100, url })
+                  })
+                }
+              })
             }}
           />
         </CardContent>
@@ -217,8 +299,68 @@ export default function EmailTemplateEditor() {
               </DialogContent>
             </Dialog>
             <Button onClick={exportHtml}><Download className="mr-2 h-4 w-4" /> Export HTML</Button>
+            <Dialog open={showVariableDialog} onOpenChange={setShowVariableDialog}>
+              <DialogTrigger asChild>
+                <Button variant="outline"><Variable className="mr-2 h-4 w-4" /> Add Variable</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add Variable</DialogTitle>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="variableName" className="text-right">
+                      Name
+                    </Label>
+                    <Input
+                      id="variableName"
+                      value={variableName}
+                      onChange={(e) => setVariableName(e.target.value)}
+                      className="col-span-3"
+                    />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="variableDescription" className="text-right">
+                      Description
+                    </Label>
+                    <Input
+                      id="variableDescription"
+                      value={variableDescription}
+                      onChange={(e) => setVariableDescription(e.target.value)}
+                      className="col-span-3"
+                    />
+                  </div>
+                </div>
+                <Button onClick={addVariable}>Add Variable</Button>
+              </DialogContent>
+            </Dialog>
           </div>
         </CardFooter>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Variable Usage</CardTitle>
+          <CardDescription>How to use variables in your template</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p>To use variables in your template, follow these steps:</p>
+          <ol className="list-decimal list-inside space-y-2 mt-2">
+            <li>Click the "Add Variable" button to define a new variable.</li>
+            <li>In the editor, use the Variable tool to insert variables into your content.</li>
+            <li>Variables will appear in the format {'{{variableName}}'} in your template.</li>
+            <li>When sending emails, replace these variables with actual values.</li>
+          </ol>
+          <div className="mt-4">
+            <h4 className="font-semibold">Available Variables:</h4>
+            <ul className="list-disc list-inside mt-2">
+              {variables.map((variable, index) => (
+                <li key={index}>
+                  <code>{`{{${variable.name}}}`}</code> - {variable.description}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </CardContent>
       </Card>
       <Toast />
     </motion.div>

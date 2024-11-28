@@ -37,7 +37,11 @@ import {
   Legend,
   Tooltip,
 } from "recharts";
+import { withAuth } from "@/shared/withAuth";
 import SearchBar from "@/shared/SearchBar";
+import { useAuthStore } from "@/store/authStore";
+import { useEffect, useState } from "react";
+import { UserTypes } from "@/types/interface";
 
 const chartData = [
   { month: "Jan", openRate: 700, ctr: 400, bounceRate: 200 },
@@ -55,26 +59,26 @@ const chartData = [
 ];
 
 const performanceMetrics = [
-  { 
-    label: "Emails sent", 
-    value: "3,189", 
-    percent: "12%", 
+  {
+    label: "Emails sent",
+    value: "3,189",
+    percent: "12%",
     icon: Send,
-    color: "bg-blue-600"
+    color: "bg-blue-600",
   },
-  { 
-    label: "Open rate", 
-    value: "2,109", 
-    percent: "8%", 
+  {
+    label: "Open rate",
+    value: "2,109",
+    percent: "8%",
     icon: Eye,
-    color: "bg-green-600"
+    color: "bg-green-600",
   },
-  { 
-    label: "Click rate", 
-    value: "4,234", 
-    percent: "15%", 
+  {
+    label: "Click rate",
+    value: "4,234",
+    percent: "15%",
     icon: MousePointer,
-    color: "bg-purple-600"
+    color: "bg-purple-600",
   },
 ];
 
@@ -84,26 +88,46 @@ const audienceData = [
   { name: "Uche Eucharia", sent: "183", open: "34%", click: "83%" },
 ];
 
-export default function Dashboard() {
+const Dashboard = () => {
+  const [data, setData] = useState<UserTypes | null>(null);
+  const {user} = useAuthStore()
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const currentUser = useAuthStore.getState().user;
+        setData(currentUser);
+      } catch (error) {
+        console.error("Error fet sching user data:", error);
+      }
+    };
+    fetchData();
+  }, [])
+  
   const handleSearch = (query: string) => {
     console.log('Home component - Searching for:', query)
+    console.log(user)
   }
   return (
     <div className="p-4 md:p-6 lg:p-8 min-h-screen rounded-lg">
-       <div className='mb-5'>
+      <div className='mb-5'>
          <SearchBar
            onSearch={handleSearch}
            avatarSrc="assets/logo.svg"
-           avatarFallback="JD"
+           avatarFallback={user?.first_name}
            notificationCount={12}
          />
        </div>
-      <Banner name="Collins" />
-      
+      <Banner name={user?.first_name} />
+
       <div className="mb-12 grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6 max-w-[800px] mt-12">
         {[
           { icon: Mail, label: "Create email", color: "text-blue-600" },
-          { icon: MousePointerClick, label: "Create campaigns", color: "text-purple-600" }
+          {
+            icon: MousePointerClick,
+            label: "Create campaigns",
+            color: "text-purple-600",
+          },
         ].map((action) => (
           <motion.div
             key={action.label}
@@ -141,7 +165,9 @@ export default function Dashboard() {
                   />
                   <p className="text-sm text-gray-600">{metric.label}</p>
                   <div className="flex justify-between items-center w-full mt-2">
-                    <p className="text-2xl md:text-3xl font-bold">{metric.value}</p>
+                    <p className="text-2xl md:text-3xl font-bold">
+                      {metric.value}
+                    </p>
                     <div className="bg-[#ECFDF3] border border-[#D3F9D8] rounded-lg px-2 py-1">
                       <span className="text-[#2B8A3E] text-sm flex items-center">
                         <ArrowUp size={16} className="mr-1" /> {metric.percent}
@@ -225,4 +251,6 @@ export default function Dashboard() {
       </div>
     </div>
   );
-}
+};
+
+export default Dashboard;
