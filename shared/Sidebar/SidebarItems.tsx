@@ -9,42 +9,41 @@ import Link from 'next/link'
 interface SidebarItem {
   name: string
   icon: React.ElementType
-  path?: string // Add path for navigation
+  path?: string 
   locked?: boolean
-  subitems?: { name: string; path: string }[] // Update subitems to include path
+  subitems?: { name: string; path: string }[]
   expandable?: boolean
 }
 
 export const SidebarItems: React.FC = () => {
   const items: SidebarItem[] = [
-    { name: 'Analytics', icon: BarChartIcon, path: '/' },
-    { name: 'Landing page', icon: FileTextIcon, locked: true, path: '/landing' },
+    { name: 'Analytics', icon: BarChartIcon, path: '/dashboard/' },
+    { name: 'Landing page', icon: FileTextIcon, locked: true, path: '/dashboard/landing' },
     {
       name: 'Template',
       icon: LayoutTemplateIcon,
       subitems: [
-        { name: 'All templates', path: '/templates/all' },
-        { name: 'Create Template', path: '/templates/create' },
-        { name: 'Saved templates', path: '/templates/saved' },
-        { name: 'My files', path: '/templates/my-files' },
-        { name: 'Gallery', path: '/templates/gallery' },
+        { name: 'All templates', path: '/dashboard/templates/all' },
+        { name: 'Create Template', path: '/dashboard/templates/create' },
+        { name: 'Saved templates', path: '/dashboard/templates/saved' },
+        { name: 'My files', path: '/dashboard/templates/my-files' },
       ],
       expandable: true,
     },
     {
       name: 'Campaigns',
       icon: SendIcon,
-      subitems: [{ name: 'All campaigns', path: '/campaigns/all' }, { name: 'Create campaign', path: '/campaign/create' }],
+      subitems: [{ name: 'All campaigns', path: '/dashboard/campaigns/all' }, { name: 'Create campaign', path: '/dashboard/campaign/create' }],
       expandable: true,
     },
-    { name: 'Integration', icon: PuzzleIcon, locked: true, path: '/integration' },
+    { name: 'Integration', icon: PuzzleIcon, locked: true, path: '/dashboard/integration' },
     {
       name: 'Audience',
       icon: UsersIcon,
-      subitems: [{ name: 'All contacts', path: '/audience/all' }],
+      subitems: [{ name: 'All contacts', path: '/dashboard/audience/all' }],
       expandable: true,
     },
-    { name: 'Settings', icon: CogIcon, path: '/settings' },
+    { name: 'Settings', icon: CogIcon, path: '/dashboard/settings' },
 
     
   ]

@@ -14,6 +14,7 @@ import {
   AlertCircle,
   Plus,
   ArrowUp,
+  RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,6 +49,7 @@ interface DNSRecord {
   type: string;
   hostname: string;
   value: string;
+  isVerified: boolean;
 }
 
 interface DomainVerificationSteps {
@@ -96,11 +98,11 @@ export default function EmailDashboard() {
     clicked: 1500,
   });
 
-  const dnsSteps: DomainVerificationSteps[] = [
+  const [dnsSteps, setDnsSteps] = useState<DomainVerificationSteps[]>([
     {
       title: "Go to your DNS Provider",
       description:
-        "Go to DNS provider that you use to manage emsang.com and the following DNS records.",
+        "Go to DNS provider that you use to manage your domain and add the following DNS records.",
       records: [],
     },
     {
@@ -110,35 +112,36 @@ export default function EmailDashboard() {
       records: [
         {
           type: "TXT",
-          hostname: "emsang.com",
+          hostname: "",
           value: "Lorem ipsum dolor sit amet et amet",
+          isVerified: false,
         },
         {
           type: "TXT",
           hostname: "gridape.domainkeyemsang.com",
           value:
             "Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor",
+          isVerified: false,
         },
       ],
     },
     {
       title: "Add DNS Records for tracking",
-      description:
-        "TXT records are required to send and receive email with Gridape.",
+      description: "CNAME record is required for email tracking with Gridape.",
       records: [
         {
           type: "CNAME",
-          hostname: "email.emsang.com",
+          hostname: "email",
           value: "gridape.org",
+          isVerified: false,
         },
       ],
     },
-  ];
+  ]);
 
   const handleCopyValue = async (value: string) => {
     try {
       await navigator.clipboard.writeText(value);
-      // Could add toast notification here
     } catch (err) {
       console.error("Failed to copy value:", err);
     }
@@ -158,9 +161,32 @@ export default function EmailDashboard() {
       isVerified: false,
     };
     setDomains([...domains, newDomainEntry]);
+
+    const updatedDnsSteps = dnsSteps.map((step) => ({
+      ...step,
+      records: step.records.map((record) => ({
+        ...record,
+        hostname: record.hostname.includes("gridape.domainkey")
+          ? `gridape.domainkey${newDomain.domainAddress}`
+          : record.hostname || newDomain.domainAddress,
+      })),
+    }));
+    setDnsSteps(updatedDnsSteps);
+
     setNewDomain({ brandName: "", domainAddress: "" });
     setShowAddDomainModal(false);
-    setShowVerifyModal(true);
+    setShowDNSSteps(true);
+  };
+
+  const handleRefreshStatus = () => {
+    const updatedDnsSteps = dnsSteps.map((step) => ({
+      ...step,
+      records: step.records.map((record) => ({
+        ...record,
+        isVerified: Math.random() < 0.5,
+      })),
+    }));
+    setDnsSteps(updatedDnsSteps);
   };
 
   const PerformanceCard = ({
@@ -182,7 +208,10 @@ export default function EmailDashboard() {
       <CardContent>
         <div className="text-2xl font-bold">{value.toLocaleString()}</div>
         <p className="text-xs text-muted-foreground">
-          <span className="text-green-500 inline-block"><ArrowUp /></span> {percentage}%
+          <span className="text-green-500 inline-block">
+            <ArrowUp />
+          </span>{" "}
+          {percentage}%
         </p>
       </CardContent>
     </Card>
@@ -190,13 +219,12 @@ export default function EmailDashboard() {
 
   return (
     <div className="min-h-screen">
-
-      <main className="container mx-auto px-4 py-6">
+      <main className="container mx-auto px-2 sm:px-4 py-4 sm:py-6">
         <div className="mb-8">
           <h1 className="text-sm text-muted-foreground">Settings</h1>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-8">
           <PerformanceCard
             title="Emails Sent"
             value={emailStats.sent}
@@ -228,16 +256,16 @@ export default function EmailDashboard() {
           onValueChange={setActiveTab}
           className="space-y-6"
         >
-          <TabsList className="border-b bg-transparent p-0 flex justify-start h-auto">
+          <TabsList className="border-b bg-transparent p-0 flex justify-start h-auto w-full overflow-x-auto">
             <TabsTrigger
               value="profile"
-              className="rounded-none border-b-2 border-transparent px-4 py-2 data-[state=active]:border-[#1E0E4E] data-[state=active]:bg-transparent"
+              className="rounded-none border-b-2 border-transparent px-2 sm:px-4 py-2 data-[state=active]:border-[#1E0E4E] data-[state=active]:bg-transparent whitespace-nowrap"
             >
               Profile
             </TabsTrigger>
             <TabsTrigger
               value="domains"
-              className="rounded-none border-b-2 border-transparent px-4 py-2 data-[state=active]:border-[#1E0E4E] data-[state=active]:bg-transparent"
+              className="rounded-none border-b-2 border-transparent px-2 sm:px-4 py-2 data-[state=active]:border-[#1E0E4E] data-[state=active]:bg-transparent whitespace-nowrap"
             >
               Domains
             </TabsTrigger>
@@ -248,15 +276,15 @@ export default function EmailDashboard() {
               animate={{ opacity: 1, y: 0 }}
               className="space-y-8"
             >
-              <div className="flex justify-between">
-                <div className="w-full">
+              <div className="flex flex-col lg:flex-row justify-between lg:space-x-8">
+                <div className="w-full lg:w-1/2">
                   <h2 className="text-xl font-semibold text-[#1E0E4E] mb-6">
                     Basic Information
                   </h2>
 
                   <div className="mb-6">
                     <Label className="text-sm mb-4 block">Profile Photo</Label>
-                    <div className="flex items-end gap-4">
+                    <div className="flex items-center gap-4">
                       <div className="relative">
                         <Avatar className="h-20 w-20">
                           <img
@@ -277,20 +305,20 @@ export default function EmailDashboard() {
                   <div className="space-y-4 max-w-xl">
                     <div>
                       <Label htmlFor="firstName">First name</Label>
-                      <Input id="firstName" className="mt-1" />
+                      <Input id="firstName" className="mt-1 w-full" />
                     </div>
                     <div>
                       <Label htmlFor="lastName">Last name</Label>
-                      <Input id="lastName" className="mt-1" />
+                      <Input id="lastName" className="mt-1 w-full" />
                     </div>
                     <div>
                       <Label htmlFor="email">Email address</Label>
-                      <Input id="email" type="email" className="mt-1" />
+                      <Input id="email" type="email" className="mt-1 w-full" />
                     </div>
                     <div>
                       <Label htmlFor="language">Language</Label>
                       <Select defaultValue="deutsch">
-                        <SelectTrigger className="mt-1">
+                        <SelectTrigger className="mt-1 w-full">
                           <SelectValue placeholder="Select language" />
                         </SelectTrigger>
                         <SelectContent>
@@ -304,7 +332,7 @@ export default function EmailDashboard() {
                   </div>
                 </div>
 
-                <div className="w-full">
+                <div className="w-full lg:w-1/2 mt-8 lg:mt-0">
                   <h2 className="text-xl font-semibold text-[#1E0E4E] mb-6">
                     Change password
                   </h2>
@@ -316,7 +344,7 @@ export default function EmailDashboard() {
                       <Input
                         id="currentPassword"
                         type="password"
-                        className="mt-1"
+                        className="mt-1 w-full"
                       />
                     </div>
                     <div>
@@ -324,7 +352,7 @@ export default function EmailDashboard() {
                       <Input
                         id="newPassword"
                         type="password"
-                        className="mt-1"
+                        className="mt-1 w-full"
                       />
                     </div>
                     <div>
@@ -332,7 +360,7 @@ export default function EmailDashboard() {
                       <Input
                         id="confirmPassword"
                         type="password"
-                        className="mt-1"
+                        className="mt-1 w-full"
                       />
                     </div>
                   </div>
@@ -340,6 +368,7 @@ export default function EmailDashboard() {
               </div>
             </motion.div>
           </TabsContent>
+
           <TabsContent value="domains">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -348,10 +377,19 @@ export default function EmailDashboard() {
             >
               {showDNSSteps ? (
                 <div className="space-y-8">
-                  <div>
+                  <div className="flex justify-between items-center">
                     <h2 className="text-2xl font-bold text-[#1E0E4E] mb-4">
                       Now follow these steps to verify your domain
                     </h2>
+                    <Button
+                      onClick={handleRefreshStatus}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center"
+                    >
+                      <RefreshCw className="mr-2 h-4 w-4" />
+                      Refresh Status
+                    </Button>
                   </div>
 
                   {dnsSteps.map((step, index) => (
@@ -365,46 +403,89 @@ export default function EmailDashboard() {
 
                       {step.records.length > 0 && (
                         <div className="bg-white rounded-lg border p-4">
-                          <Table>
-                            <TableHeader>
-                              <TableRow>
-                                <TableHead>Type</TableHead>
-                                <TableHead>Hostname</TableHead>
-                                <TableHead>Enter this value</TableHead>
-                                <TableHead></TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {step.records.map((record, recordIndex) => (
-                                <TableRow key={recordIndex}>
-                                  <TableCell className="font-mono">
-                                    {record.type}
-                                  </TableCell>
-                                  <TableCell className="font-mono">
-                                    {record.hostname}
-                                  </TableCell>
-                                  <TableCell className="font-mono max-w-md truncate">
-                                    {record.value}
-                                  </TableCell>
-                                  <TableCell>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      onClick={() =>
-                                        handleCopyValue(record.value)
-                                      }
-                                    >
-                                      <Copy className="h-4 w-4" />
-                                    </Button>
-                                  </TableCell>
+                          <div className="overflow-x-auto">
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>Type</TableHead>
+                                  <TableHead>Hostname</TableHead>
+                                  <TableHead>Enter this value</TableHead>
+                                  <TableHead>Status</TableHead>
+                                  <TableHead></TableHead>
                                 </TableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
+                              </TableHeader>
+                              <TableBody>
+                                {step.records.map((record, recordIndex) => (
+                                  <TableRow key={recordIndex}>
+                                    <TableCell className="font-mono">
+                                      {record.type}
+                                    </TableCell>
+                                    <TableCell className="font-mono">
+                                      <Input
+                                        value={record.hostname}
+                                        onChange={(e) => {
+                                          const updatedSteps = [...dnsSteps];
+                                          updatedSteps[index].records[
+                                            recordIndex
+                                          ].hostname = e.target.value;
+                                          setDnsSteps(updatedSteps);
+                                        }}
+                                        className="w-full"
+                                      />
+                                    </TableCell>
+                                    <TableCell className="font-mono max-w-md truncate">
+                                      <Input
+                                        value={record.value}
+                                        onChange={(e) => {
+                                          const updatedSteps = [...dnsSteps];
+                                          updatedSteps[index].records[
+                                            recordIndex
+                                          ].value = e.target.value;
+                                          setDnsSteps(updatedSteps);
+                                        }}
+                                        className="w-full"
+                                      />
+                                    </TableCell>
+                                    <TableCell>
+                                      {record.isVerified ? (
+                                        <span className="flex items-center text-green-500">
+                                          <Check className="mr-2 h-4 w-4" />{" "}
+                                          Verified
+                                        </span>
+                                      ) : (
+                                        <span className="flex items-center text-yellow-500">
+                                          <AlertCircle className="mr-2 h-4 w-4" />{" "}
+                                          Pending
+                                        </span>
+                                      )}
+                                    </TableCell>
+                                    <TableCell>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() =>
+                                          handleCopyValue(record.value)
+                                        }
+                                        className="w-full sm:w-auto"
+                                      >
+                                        <Copy className="h-4 w-4" />
+                                      </Button>
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </div>
                         </div>
                       )}
                     </div>
                   ))}
+                  <Button
+                    onClick={() => setShowDNSSteps(false)}
+                    className="bg-[#1E0E4E] hover:bg-[#1E0E4E]/90 w-full sm:w-auto"
+                  >
+                    Finish Setup
+                  </Button>
                 </div>
               ) : (
                 <>
@@ -414,20 +495,21 @@ export default function EmailDashboard() {
                     </h2>
                     <p className="text-muted-foreground mb-6">
                       Add a verified email domain to control how your emails
-                      will be send to your customer. Start sending campaigns
+                      will be sent to your customers. Start sending campaigns
                       once you verify your domain ownership, start connecting
                       with your customers through gridape.
                     </p>
-                    <div className="flex gap-4">
+                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
                       <Button
                         onClick={() => setShowAddDomainModal(true)}
-                        className="bg-[#1E0E4E] hover:bg-[#1E0E4E]/90"
+                        className="bg-[#1E0E4E] hover:bg-[#1E0E4E]/90 w-full sm:w-auto"
                       >
                         <Plus className="mr-2 h-4 w-4" /> Add Domain
                       </Button>
                       <Button
                         onClick={() => setShowVerifyModal(true)}
                         variant="outline"
+                        className="w-full sm:w-auto"
                       >
                         Verify Domain
                       </Button>
@@ -438,48 +520,58 @@ export default function EmailDashboard() {
                     <h2 className="text-xl font-semibold text-[#1E0E4E] mb-6">
                       Existing domains
                     </h2>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Brand Name</TableHead>
-                          <TableHead>Domain Address</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead></TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {domains.map((domain) => (
-                          <TableRow key={domain.id}>
-                            <TableCell className="font-medium">
-                              {domain.brandName}
-                            </TableCell>
-                            <TableCell>{domain.domainAddress}</TableCell>
-                            <TableCell>
-                              {domain.isVerified ? (
-                                <span className="flex items-center text-green-500">
-                                  <Check className="mr-2 h-4 w-4" /> Verified
-                                </span>
-                              ) : (
-                                <span className="flex items-center text-yellow-500">
-                                  <AlertCircle className="mr-2 h-4 w-4" />{" "}
-                                  Pending
-                                </span>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex justify-end gap-2">
-                                <Button variant="ghost" size="icon">
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                                <Button variant="ghost" size="icon">
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </TableCell>
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Brand Name</TableHead>
+                            <TableHead>Domain Address</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead></TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                        </TableHeader>
+                        <TableBody>
+                          {domains.map((domain) => (
+                            <TableRow key={domain.id}>
+                              <TableCell className="font-medium">
+                                {domain.brandName}
+                              </TableCell>
+                              <TableCell>{domain.domainAddress}</TableCell>
+                              <TableCell>
+                                {domain.isVerified ? (
+                                  <span className="flex items-center text-green-500">
+                                    <Check className="mr-2 h-4 w-4" /> Verified
+                                  </span>
+                                ) : (
+                                  <span className="flex items-center text-yellow-500">
+                                    <AlertCircle className="mr-2 h-4 w-4" />{" "}
+                                    Pending
+                                  </span>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex justify-end gap-2">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="w-full sm:w-auto"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="w-full sm:w-auto"
+                                  >
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
                   </div>
                 </>
               )}
@@ -488,7 +580,7 @@ export default function EmailDashboard() {
         </Tabs>
 
         <Dialog open={showVerifyModal} onOpenChange={setShowVerifyModal}>
-          <DialogContent className="sm:max-w-[500px]">
+          <DialogContent className="w-[95vw] max-w-[500px]">
             <DialogHeader>
               <DialogTitle>Verify a domain</DialogTitle>
               <DialogDescription>
@@ -509,7 +601,10 @@ export default function EmailDashboard() {
               </div>
               <div className="text-sm">
                 Already have a domain?{" "}
-                <Button variant="link" className="p-0 h-auto text-blue-600">
+                <Button
+                  variant="link"
+                  className="p-0 h-auto text-blue-600 w-full sm:w-auto"
+                >
                   Connect here
                 </Button>
               </div>
@@ -518,12 +613,13 @@ export default function EmailDashboard() {
                   type="button"
                   variant="ghost"
                   onClick={() => setShowVerifyModal(false)}
+                  className="w-full sm:w-auto"
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
-                  className="bg-[#1E0E4E] hover:bg-[#1E0E4E]/90"
+                  className="bg-[#1E0E4E] hover:bg-[#1E0E4E]/90 w-full sm:w-auto"
                 >
                   Send email
                 </Button>
@@ -533,7 +629,7 @@ export default function EmailDashboard() {
         </Dialog>
 
         <Dialog open={showAddDomainModal} onOpenChange={setShowAddDomainModal}>
-          <DialogContent className="sm:max-w-[500px]">
+          <DialogContent className="w-[95vw] max-w-[500px]">
             <DialogHeader>
               <DialogTitle>Add a new domain</DialogTitle>
               <DialogDescription>
@@ -571,12 +667,13 @@ export default function EmailDashboard() {
                   type="button"
                   variant="ghost"
                   onClick={() => setShowAddDomainModal(false)}
+                  className="w-full sm:w-auto"
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
-                  className="bg-[#1E0E4E] hover:bg-[#1E0E4E]/90"
+                  className="bg-[#1E0E4E] hover:bg-[#1E0E4E]/90 w-full sm:w-auto"
                 >
                   Add Domain
                 </Button>
