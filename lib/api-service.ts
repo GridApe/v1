@@ -187,8 +187,11 @@ class ApiService {
   }
 
   //templates
-  async listAllEmailTemplate(data: TemplateTypes) {
-    return this.executeApiCall<any>("post", "/user/templates", data);
+  async listAllEmailTemplate() {
+    return this.executeApiCall<any>("get", "/user/templates");
+  }
+  async savedEmailTemplates() {
+    return this.executeApiCall<any>("get", "/user/email-templates");
   }
   async updateEmailTemplate(data: TemplateTypes) {
     return this.executeApiCall<any>("put", "/auth/campaigns", data);

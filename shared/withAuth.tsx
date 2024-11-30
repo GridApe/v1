@@ -13,11 +13,11 @@ export function withAuth<P extends object>(
     const router = useRouter()
 
     // If you decide to re-enable redirection, uncomment the following code:
-    // useEffect(() => {
-    //   if (!loading && !user) {
-    //     router.push('/auth/login')
-    //   }
-    // }, [user, loading])
+    useEffect(() => {
+      if (!loading && !user) {
+        router.push('/auth/login')
+      }
+    }, [user, loading])
 
     // Improved Loading State
     if (loading) {

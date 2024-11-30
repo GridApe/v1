@@ -35,6 +35,7 @@ export interface ContactTypes {
 }
 
 export interface TemplateTypes {
+  id?: any;
   name: string;
   content: string;
 }
