@@ -1,38 +1,44 @@
-"use client"
+'use client';
 
-import { useState } from "react"
-import { motion } from "framer-motion"
-import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Card, CardContent, CardFooter } from "@/components/ui/card"
-import { LayoutGrid, List, MoreVertical, Plus } from "lucide-react"
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { LayoutGrid, List, MoreVertical, Plus } from 'lucide-react';
 
 interface File {
-  id: string
-  name: string
-  size: string
-  image: string
+  id: string;
+  name: string;
+  size: string;
+  image: string;
 }
 
 const initialFiles: File[] = [
-  { id: "1", name: "My cv1.pdf", size: "234k", image: "https://dummyimage.com/716x480" },
-  { id: "2", name: "My cv2.pdf", size: "234k", image: "https://dummyimage.com/716x480" },
-  { id: "3", name: "My cv3.pdf", size: "234k", image: "https://dummyimage.com/716x480" },
-]
+  { id: '1', name: 'My cv1.pdf', size: '234k', image: 'https://dummyimage.com/716x480' },
+  { id: '2', name: 'My cv2.pdf', size: '234k', image: 'https://dummyimage.com/716x480' },
+  { id: '3', name: 'My cv3.pdf', size: '234k', image: 'https://dummyimage.com/716x480' },
+];
 
 export default function FileManager() {
-  const [files, setFiles] = useState<File[]>(initialFiles)
-  const [view, setView] = useState<"grid" | "list">("grid")
+  const [files, setFiles] = useState<File[]>(initialFiles);
+  const [view, setView] = useState<'grid' | 'list'>('grid');
 
   const handleAddFolder = () => {
     const newFolder: File = {
       id: String(files.length + 1),
-      name: "New Folder",
-      size: "",
-      image: "",
-    }
-    setFiles((prev) => [...prev, newFolder])
-  }
+      name: 'New Folder',
+      size: '',
+      image: '',
+    };
+    setFiles((prev) => [...prev, newFolder]);
+  };
 
   return (
     <div className="container mx-auto p-4">
@@ -64,10 +70,10 @@ export default function FileManager() {
           </Select>
         </div>
         <div className="flex space-x-2">
-          <Button variant="outline" size="icon" onClick={() => setView("grid")}>
+          <Button variant="outline" size="icon" onClick={() => setView('grid')}>
             <LayoutGrid className="h-4 w-4" />
           </Button>
-          <Button variant="outline" size="icon" onClick={() => setView("list")}>
+          <Button variant="outline" size="icon" onClick={() => setView('list')}>
             <List className="h-4 w-4" />
           </Button>
         </div>
@@ -78,11 +84,17 @@ export default function FileManager() {
       </Button>
 
       <motion.div
-        className={`grid gap-4 ${view === "grid" ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4" : "grid-cols-1"}`}
+        className={`grid gap-4 ${view === 'grid' ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4' : 'grid-cols-1'}`}
         layout
       >
         {files.map((file) => (
-          <motion.div key={file.id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+          <motion.div
+            key={file.id}
+            layout
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
             <Card>
               <CardContent className="p-4">
                 {file.image && (
@@ -106,5 +118,5 @@ export default function FileManager() {
         ))}
       </motion.div>
     </div>
-  )
+  );
 }

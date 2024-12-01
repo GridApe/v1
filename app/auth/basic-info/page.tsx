@@ -1,44 +1,44 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { AuthCard } from '../auth-card'
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { AuthCard } from '../auth-card';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from '@/components/ui/select';
 
 export default function BasicInfoPage() {
-  const router = useRouter()
-  const [loading, setLoading] = useState(false)
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     fullName: '',
     phoneNumber: '',
     country: '',
     state: '',
-  })
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
+    e.preventDefault();
+    setLoading(true);
 
     try {
       // Simulated API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      router.push('/auth/business-info')
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      router.push('/auth/business-info');
     } catch (error) {
-      console.error(error)
+      console.error(error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <motion.div
@@ -55,7 +55,7 @@ export default function BasicInfoPage() {
               id="fullName"
               placeholder="Enter full name"
               value={formData.fullName}
-              onChange={e => setFormData({...formData, fullName: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
               required
             />
           </div>
@@ -65,7 +65,7 @@ export default function BasicInfoPage() {
               id="phoneNumber"
               placeholder="Enter phone number"
               value={formData.phoneNumber}
-              onChange={e => setFormData({...formData, phoneNumber: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
               required
             />
           </div>
@@ -74,8 +74,7 @@ export default function BasicInfoPage() {
               <Label htmlFor="country">Country</Label>
               <Select
                 value={formData.country}
-                onValueChange={value => setFormData({...formData, country: value})
-                }
+                onValueChange={(value) => setFormData({ ...formData, country: value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select country" />
@@ -91,9 +90,7 @@ export default function BasicInfoPage() {
               <Label htmlFor="state">State</Label>
               <Select
                 value={formData.state}
-                onValueChange={value =>
-                  setFormData({...formData, state: value})
-                }
+                onValueChange={(value) => setFormData({ ...formData, state: value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select state" />
@@ -106,8 +103,8 @@ export default function BasicInfoPage() {
               </Select>
             </div>
           </div>
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             className="w-full bg-[#4338ca] hover:bg-[#3730a3]"
             disabled={loading}
           >
@@ -116,5 +113,5 @@ export default function BasicInfoPage() {
         </form>
       </AuthCard>
     </motion.div>
-  )
+  );
 }

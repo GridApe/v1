@@ -20,10 +20,16 @@ export function useAuth() {
     router.push('/auth/login');
   };
 
-  const handleRegister = async (email: string, password: string, password_confirmation: string, first_name: string, last_name: string) => {
-    await register( email, password, password_confirmation, first_name, last_name );
+  const handleRegister = async (
+    email: string,
+    password: string,
+    password_confirmation: string,
+    first_name: string,
+    last_name: string
+  ) => {
+    await register(email, password, password_confirmation, first_name, last_name);
     router.push('/dashboard');
   };
-1
+  1;
   return { user, loading, login: handleLogin, logout: handleLogout, register: handleRegister };
 }

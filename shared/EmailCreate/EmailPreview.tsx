@@ -1,4 +1,4 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface EmailPreviewProps {
   userName: string;
@@ -26,7 +26,10 @@ export const EmailPreview: React.FC<EmailPreviewProps> = ({
             <Avatar className="h-8 w-8">
               <AvatarImage src={userAvatar} alt={userName} />
               <AvatarFallback>
-                {userName.split(" ").map((n) => n[0]).join("")}
+                {userName
+                  .split(' ')
+                  .map((n) => n[0])
+                  .join('')}
               </AvatarFallback>
             </Avatar>
             <div>
@@ -35,9 +38,7 @@ export const EmailPreview: React.FC<EmailPreviewProps> = ({
             </div>
           </div>
           {recipients.length > 0 && (
-            <div className="text-sm text-gray-600">
-              To: {recipients.join(", ")}
-            </div>
+            <div className="text-sm text-gray-600">To: {recipients.join(', ')}</div>
           )}
           <div className="font-medium">{subject}</div>
         </div>

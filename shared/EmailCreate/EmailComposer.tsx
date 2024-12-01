@@ -1,24 +1,24 @@
 'use client';
 
-import { useState, ChangeEvent, KeyboardEvent } from "react";
-import { motion } from "framer-motion";
-import { Eye, EyeOff, Users } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { useState, ChangeEvent, KeyboardEvent } from 'react';
+import { motion } from 'framer-motion';
+import { Eye, EyeOff, Users } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { NavigationBar } from "./NavigationBar";
-import { EmailToolbar } from "./EmailToolbar";
-import { EmailPreview } from "./EmailPreview";
-import { RecipientList } from "./RecipientList";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+} from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { NavigationBar } from './NavigationBar';
+import { EmailToolbar } from './EmailToolbar';
+import { EmailPreview } from './EmailPreview';
+import { RecipientList } from './RecipientList';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface EmailComposerProps {
   userEmail?: string;
@@ -27,20 +27,20 @@ interface EmailComposerProps {
 }
 
 const EmailComposer: React.FC<EmailComposerProps> = ({
-  userEmail = "lyndaada80@gmail.com",
-  userAvatar = "https://github.com/shadcn.png",
-  userName = "Lynda Ada",
+  userEmail = 'lyndaada80@gmail.com',
+  userAvatar = 'https://github.com/shadcn.png',
+  userName = 'Lynda Ada',
 }) => {
   const [showPreview, setShowPreview] = useState<boolean>(true);
-  const [emailContent, setEmailContent] = useState<string>("");
-  const [subject, setSubject] = useState<string>("Design Proposal");
+  const [emailContent, setEmailContent] = useState<string>('');
+  const [subject, setSubject] = useState<string>('Design Proposal');
   const [recipients, setRecipients] = useState<string[]>([]);
-  const [newRecipient, setNewRecipient] = useState<string>("");
+  const [newRecipient, setNewRecipient] = useState<string>('');
 
   const handleAddRecipient = () => {
     if (newRecipient && /\S+@\S+\.\S+/.test(newRecipient)) {
       setRecipients([...recipients, newRecipient]);
-      setNewRecipient("");
+      setNewRecipient('');
     }
   };
 
@@ -75,7 +75,9 @@ const EmailComposer: React.FC<EmailComposerProps> = ({
               <div className="space-y-4">
                 {/* From field */}
                 <div className="flex items-center gap-4 flex-wrap">
-                  <Label htmlFor="from" className="w-20">From:</Label>
+                  <Label htmlFor="from" className="w-20">
+                    From:
+                  </Label>
                   <Select defaultValue="default">
                     <SelectTrigger className="w-full sm:w-[300px]">
                       <SelectValue>
@@ -83,7 +85,10 @@ const EmailComposer: React.FC<EmailComposerProps> = ({
                           <Avatar className="h-6 w-6">
                             <AvatarImage src={userAvatar} alt={userName} />
                             <AvatarFallback>
-                              {userName.split(" ").map((n) => n[0]).join("")}
+                              {userName
+                                .split(' ')
+                                .map((n) => n[0])
+                                .join('')}
                             </AvatarFallback>
                           </Avatar>
                           {userEmail}
@@ -96,7 +101,10 @@ const EmailComposer: React.FC<EmailComposerProps> = ({
                           <Avatar className="h-6 w-6">
                             <AvatarImage src={userAvatar} alt={userName} />
                             <AvatarFallback>
-                              {userName.split(" ").map((n) => n[0]).join("")}
+                              {userName
+                                .split(' ')
+                                .map((n) => n[0])
+                                .join('')}
                             </AvatarFallback>
                           </Avatar>
                           {userEmail}
@@ -109,19 +117,21 @@ const EmailComposer: React.FC<EmailComposerProps> = ({
                 {/* To field */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-4 flex-wrap">
-                    <Label htmlFor="to" className="w-20">To:</Label>
+                    <Label htmlFor="to" className="w-20">
+                      To:
+                    </Label>
                     <div className="flex flex-1 items-center gap-2 flex-wrap">
                       <div className="flex-1">
                         <Input
                           id="to"
                           value={newRecipient}
-                          onChange={(e: ChangeEvent<HTMLInputElement>) => 
+                          onChange={(e: ChangeEvent<HTMLInputElement>) =>
                             setNewRecipient(e.target.value)
                           }
                           placeholder="Enter recipient email"
                           className="flex-1"
                           onKeyPress={(e: KeyboardEvent<HTMLInputElement>) => {
-                            if (e.key === "Enter") {
+                            if (e.key === 'Enter') {
                               e.preventDefault();
                               handleAddRecipient();
                             }
@@ -139,22 +149,19 @@ const EmailComposer: React.FC<EmailComposerProps> = ({
                     </div>
                   </div>
                   {recipients.length > 0 && (
-                    <RecipientList 
-                      recipients={recipients} 
-                      onRemove={removeRecipient} 
-                    />
+                    <RecipientList recipients={recipients} onRemove={removeRecipient} />
                   )}
                 </div>
 
                 {/* Subject field */}
                 <div className="flex items-center gap-4 flex-wrap">
-                  <Label htmlFor="subject" className="w-20">Subject:</Label>
+                  <Label htmlFor="subject" className="w-20">
+                    Subject:
+                  </Label>
                   <Input
                     id="subject"
                     value={subject}
-                    onChange={(e: ChangeEvent<HTMLInputElement>) => 
-                      setSubject(e.target.value)
-                    }
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => setSubject(e.target.value)}
                     className="flex-1"
                   />
                 </div>

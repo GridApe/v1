@@ -2,13 +2,18 @@ import apiService from '@/lib/api-service';
 import { UserTypes } from '@/types/interface';
 import { create } from 'zustand';
 
-
 interface AuthState {
   user: UserTypes | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  register: (email: string, password: string, password_confirmation: string, first_name: string, last_name: string) => Promise<void>;
+  register: (
+    email: string,
+    password: string,
+    password_confirmation: string,
+    first_name: string,
+    last_name: string
+  ) => Promise<void>;
   fetchCurrentUser: () => Promise<void>;
 }
 
@@ -18,7 +23,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   login: async (email: string, password: string) => {
     try {
       const response = await apiService.login({ email, password });
-      console.log({response})
+      console.log({ response });
       localStorage.setItem('token', response.data.access_token);
       // set({ user: response.username });
       await useAuthStore.getState().fetchCurrentUser();
@@ -37,9 +42,21 @@ export const useAuthStore = create<AuthState>((set) => ({
       throw error;
     }
   },
-  register: async (email: string, password: string, password_confirmation: string, first_name: string, last_name: string) => {
+  register: async (
+    email: string,
+    password: string,
+    password_confirmation: string,
+    first_name: string,
+    last_name: string
+  ) => {
     try {
-      const response = await apiService.register({ email, password, password_confirmation, first_name, last_name });
+      const response = await apiService.register({
+        email,
+        password,
+        password_confirmation,
+        first_name,
+        last_name,
+      });
       localStorage.setItem('token', response.token);
       set({ user: response.user });
     } catch (error) {

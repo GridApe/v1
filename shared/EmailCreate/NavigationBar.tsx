@@ -1,6 +1,6 @@
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Eye, EyeOff, Mail } from "lucide-react";
-import { motion } from "framer-motion";
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, Eye, EyeOff, Mail } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface NavigationBarProps {
   showPreview: boolean;
@@ -20,9 +20,7 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({ showPreview, setSh
             <Button variant="ghost" size="icon">
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <span className="text-lg font-semibold text-[#1E0E4E]">
-              Create email
-            </span>
+            <span className="text-lg font-semibold text-[#1E0E4E]">Create email</span>
           </motion.div>
           <div className="flex items-center gap-3">
             <Button

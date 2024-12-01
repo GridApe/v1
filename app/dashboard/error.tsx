@@ -1,10 +1,8 @@
-"use client"
-import React from 'react'
+'use client';
+import React from 'react';
 
 const error = () => {
-  return (
-    <div>error</div>
-  )
-}
+  return <div>error</div>;
+};
 
-export default error
+export default error;
