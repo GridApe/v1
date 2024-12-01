@@ -6,7 +6,7 @@ interface AuthCardProps {
   children: ReactNode;
 }
 
-export function AuthCard({ title, children }: AuthCardProps) {
+export function AuthCard({ title, children }: AuthCardProps): JSX.Element {
   return (
     <Card className="w-full">
       <CardHeader className="space-y-1 flex items-center">
