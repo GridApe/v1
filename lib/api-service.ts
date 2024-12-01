@@ -2,8 +2,8 @@ import { CampaignTypes, ContactTypes, TemplateTypes } from "@/types/interface";
 import axios, { AxiosError, AxiosInstance } from "axios";
 import Cookies from "js-cookie";
 
-const BASE_URL = "http://localhost:8000/api/v1";
-// const BASE_URL = "https:api.gridape.com/api/v1";
+// const BASE_URL = "http://localhost:8000/api/v1";
+const BASE_URL = "https:api.gridape.com/api/v1";
 
 class ApiService {
   private api: AxiosInstance;

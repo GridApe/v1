@@ -18,4 +18,5 @@ function DashboardLayout({
   );
 }
 
-export default withAuth(DashboardLayout);
+// export default withAuth(DashboardLayout);
+export default DashboardLayout;
