@@ -85,7 +85,7 @@ class ApiService {
         console.error("API Error Response:", axiosError.response.data);
         return new ApiError(
           axiosError.response.status,
-          axiosError.response.data?.message || "An error occurred",
+          axiosError.message || "An error occurred",
           axiosError.response.data
         );
       } else if (axiosError.request) {
