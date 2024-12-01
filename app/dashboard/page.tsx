@@ -92,17 +92,6 @@ const Dashboard = () => {
   const [data, setData] = useState<UserTypes | null>(null);
   const { user } = useAuthStore();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const currentUser = useAuthStore.getState().user;
-        setData(currentUser);
-      } catch (error) {
-        console.error('Error fet sching user data:', error);
-      }
-    };
-    fetchData();
-  }, []);
 
   const handleSearch = (query: string) => {
     console.log('Home component - Searching for:', query);
