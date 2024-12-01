@@ -13,7 +13,7 @@ const config = [
     plugins: {
       '@typescript-eslint': tsPlugin,
       '@next/next': nextPlugin,
-      'prettier': prettierPlugin,
+      prettier: prettierPlugin,
       'react-hooks': reactHooksPlugin,
     },
     languageOptions: {
@@ -49,4 +49,3 @@ const config = [
 ];
 
 export default config;
-
