@@ -14,11 +14,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { useAuthStore } from '@/store/authStore';
 import { useTemplateStore } from '@/store/templateStore';
 
 export default function TemplatesPage() {
-  const { user } = useAuthStore();
   const { templates, listAllTemplates, loading, error } = useTemplateStore();
 
   useEffect(() => {

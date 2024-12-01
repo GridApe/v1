@@ -8,33 +8,29 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { apiService } from '@/lib/api-service';
 import { useToast } from '@/hooks/use-toast';
 import { AuthCard } from '../auth-card';
 import { useAuth } from '@/hooks/useAuth';
+import { useAuthStore } from '@/store/authStore';
 
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
+
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     rememberMe: false,
   });
   const auth = useAuth();
+  const {user, loading} = useAuthStore()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    // setLoading(true);
 
     try {
-      const response = await auth.login(formData.email, formData.password);
-      toast({
-        title: 'Success',
-        description: 'Logged in successfully',
-      });
-      router.push('/dashboard');
+      await auth.login(formData.email, formData.password);
     } catch (error) {
       toast({
         variant: 'destructive',
@@ -42,7 +38,7 @@ export default function LoginPage() {
         description: error instanceof Error ? error.message : 'Failed to login',
       });
     } finally {
-      setLoading(false);
+      // setLoading(false);
     }
   };
 
@@ -55,6 +51,7 @@ export default function LoginPage() {
     >
       <AuthCard title="Login">
         <form onSubmit={handleSubmit} className="space-y-4">
+          {user?.email || 3}
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input

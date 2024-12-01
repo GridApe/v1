@@ -1,6 +1,9 @@
-import apiService from '@/lib/api-service';
-import { UserTypes } from '@/types/interface';
+'use client';
+
 import { create } from 'zustand';
+import Cookies from 'js-cookie';
+import { UserTypes } from '@/types/interface';
+
 
 interface AuthState {
   user: UserTypes | null;
@@ -19,29 +22,48 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
-  loading: true,
+  loading: false,
+
   login: async (email: string, password: string) => {
     try {
-      const response = await apiService.login({ email, password });
-      console.log({ response });
-      localStorage.setItem('token', response.data.access_token);
-      // set({ user: response.username });
-      await useAuthStore.getState().fetchCurrentUser();
+      set({ loading: true });
+      
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (response.ok) {
+        const responseData = await response.json();
+        Cookies.set('token', responseData.data.access_token)
+        await useAuthStore.getState().fetchCurrentUser();
+        set({ loading: false });
+      } else {
+        throw new Error('Login failed');
+      }
     } catch (error) {
-      console.error('Login failed:', error);
+      console.error('Login error:', error);
+      set({ loading: false });
       throw error;
     }
   },
+
   logout: async () => {
     try {
-      await apiService.logout();
-      localStorage.removeItem('token');
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+      });
+
+      if (!response.ok) throw new Error('Logout failed');
+
       set({ user: null });
     } catch (error) {
-      console.error('Logout failed:', error);
+      console.error('Logout error:', error);
       throw error;
     }
   },
+
   register: async (
     email: string,
     password: string,
@@ -50,27 +72,45 @@ export const useAuthStore = create<AuthState>((set) => ({
     last_name: string
   ) => {
     try {
-      const response = await apiService.register({
-        email,
-        password,
-        password_confirmation,
-        first_name,
-        last_name,
+      set({ loading: true });
+
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          password,
+          password_confirmation,
+          first_name,
+          last_name,
+        }),
       });
-      localStorage.setItem('token', response.token);
-      set({ user: response.user });
+
+      if (!response.ok) throw new Error('Registration failed');
+
+      await useAuthStore.getState().fetchCurrentUser();
+      set({ loading: false });
     } catch (error) {
-      console.error('Registration failed:', error);
+      console.error('Registration error:', error);
+      set({ loading: false });
       throw error;
     }
   },
+
   fetchCurrentUser: async () => {
     try {
       set({ loading: true });
-      const response = await apiService.getCurrentUser();
-      set({ user: response.data.user, loading: false });
+
+      const response = await fetch('/api/user/profile', {
+        credentials: 'include',
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch user');
+
+      const responseData = await response.json();
+      set({ user: responseData.data.user, loading: false });
     } catch (error) {
-      console.error('Failed to load user:', error);
+      console.error('Fetch user error:', error);
       set({ loading: false });
     }
   },

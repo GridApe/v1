@@ -1,38 +1,99 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/useAuth';
-import { LoaderCircleIcon } from 'lucide-react';
+import { useAuthStore } from '@/store/authStore';
+import { LoaderCircle } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export function withAuth<P extends object>(WrappedComponent: React.ComponentType<P>) {
   return function AuthComponent(props: P) {
-    const { user, loading } = useAuth();
+    const { user, loading, fetchCurrentUser } = useAuthStore();
     const router = useRouter();
+    const [isInitialized, setIsInitialized] = useState(false);
 
-    // If you decide to re-enable redirection, uncomment the following code:
     useEffect(() => {
-      if (!loading && !user) {
+      const initializeAuth = async () => {
+        if (!user && !loading) {
+          try {
+            await fetchCurrentUser();
+          } catch (error) {
+            console.error('Error fetching current user:', error);
+          }
+        }
+        setIsInitialized(true);
+      };
+
+      initializeAuth();
+    }, [user, loading, fetchCurrentUser]);
+
+    useEffect(() => {
+      if (isInitialized && !loading && !user) {
         router.push('/auth/login');
       }
-    }, [user, loading]);
+    }, [isInitialized, loading, user, router]);
 
-    // Improved Loading State
-    if (loading) {
-      return (
-        <div className="flex justify-center items-center h-screen">
-          <div className="text-center">
-            <LoaderCircleIcon className="mb-4 animate-spin" size={40} />
-            <p className="text-gray-600">Authenticating, please wait...</p>
-          </div>
-        </div>
-      );
+    if (!isInitialized || loading) {
+      return <LoadingScreen />;
     }
 
     if (!user) {
-      return null; // You can handle this with a redirection to login or an error page if needed
+      return <UnauthorizedScreen />;
     }
 
     return <WrappedComponent {...props} />;
   };
 }
+
+
+
+const LoadingScreen = ({ 
+  loadingText = "Loading...", 
+  logoSrc = "/logo.svg" 
+}) => {
+  return (
+    <div className="flex flex-col justify-center items-center h-screen bg-primary">
+      <motion.img 
+        src={logoSrc}
+        alt="Loading Logo"
+        className="w-24 h-24 mb-6"
+        animate={{
+          y: [0, -20, 0],
+          scale: [1, 1.1, 1],
+        }}
+        transition={{
+          duration: 0.8,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
+      />
+      <div className="flex items-center">
+        <motion.div
+          animate={{
+            rotate: 360,
+          }}
+          transition={{
+            duration: 1,
+            repeat: Infinity,
+            ease: "linear"
+          }}
+          className="mr-4"
+        >
+          <LoaderCircle size={40} className="text-white" />
+        </motion.div>
+        <p className="text-white text-lg font-black">{loadingText}</p>
+      </div>
+    </div>
+  );
+}
+
+export default LoadingScreen;
+
+function UnauthorizedScreen() {
+  return (
+    <div className="flex justify-center items-center h-screen text-center">
+      <p className="text-gray-600">You need to log in to access this page.</p>
+    </div>
+  );
+}
+

@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-export default function BasicInfoPage() {
+export default function BasicInfoPage(): JSX.Element {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -25,7 +25,8 @@ export default function BasicInfoPage() {
     state: '',
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Explicitly define return type as Promise<void>
+  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     setLoading(true);
 
@@ -48,7 +49,7 @@ export default function BasicInfoPage() {
       transition={{ duration: 0.3 }}
     >
       <AuthCard title="Basic Information">
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={(e) => handleSubmit(e)} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="fullName">Full name</Label>
             <Input

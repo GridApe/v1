@@ -7,17 +7,27 @@ export function useAuth() {
   const router = useRouter();
 
   useEffect(() => {
-    fetchCurrentUser();
+    // Create an async function inside the useEffect to handle the async operation
+    const fetchUserData = async () => {
+      try {
+        await fetchCurrentUser();
+      } catch (error) {
+        console.error('Error fetching current user:', error);
+      }
+    };
+
+    // Call the async function
+    fetchUserData();
   }, [fetchCurrentUser]);
 
   const handleLogin = async (email: string, password: string) => {
     await login(email, password);
-    router.push('/dashboard');
+    router.push('/dashboard'); // Redirect to the dashboard after login
   };
 
   const handleLogout = async () => {
     await logout();
-    router.push('/auth/login');
+    router.push('/auth/login'); // Redirect to login page after logout
   };
 
   const handleRegister = async (
@@ -26,10 +36,10 @@ export function useAuth() {
     password_confirmation: string,
     first_name: string,
     last_name: string
-  ) => {
+  ) => {  
     await register(email, password, password_confirmation, first_name, last_name);
-    router.push('/dashboard');
+    router.push('/dashboard'); // Redirect to the dashboard after registration
   };
-  1;
+
   return { user, loading, login: handleLogin, logout: handleLogout, register: handleRegister };
 }
