@@ -36,12 +36,13 @@ import {
   ResponsiveContainer,
   Legend,
   Tooltip,
-} from 'recharts';
-import { withAuth } from '@/shared/withAuth';
-import SearchBar from '@/shared/SearchBar';
-import { useAuthStore } from '@/store/authStore';
-import { useEffect, useState } from 'react';
-import { UserTypes } from '@/types/interface';
+} from "recharts";
+import { withAuth } from "@/shared/withAuth";
+import SearchBar from "@/shared/SearchBar";
+import { useAuthStore } from "@/store/authStore";
+import { useEffect, useState } from "react";
+import { UserTypes } from "@/types/interface";
+import { mockSearchFunction } from "@/lib/mockData";
 
 const chartData = [
   { month: 'Jan', openRate: 700, ctr: 400, bounceRate: 200 },
@@ -99,14 +100,14 @@ const Dashboard = () => {
   };
   return (
     <div className="p-4 md:p-6 lg:p-8 min-h-screen rounded-lg">
-      <div className="mb-5">
-        <SearchBar
-          onSearch={handleSearch}
-          avatarSrc="assets/logo.svg"
-          avatarFallback={user?.first_name}
-          notificationCount={12}
-        />
-      </div>
+      <div className='mb-5'>
+         <SearchBar
+          searchFunction={mockSearchFunction}
+           avatarSrc="assets/logo.svg"
+           avatarFallback={user?.first_name}
+           notificationCount={12}
+         />
+       </div>
       <Banner name={user?.first_name} />
 
       <div className="mb-12 grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6 max-w-[800px] mt-12">
