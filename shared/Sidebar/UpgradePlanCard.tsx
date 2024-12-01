@@ -1,14 +1,18 @@
-import { Progress } from '@/components/ui/progress'
-import React from 'react'
-import { motion } from 'framer-motion'
+import { Progress } from '@/components/ui/progress';
+import React from 'react';
+import { motion } from 'framer-motion';
 
 interface UpgradePlanCardProps {
-  emailSent: number
-  contactLimit: number
-  campaignLimit: number
+  emailSent: number;
+  contactLimit: number;
+  campaignLimit: number;
 }
 
-export const UpgradePlanCard: React.FC<UpgradePlanCardProps> = ({ emailSent, contactLimit, campaignLimit }) => (
+export const UpgradePlanCard: React.FC<UpgradePlanCardProps> = ({
+  emailSent,
+  contactLimit,
+  campaignLimit,
+}) => (
   <motion.div
     className=" border-[0.5px] border-[#dddddd] text-white p-4 rounded-lg mb-4"
     initial={{ opacity: 0, y: 20 }}
@@ -40,4 +44,4 @@ export const UpgradePlanCard: React.FC<UpgradePlanCardProps> = ({ emailSent, con
       </div>
     </div>
   </motion.div>
-)
+);

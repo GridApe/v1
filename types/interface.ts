@@ -13,6 +13,7 @@ export interface UserTypes {
   email: string;
   phone_number: string;
   address: string;
+  avatar: string;
 }
 
 export interface CampaignTypes {
@@ -38,4 +39,41 @@ export interface TemplateTypes {
   id?: any;
   name: string;
   content: string;
+}
+export interface RateInfo {
+  value: number;
+  change: string;
+}
+
+export interface EmailPerformance {
+  emailsSent: number;
+  openRate: RateInfo;
+  clickRate: RateInfo;
+}
+
+export interface AudiencePerformance {
+  name: string;
+  emailsSent: number;
+  openRate: string;
+  clickRate: string;
+}
+
+export interface CampaignStatData {
+  label: any;
+  value: any;
+  month: string;
+  openRate: number;
+  ctr: number;
+  bounceRate: number;
+}
+
+export interface CampaignStats {
+  timeFrame: string;
+  data: CampaignStatData[];
+}
+
+export interface DashboardTypes {
+  emailPerformance: EmailPerformance;
+  audiencePerformance: AudiencePerformance[];
+  campaignStats: CampaignStats;
 }

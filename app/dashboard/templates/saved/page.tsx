@@ -1,41 +1,35 @@
-"use client";
+'use client';
 
-import { useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
-import { Plus, Search, Bell } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import DOMPurify from "dompurify";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from "@/components/ui/card";
+import { useEffect, useRef, useState } from 'react';
+import { motion } from 'framer-motion';
+import { Plus, Search, Bell } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import DOMPurify from 'dompurify';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { useAuthStore } from "@/store/authStore";
-import { useTemplateStore } from "@/store/templateStore";
-import { TemplateTypes } from "@/types/interface";
-import EmailEditor, { EditorRef } from "react-email-editor";
+} from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { useAuthStore } from '@/store/authStore';
+import { useTemplateStore } from '@/store/templateStore';
+import { TemplateTypes } from '@/types/interface';
+import EmailEditor, { EditorRef } from 'react-email-editor';
 
 export default function TemplatesPage() {
   const { user } = useAuthStore();
   const { templates, savedTemplates, loading, error } = useTemplateStore();
-  
 
   useEffect(() => {
     async function fetchTemplates() {
       try {
         await savedTemplates();
       } catch (err) {
-        console.error("Error fetching templates:", err);
+        console.error('Error fetching templates:', err);
       }
     }
     fetchTemplates();
@@ -154,7 +148,6 @@ interface EmailTemplatePreviewProps {
   content: string; // JSON string for the email template
 }
 
-
 function EmailTemplatePreview({ content }: EmailTemplatePreviewProps): JSX.Element {
   const emailEditorRef = useRef<EditorRef | null>(null);
 
@@ -166,7 +159,7 @@ function EmailTemplatePreview({ content }: EmailTemplatePreviewProps): JSX.Eleme
 
   return (
     <div className="h-[300px] overflow-hidden">
-      <EmailEditor ref={emailEditorRef} options={{ displayMode: "email" }} />
+      <EmailEditor ref={emailEditorRef} options={{ displayMode: 'email' }} />
     </div>
   );
 }

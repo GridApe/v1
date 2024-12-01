@@ -1,10 +1,8 @@
-import EmailComposer from '@/shared/EmailCreate/EmailComposer'
-import React from 'react'
+import EmailComposer from '@/shared/EmailCreate/EmailComposer';
+import React from 'react';
 
 const page = () => {
-  return (
-    <EmailComposer />
-  )
-}
+  return <EmailComposer />;
+};
 
-export default page
+export default page;

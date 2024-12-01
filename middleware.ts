@@ -2,20 +2,42 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
-  const token = request.cookies.get('auth_token')?.value
-  const isAuthPage = request.nextUrl.pathname.startsWith('/auth')
+  // Protected routes that require authentication
+  const protectedPaths = ['/api/user', '/api/contacts']
 
-//   if (!token && !isAuthPage) {
-//     return NextResponse.redirect(new URL('/auth/login', request.url))
-//   }
+  // Check if the current path is protected
+  const isProtectedPath = protectedPaths.some(path =>
+    request.nextUrl.pathname.startsWith(path)
+  )
 
-//   if (token && isAuthPage) {
-//     return NextResponse.redirect(new URL('/dashboard', request.url))
-//   }
+  // Access token from cookies directly (server-side)
+  const token = request.cookies.get('token')?.value; // Server-side cookie access
+
+  // Log the token (useful for debugging)
+  console.log('Token from cookies:', token);
+
+  // If it's a protected path and there's no token, return 401
+  if (isProtectedPath && !token) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Unauthorized',
+        message: 'No token provided, please login first.',
+      },
+      { status: 401 }
+    )
+  }
+
+  // If token exists for protected path, add it to the request headers
+  if (isProtectedPath && token) {
+    const response = NextResponse.next()
+    response.headers.set('Authorization', `Bearer ${token}`)
+    return response
+  }
 
   return NextResponse.next()
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+  matcher: '/api/:path*', // Apply middleware only for paths that match the protected routes
 }

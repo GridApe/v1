@@ -1,18 +1,26 @@
-import { Button } from '@/components/ui/button'
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import { ChevronDownIcon, LockClosedIcon } from '@radix-ui/react-icons'
-import { BarChartIcon, CogIcon, FileTextIcon, LayoutTemplateIcon, PuzzleIcon, SendIcon, UsersIcon } from 'lucide-react'
-import React from 'react'
-import { motion } from 'framer-motion'
-import Link from 'next/link'
+import { Button } from '@/components/ui/button';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ChevronDownIcon, LockClosedIcon } from '@radix-ui/react-icons';
+import {
+  BarChartIcon,
+  CogIcon,
+  FileTextIcon,
+  LayoutTemplateIcon,
+  PuzzleIcon,
+  SendIcon,
+  UsersIcon,
+} from 'lucide-react';
+import React from 'react';
+import { motion } from 'framer-motion';
+import Link from 'next/link';
 
 interface SidebarItem {
-  name: string
-  icon: React.ElementType
-  path?: string 
-  locked?: boolean
-  subitems?: { name: string; path: string }[]
-  expandable?: boolean
+  name: string;
+  icon: React.ElementType;
+  path?: string;
+  locked?: boolean;
+  subitems?: { name: string; path: string }[];
+  expandable?: boolean;
 }
 
 export const SidebarItems: React.FC = () => {
@@ -33,7 +41,10 @@ export const SidebarItems: React.FC = () => {
     {
       name: 'Campaigns',
       icon: SendIcon,
-      subitems: [{ name: 'All campaigns', path: '/dashboard/campaigns/all' }, { name: 'Create campaign', path: '/dashboard/campaign/create' }],
+      subitems: [
+        { name: 'All campaigns', path: '/dashboard/campaigns/all' },
+        { name: 'Create campaign', path: '/dashboard/campaign/create' },
+      ],
       expandable: true,
     },
     { name: 'Integration', icon: PuzzleIcon, locked: true, path: '/dashboard/integration' },
@@ -44,9 +55,7 @@ export const SidebarItems: React.FC = () => {
       expandable: true,
     },
     { name: 'Settings', icon: CogIcon, path: '/dashboard/settings' },
-
-    
-  ]
+  ];
 
   return (
     <nav className="space-y-1">
@@ -59,24 +68,35 @@ export const SidebarItems: React.FC = () => {
         >
           <Collapsible>
             <CollapsibleTrigger className="w-full">
-              <Button variant="ghost" className="w-full justify-between text-white hover:bg-indigo-700 hover:text-white">
+              <Button
+                variant="ghost"
+                className="w-full justify-between text-white hover:bg-indigo-700 hover:text-white"
+              >
                 <div className="flex items-center">
                   <item.icon className="w-5 h-5 mr-3" />
-                  
-                {item.locked ? <Button variant="ghost" className="w-full justify-between text-white hover:bg-indigo-700 hover:text-white" disabled>
-                  <div className="flex items-center">
-                    <span>{item.name}</span>
-                  </div>
-                </Button>
-                : (
-                  <Link href={item.path || '#'} passHref>
-                  <Button variant="ghost" className="w-full justify-between text-white hover:bg-indigo-700 hover:text-white">
-                    <div className="flex items-center">
-                      <span>{item.name}</span>
-                    </div>
-                  </Button>
-                </Link>
-                )}
+
+                  {item.locked ? (
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-between text-white hover:bg-indigo-700 hover:text-white"
+                      disabled
+                    >
+                      <div className="flex items-center">
+                        <span>{item.name}</span>
+                      </div>
+                    </Button>
+                  ) : (
+                    <Link href={item.path || '#'} passHref>
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-between text-white hover:bg-indigo-700 hover:text-white"
+                      >
+                        <div className="flex items-center">
+                          <span>{item.name}</span>
+                        </div>
+                      </Button>
+                    </Link>
+                  )}
                 </div>
                 {item.locked && <LockClosedIcon className="w-4 h-4" />}
                 {item.expandable && <ChevronDownIcon className="w-4 h-4" />}
@@ -87,7 +107,10 @@ export const SidebarItems: React.FC = () => {
                 <div className="ml-8 mt-2 space-y-1">
                   {item.subitems?.map((subitem) => (
                     <Link key={subitem.name} href={subitem.path} passHref>
-                      <Button variant="ghost" className="w-full justify-start text-white hover:bg-indigo-700 hover:text-white">
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start text-white hover:bg-indigo-700 hover:text-white"
+                      >
                         {subitem.name}
                       </Button>
                     </Link>
@@ -99,5 +122,5 @@ export const SidebarItems: React.FC = () => {
         </motion.div>
       ))}
     </nav>
-  )
-}
+  );
+};

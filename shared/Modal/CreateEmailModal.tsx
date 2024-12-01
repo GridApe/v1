@@ -1,8 +1,14 @@
-import React from "react"
-import { HelpingHand, BrainIcon, ArrowRight } from "lucide-react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { CreateButton } from "../buttons/CreateButton"
+import React from 'react';
+import { HelpingHand, BrainIcon, ArrowRight } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { CreateButton } from '../buttons/CreateButton';
 
 export function CreateEmailModal() {
   return (
@@ -28,16 +34,16 @@ export function CreateEmailModal() {
             actionText="Use AI"
           />
         </div>
-      </DialogContent> 
+      </DialogContent>
     </Dialog>
-  )
+  );
 }
 
 interface EmailOptionProps {
-  icon: React.ElementType
-  title: string
-  description: string
-  actionText: string
+  icon: React.ElementType;
+  title: string;
+  description: string;
+  actionText: string;
 }
 
 function EmailOption({ icon: Icon, title, description, actionText }: EmailOptionProps) {
@@ -51,5 +57,5 @@ function EmailOption({ icon: Icon, title, description, actionText }: EmailOption
         <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
       </Button>
     </div>
-  )
+  );
 }

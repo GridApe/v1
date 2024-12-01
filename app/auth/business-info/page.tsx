@@ -1,41 +1,40 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { AuthCard } from '../auth-card'
-import Head from 'next/head'
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { AuthCard } from '../auth-card';
+import Head from 'next/head';
 
 export default function BusinessInfoPage() {
-  const router = useRouter()
-  const [loading, setLoading] = useState(false)
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     businessName: '',
     businessEmail: '',
     businessPhone: '',
     businessAddress: '',
-  })
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
+    e.preventDefault();
+    setLoading(true);
 
     try {
       // Simulated API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      router.push('/dashboard')
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      router.push('/dashboard');
     } catch (error) {
-      console.error(error)
+      console.error(error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
-
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -50,7 +49,7 @@ export default function BusinessInfoPage() {
               id="businessName"
               placeholder="Enter business name"
               value={formData.businessName}
-              onChange={e => setFormData({...formData, businessName: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, businessName: e.target.value })}
               required
             />
           </div>
@@ -61,7 +60,7 @@ export default function BusinessInfoPage() {
               type="email"
               placeholder="Enter business email"
               value={formData.businessEmail}
-              onChange={e => setFormData({...formData, businessEmail: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, businessEmail: e.target.value })}
               required
             />
           </div>
@@ -71,7 +70,7 @@ export default function BusinessInfoPage() {
               id="businessPhone"
               placeholder="Enter business number"
               value={formData.businessPhone}
-              onChange={e => setFormData({...formData, businessPhone: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, businessPhone: e.target.value })}
               required
             />
           </div>
@@ -81,12 +80,12 @@ export default function BusinessInfoPage() {
               id="businessAddress"
               placeholder="Enter business address"
               value={formData.businessAddress}
-              onChange={e => setFormData({...formData, businessAddress: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, businessAddress: e.target.value })}
               required
             />
           </div>
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             className="w-full bg-[#4338ca] hover:bg-[#3730a3]"
             disabled={loading}
           >
@@ -95,5 +94,5 @@ export default function BusinessInfoPage() {
         </form>
       </AuthCard>
     </motion.div>
-  )
+  );
 }

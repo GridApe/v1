@@ -1,36 +1,34 @@
-"use client"
+'use client';
 
-import { useEffect, useState } from "react"
-import { motion } from "framer-motion"
-import { Plus, Search, Bell } from "lucide-react"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
+import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
+import { Plus, Search, Bell } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Input } from "@/components/ui/input"
-import { useAuthStore } from "@/store/authStore"
-import { useTemplateStore } from "@/store/templateStore"
+} from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { useTemplateStore } from '@/store/templateStore';
 
 export default function TemplatesPage() {
-  const { user } = useAuthStore();
-  const { templates, listAllTemplates, loading, error } = useTemplateStore()
+  const { templates, listAllTemplates, loading, error } = useTemplateStore();
 
   useEffect(() => {
     async function fetchTemplates() {
       try {
         await listAllTemplates();
       } catch (error) {
-        console.error("Error fetching templates:", error);
+        console.error('Error fetching templates:', error);
       }
     }
     fetchTemplates();
-  }, [])
+  }, []);
 
   return (
     <div className="p-6">
@@ -82,7 +80,6 @@ export default function TemplatesPage() {
       )}
     </div>
   );
-
 
   // return (
   //   <div className="min-h-screen bg-gray-50">
