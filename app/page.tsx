@@ -38,6 +38,7 @@ import {
   Tooltip,
 } from "recharts";
 import SearchBar from "@/shared/SearchBar";
+import { mockSearchFunction } from "@/lib/mockData";
 
 const chartData = [
   { month: "Jan", openRate: 700, ctr: 400, bounceRate: 200 },
@@ -92,7 +93,7 @@ export default function Dashboard() {
     <div className="p-4 md:p-6 lg:p-8 min-h-screen rounded-lg">
        <div className='mb-5'>
          <SearchBar
-           onSearch={handleSearch}
+          searchFunction={mockSearchFunction}
            avatarSrc="assets/logo.svg"
            avatarFallback="JD"
            notificationCount={12}
