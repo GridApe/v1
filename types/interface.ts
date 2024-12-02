@@ -14,6 +14,7 @@ export interface UserTypes {
   phone_number: string;
   address: string;
   avatar: string;
+  language: string;
 }
 
 export interface CampaignTypes {
@@ -36,9 +37,11 @@ export interface ContactTypes {
 }
 
 export interface TemplateTypes {
-  id?: any;
+  id?: string;
   name: string;
   content: string;
+  html: string;
+  category?: string;
 }
 export interface RateInfo {
   value: number;
