@@ -1,10 +1,10 @@
-import * as React from 'react';
-import { Search } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { useSearch } from '@/hooks/useSearch';
-import { NotificationList } from './NotificationList'; 
-import { UserNav } from './UserNav';
-
+import React, { useEffect } from "react";
+import { Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { useSearch } from "@/hooks/useSearch";
+import { NotificationList } from "./NotificationList";
+import { UserNav } from "./UserNav";
+import { useNotificationStore } from "@/store/notificationStore";
 
 interface SearchBarProps {
   searchFunction: (query: string) => Promise<any[]>;
@@ -12,28 +12,25 @@ interface SearchBarProps {
   avatarSrc?: string;
   avatarFallback?: string;
   className?: string;
-  notificationCount?: number;
 }
 
 export default function SearchBar({
   searchFunction,
-  placeholder = 'Search anything....',
+  placeholder = "Search anything....",
   avatarSrc,
-  avatarFallback = 'U',
-  className = '',
-  notificationCount = 0,
+  avatarFallback = "U",
+  className = "",
 }: SearchBarProps) {
   const { query, isSearching, handleSearch } = useSearch({ searchFunction });
+  const {
+    notifications,
+    fetchNotifications,
+    markAllAsRead,
+  } = useNotificationStore();
 
-  const [currentNotificationCount, setNotificationCount] = React.useState(notificationCount);
-
-  const handleMarkAsRead = () => {
-    setNotificationCount(0);
-  };
-
-  const handleLogout = () => {
-    console.log('User logged out');
-  };
+  useEffect(() => {
+    fetchNotifications();
+  }, [fetchNotifications]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,13 +59,13 @@ export default function SearchBar({
       </div>
       <div className="hidden items-center gap-4 md:flex">
         <NotificationList
-          notificationCount={currentNotificationCount}
-          onMarkAsRead={handleMarkAsRead}
+          notifications={notifications}
+          onMarkAsRead={markAllAsRead}
         />
         <UserNav
           avatarSrc={avatarSrc}
           avatarFallback={avatarFallback}
-          onLogout={handleLogout}
+          onLogout={() => console.log("User logged out")}
         />
       </div>
     </form>

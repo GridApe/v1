@@ -39,3 +39,11 @@ export interface TemplateTypes {
   name: string;
   content: string;
 }
+
+export interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  timestamp: Date;
+  isRead: boolean;
+}

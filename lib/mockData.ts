@@ -15,3 +15,27 @@ export const mockSearchFunction = async (query: string): Promise<any[]> => {
       item.content.toLowerCase().includes(query.toLowerCase())
     )
   }
+
+  export const initialNotifications = [
+    {
+      id: '1',
+      title: 'New message',
+      message: 'You have a new message from John Doe',
+      timestamp: new Date(Date.now() - 5 * 60 * 1000), 
+      isRead: false,
+    },
+    {
+        id: '2',
+        title: 'Meeting reminder',
+        message: 'Your team meeting starts in 15 minutes',
+        timestamp: new Date(Date.now() - 15 * 60 * 1000), 
+        isRead: false,
+    },
+    {
+        id: '3',
+        title: 'Task completed',
+        message: 'Great job! You\'ve completed all your tasks for today',
+        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
+        isRead: false,
+    },
+  ]

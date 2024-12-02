@@ -115,12 +115,12 @@ class ApiService {
         method === "get"
           ? await this.api.get(endpoint)
           : method === "post"
-          ? await this.api.post(endpoint, data)
-          : method === "put"
-          ? await this.api.put(endpoint, data)
-          : method === "delete"
-          ? await this.api.delete(endpoint, { data })
-          : null;
+            ? await this.api.post(endpoint, data)
+            : method === "put"
+              ? await this.api.put(endpoint, data)
+              : method === "delete"
+                ? await this.api.delete(endpoint, { data })
+                : null;
 
       if (response) {
         return response.data;
@@ -201,6 +201,26 @@ class ApiService {
   }
   async saveEmailTemplate(data: TemplateTypes) {
     return this.executeApiCall<any>("post", "/user/email-templates", data);
+  }
+
+  // Notifications
+  async listNotifications() {
+    return this.executeApiCall<any>("get", "/user/notifications/");
+  }
+  async markNotificationAsRead(notificationId: string) {
+    return this.executeApiCall<any>(
+      "post",
+      `/user/notifications/${notificationId}/read`
+    );
+  }
+  async markAllNotificationsAsRead() {
+    return this.executeApiCall<any>("post", "/user/notifications/mark-all-read");
+  }
+  async deleteNotification(notificationId: string) {
+    return this.executeApiCall<any>(
+      "delete",
+      `/user/notifications/${notificationId}`
+    );
   }
 }
 
