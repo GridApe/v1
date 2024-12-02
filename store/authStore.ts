@@ -18,6 +18,8 @@ interface AuthState {
     last_name: string
   ) => Promise<void>;
   fetchCurrentUser: () => Promise<void>;
+  updateUser: (user: UserTypes) => void;
+  updatePassword: (currentPassword: string, newPassword: string) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -114,4 +116,46 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({ loading: false });
     }
   },
+   updateUser: async (userData: Partial<UserTypes>) => {
+    try {
+      set({ loading: true });
+
+      const response = await fetch('/api/user/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(userData),
+      });
+
+      if (!response.ok) throw new Error('Failed to update user');
+
+      const responseData = await response.json();
+      set({ user: { ...useAuthStore.getState().user, ...responseData.data.user }, loading: false });
+    } catch (error) {
+      console.error('Update user error:', error);
+      set({ loading: false });
+      throw error;
+    }
+  },
+  updatePassword: async (currentPassword: string, newPassword: string) => {
+    try {
+      set({ loading: true });
+
+      const response = await fetch('/api/user/password', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
+      });
+
+      if (!response.ok) throw new Error('Failed to update password');
+
+      set({ loading: false });
+    } catch (error) {
+      console.error('Update password error:', error);
+      set({ loading: false });
+      throw error;
+    }
+  },
+
 }));
