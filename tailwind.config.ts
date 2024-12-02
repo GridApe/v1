@@ -60,6 +60,15 @@ const config: Config = {
       fontFamily: {
         sans: ['Arial', 'Helvetica', 'sans-serif'],
       },
+      animation: {
+        'auto-scroll': 'auto-scroll 10s linear infinite',
+      },
+      keyframes: {
+        'auto-scroll': {
+          '0%': { transform: 'translateY(0)' },
+          '100%': { transform: 'translateY(-100%)' },
+        },
+      }
     },
   },
   plugins: [require('tailwindcss-animate')],
