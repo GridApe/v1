@@ -1,30 +1,38 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import {
-  Mail,
-  MousePointerClick,
-  MailOpenIcon,
-} from 'lucide-react';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  CartesianGrid,
-} from 'recharts';
+import { Mail, MousePointerClick, MailOpenIcon, MailCheck } from 'lucide-react';
+import { BarChart, Bar, XAxis, CartesianGrid } from 'recharts';
 import { useAuthStore } from '@/store/authStore';
 import { useEffect, useState } from 'react';
 import { DashboardTypes } from '@/types/interface';
 import SearchBar from '@/shared/SearchBar';
 import { mockSearchFunction } from '@/lib/mockData';
 import PerformanceCard from '@/shared/PerformanceCard';
-import { ChartConfig, ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  ChartConfig,
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent,
+} from '@/components/ui/chart';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { useRouter } from 'next/navigation';
 
 const Dashboard = () => {
   const { user } = useAuthStore();
   const [data, setData] = useState<DashboardTypes | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter()
 
   useEffect(() => {
     const fetchData = async () => {
@@ -61,7 +69,16 @@ const Dashboard = () => {
       </div>
 
       <div className="mb-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {[
+        <Button onClick={() => router.push('/')}  className=" justify-start rounded-xl bg-white p-4 md:py-10  hover:shadow-sm hover:scale-105 transition-shadow transition-transform cursor-pointer text-left">
+          <MailCheck className=" text-blue-600" size={40} />
+          <span className="text-lg font-semibold text-[#1E0E4E]">Create Email</span>
+        </Button>
+        <Button onClick={() => router.push('/dashboard/campaign/create')}  className=" justify-start rounded-xl bg-white p-4 md:py-10  hover:shadow-sm hover:scale-105 transition-shadow transition-transform cursor-pointer text-left">
+          <MailCheck className=" text-purple-600" size={40} />
+          <span className="text-lg font-semibold text-[#1E0E4E]">Create Campaigns</span>
+        </Button>
+        
+        {/* {[
           { icon: Mail, label: 'Create Email', color: 'text-blue-600' },
           { icon: MousePointerClick, label: 'Create Campaigns', color: 'text-purple-600' },
         ].map((action) => (
@@ -75,7 +92,7 @@ const Dashboard = () => {
               <span className="text-lg font-semibold text-[#1E0E4E]">{action.label}</span>
             </div>
           </motion.div>
-        ))}
+        ))} */}
       </div>
 
       <div className="mb-12">
@@ -136,24 +153,25 @@ const Dashboard = () => {
         </div>
 
         <div className="mb-12">
-        <h2 className="mb-6 text-xl font-semibold text-[#1E0E4E]">Campaign Performance</h2>
-        {data?.campaignStats && (
-        <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
-          <BarChart accessibilityLayer data={data?.campaignStats.data}>
-            <CartesianGrid vertical={false} />
-            <XAxis
-              dataKey="month"
-              tickLine={false}
-              tickMargin={10}
-              axisLine={false}
-              tickFormatter={(value) => value.slice(0, 3)}
-            />
-            <ChartTooltip content={<ChartTooltipContent />} />
-            <ChartLegend content={<ChartLegendContent />} />
-            <Bar dataKey="value" fill="var(--color-value)" radius={4} />
-          </BarChart>
-        </ChartContainer>)}
-      </div>
+          <h2 className="mb-6 text-xl font-semibold text-[#1E0E4E]">Campaign Performance</h2>
+          {data?.campaignStats && (
+            <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
+              <BarChart accessibilityLayer data={data?.campaignStats.data}>
+                <CartesianGrid vertical={false} />
+                <XAxis
+                  dataKey="month"
+                  tickLine={false}
+                  tickMargin={10}
+                  axisLine={false}
+                  tickFormatter={(value) => value.slice(0, 3)}
+                />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <ChartLegend content={<ChartLegendContent />} />
+                <Bar dataKey="value" fill="var(--color-value)" radius={4} />
+              </BarChart>
+            </ChartContainer>
+          )}
+        </div>
       </div>
     </div>
   );
