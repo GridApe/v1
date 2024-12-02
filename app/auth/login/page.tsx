@@ -1,50 +1,46 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { motion } from 'framer-motion'
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
-import { apiService } from '@/lib/api-service'
-import { useToast } from '@/hooks/use-toast'
-import { AuthCard } from '../auth-card'
-import { useAuth } from '@/hooks/useAuth'
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import { useToast } from '@/hooks/use-toast';
+import { AuthCard } from '../auth-card';
+import { useAuth } from '@/hooks/useAuth';
+import { useAuthStore } from '@/store/authStore';
 
 export default function LoginPage() {
-  const router = useRouter()
-  const { toast } = useToast()
-  const [loading, setLoading] = useState(false)
+  const router = useRouter();
+  const { toast } = useToast();
+
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     rememberMe: false,
-  })
-  const auth = useAuth()
+  });
+  const auth = useAuth();
+  const {user, loading} = useAuthStore()
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
+    e.preventDefault();
+    // setLoading(true);
 
     try {
-      const response = await auth.login(formData.email, formData.password)
-      toast({
-        title: "Success",
-        description: "Logged in successfully",
-      })
-      router.push('/dashboard')
+      await auth.login(formData.email, formData.password);
     } catch (error) {
       toast({
-        variant: "destructive",
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to login",
-      })
+        variant: 'destructive',
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to login',
+      });
     } finally {
-      setLoading(false)
+      // setLoading(false);
     }
-  }
+  };
 
   return (
     <motion.div
@@ -55,6 +51,7 @@ export default function LoginPage() {
     >
       <AuthCard title="Login">
         <form onSubmit={handleSubmit} className="space-y-4">
+          {user?.email || 3}
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -62,7 +59,7 @@ export default function LoginPage() {
               type="email"
               placeholder="Enter email"
               value={formData.email}
-              onChange={e => setFormData({...formData, email: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               required
             />
           </div>
@@ -73,7 +70,7 @@ export default function LoginPage() {
               type="password"
               placeholder="Enter password"
               value={formData.password}
-              onChange={e => setFormData({...formData, password: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
               required
             />
           </div>
@@ -82,8 +79,8 @@ export default function LoginPage() {
               <Checkbox
                 id="remember"
                 checked={formData.rememberMe}
-                onCheckedChange={(checked) => 
-                  setFormData({...formData, rememberMe: checked as boolean})
+                onCheckedChange={(checked) =>
+                  setFormData({ ...formData, rememberMe: checked as boolean })
                 }
               />
               <Label htmlFor="remember">Remember me</Label>
@@ -92,8 +89,8 @@ export default function LoginPage() {
               Forgot password?
             </Link>
           </div>
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             className="w-full bg-[#4338ca] hover:bg-[#3730a3]"
             disabled={loading}
           >
@@ -110,5 +107,5 @@ export default function LoginPage() {
         </form>
       </AuthCard>
     </motion.div>
-  )
+  );
 }

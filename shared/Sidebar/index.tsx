@@ -1,9 +1,9 @@
-import { Button } from "@/components/ui/button"
-import { Logo } from "../Logo"
-import { SidebarItems } from "./SidebarItems"
-import { UpgradePlanCard } from "./UpgradePlanCard"
-import { motion } from 'framer-motion'
-import { CreateEmailModal } from "../Modal/CreateEmailModal"
+import { Button } from '@/components/ui/button';
+import { Logo } from '../Logo';
+import { SidebarItems } from './SidebarItems';
+import { UpgradePlanCard } from './UpgradePlanCard';
+import { motion } from 'framer-motion';
+import { CreateEmailModal } from '../Modal/CreateEmailModal';
 
 export default function Sidebar() {
   return (
@@ -23,9 +23,12 @@ export default function Sidebar() {
       <div className="mt-auto">
         <UpgradePlanCard emailSent={30} contactLimit={30} campaignLimit={60} />
         <div className="bg-[#C4C6ED] text-[#0D0F56] p-4 rounded-lg text-sm">
-          14 days left in trial. <Button variant="link" className="p-0 h-auto text-[#E8590C] underline">Upgrade</Button>
+          14 days left in trial.{' '}
+          <Button variant="link" className="p-0 h-auto text-[#E8590C] underline">
+            Upgrade
+          </Button>
         </div>
       </div>
     </motion.div>
-  )
+  );
 }

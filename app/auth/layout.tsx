@@ -1,10 +1,10 @@
-import type { Metadata } from "next";
-import { ReactNode } from "react";
-import { Toaster } from "@/components/ui/toaster";
+import type { Metadata } from 'next';
+import { ReactNode } from 'react';
+import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: "Authentication",
-  description: "Authentication pages for the application",
+  title: 'Authentication',
+  description: 'Authentication pages for the application',
 };
 
 export default function AuthLayout({ children }: { children: ReactNode }) {

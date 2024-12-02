@@ -1,31 +1,27 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { Button } from "@/components/ui/button"
-import { Menu } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
-import Sidebar from '../Sidebar'
-import { usePathname } from 'next/navigation'
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Menu } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import Sidebar from '../Sidebar';
+import { usePathname } from 'next/navigation';
 
-export default function DashboardWrapper({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [isMobile, setIsMobile] = useState(false)
-  const [loading, setLoading] = useState(true) // Loading state
-  const pathname = usePathname()
+export default function DashboardWrapper({ children }: { children: React.ReactNode }) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [loading, setLoading] = useState(true); // Loading state
+  const pathname = usePathname();
 
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768)
-      setSidebarOpen(window.innerWidth >= 768)
-    }
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
-  }, [])
+      setIsMobile(window.innerWidth < 768);
+      setSidebarOpen(window.innerWidth >= 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // useEffect(() => {
   //   const timer = setTimeout(() => {
@@ -76,15 +72,15 @@ export default function DashboardWrapper({
               <Menu className="h-4 w-4" />
             </Button>
             {/* <AnimatePresence mode="wait"> */}
-              <motion.div
-                key={pathname}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.3 }}
-              >
-                {children}
-              </motion.div>
+            <motion.div
+              key={pathname}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              {children}
+            </motion.div>
             {/* </AnimatePresence> */}
           </div>
         </motion.main>
@@ -102,5 +98,5 @@ export default function DashboardWrapper({
         </AnimatePresence>
       </div>
     </div>
-  )
+  );
 }

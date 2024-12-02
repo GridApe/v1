@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState } from 'react';
+import { motion } from 'framer-motion';
 import {
   Pencil,
   Trash2,
@@ -15,24 +15,24 @@ import {
   Plus,
   ArrowUp,
   RefreshCw,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Avatar } from "@/components/ui/avatar";
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Avatar } from '@/components/ui/avatar';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
 import {
   Table,
   TableBody,
@@ -40,10 +40,10 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+} from '@/components/ui/table';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface DNSRecord {
   type: string;
@@ -73,20 +73,20 @@ interface Domain {
 }
 
 export default function EmailDashboard() {
-  const [activeTab, setActiveTab] = useState("domains");
+  const [activeTab, setActiveTab] = useState('domains');
   const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [showAddDomainModal, setShowAddDomainModal] = useState(false);
   const [showDNSSteps, setShowDNSSteps] = useState(false);
-  const [verificationEmail, setVerificationEmail] = useState("");
+  const [verificationEmail, setVerificationEmail] = useState('');
   const [newDomain, setNewDomain] = useState({
-    brandName: "",
-    domainAddress: "",
+    brandName: '',
+    domainAddress: '',
   });
   const [domains, setDomains] = useState<Domain[]>([
     {
-      id: "1",
-      brandName: "Emsa",
-      domainAddress: "emsang.com",
+      id: '1',
+      brandName: 'Emsa',
+      domainAddress: 'emsang.com',
       isVerified: true,
     },
   ]);
@@ -100,39 +100,37 @@ export default function EmailDashboard() {
 
   const [dnsSteps, setDnsSteps] = useState<DomainVerificationSteps[]>([
     {
-      title: "Go to your DNS Provider",
+      title: 'Go to your DNS Provider',
       description:
-        "Go to DNS provider that you use to manage your domain and add the following DNS records.",
+        'Go to DNS provider that you use to manage your domain and add the following DNS records.',
       records: [],
     },
     {
-      title: "Add DNS Records for sending",
-      description:
-        "TXT records are required to send and receive email with Gridape.",
+      title: 'Add DNS Records for sending',
+      description: 'TXT records are required to send and receive email with Gridape.',
       records: [
         {
-          type: "TXT",
-          hostname: "",
-          value: "Lorem ipsum dolor sit amet et amet",
+          type: 'TXT',
+          hostname: '',
+          value: 'Lorem ipsum dolor sit amet et amet',
           isVerified: false,
         },
         {
-          type: "TXT",
-          hostname: "gridape.domainkeyemsang.com",
-          value:
-            "Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor",
+          type: 'TXT',
+          hostname: 'gridape.domainkeyemsang.com',
+          value: 'Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor',
           isVerified: false,
         },
       ],
     },
     {
-      title: "Add DNS Records for tracking",
-      description: "CNAME record is required for email tracking with Gridape.",
+      title: 'Add DNS Records for tracking',
+      description: 'CNAME record is required for email tracking with Gridape.',
       records: [
         {
-          type: "CNAME",
-          hostname: "email",
-          value: "gridape.org",
+          type: 'CNAME',
+          hostname: 'email',
+          value: 'gridape.org',
           isVerified: false,
         },
       ],
@@ -143,7 +141,7 @@ export default function EmailDashboard() {
     try {
       await navigator.clipboard.writeText(value);
     } catch (err) {
-      console.error("Failed to copy value:", err);
+      console.error('Failed to copy value:', err);
     }
   };
 
@@ -166,14 +164,14 @@ export default function EmailDashboard() {
       ...step,
       records: step.records.map((record) => ({
         ...record,
-        hostname: record.hostname.includes("gridape.domainkey")
+        hostname: record.hostname.includes('gridape.domainkey')
           ? `gridape.domainkey${newDomain.domainAddress}`
           : record.hostname || newDomain.domainAddress,
       })),
     }));
     setDnsSteps(updatedDnsSteps);
 
-    setNewDomain({ brandName: "", domainAddress: "" });
+    setNewDomain({ brandName: '', domainAddress: '' });
     setShowAddDomainModal(false);
     setShowDNSSteps(true);
   };
@@ -210,7 +208,7 @@ export default function EmailDashboard() {
         <p className="text-xs text-muted-foreground">
           <span className="text-green-500 inline-block">
             <ArrowUp />
-          </span>{" "}
+          </span>{' '}
           {percentage}%
         </p>
       </CardContent>
@@ -251,11 +249,7 @@ export default function EmailDashboard() {
           />
         </div>
 
-        <Tabs
-          value={activeTab}
-          onValueChange={setActiveTab}
-          className="space-y-6"
-        >
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="border-b bg-transparent p-0 flex justify-start h-auto w-full overflow-x-auto">
             <TabsTrigger
               value="profile"
@@ -278,19 +272,14 @@ export default function EmailDashboard() {
             >
               <div className="flex flex-col lg:flex-row justify-between lg:space-x-8">
                 <div className="w-full lg:w-1/2">
-                  <h2 className="text-xl font-semibold text-[#1E0E4E] mb-6">
-                    Basic Information
-                  </h2>
+                  <h2 className="text-xl font-semibold text-[#1E0E4E] mb-6">Basic Information</h2>
 
                   <div className="mb-6">
                     <Label className="text-sm mb-4 block">Profile Photo</Label>
                     <div className="flex items-center gap-4">
                       <div className="relative">
                         <Avatar className="h-20 w-20">
-                          <img
-                            src="https://github.com/shadcn.png"
-                            alt="Profile"
-                          />
+                          <img src="https://github.com/shadcn.png" alt="Profile" />
                         </Avatar>
                         <Button
                           size="icon"
@@ -333,35 +322,19 @@ export default function EmailDashboard() {
                 </div>
 
                 <div className="w-full lg:w-1/2 mt-8 lg:mt-0">
-                  <h2 className="text-xl font-semibold text-[#1E0E4E] mb-6">
-                    Change password
-                  </h2>
+                  <h2 className="text-xl font-semibold text-[#1E0E4E] mb-6">Change password</h2>
                   <div className="space-y-4 max-w-xl">
                     <div>
-                      <Label htmlFor="currentPassword">
-                        Verify current password
-                      </Label>
-                      <Input
-                        id="currentPassword"
-                        type="password"
-                        className="mt-1 w-full"
-                      />
+                      <Label htmlFor="currentPassword">Verify current password</Label>
+                      <Input id="currentPassword" type="password" className="mt-1 w-full" />
                     </div>
                     <div>
                       <Label htmlFor="newPassword">New password</Label>
-                      <Input
-                        id="newPassword"
-                        type="password"
-                        className="mt-1 w-full"
-                      />
+                      <Input id="newPassword" type="password" className="mt-1 w-full" />
                     </div>
                     <div>
                       <Label htmlFor="confirmPassword">Confirm password</Label>
-                      <Input
-                        id="confirmPassword"
-                        type="password"
-                        className="mt-1 w-full"
-                      />
+                      <Input id="confirmPassword" type="password" className="mt-1 w-full" />
                     </div>
                   </div>
                 </div>
@@ -397,9 +370,7 @@ export default function EmailDashboard() {
                       <h3 className="text-lg font-semibold text-[#1E0E4E]">
                         {index + 1}. {step.title}
                       </h3>
-                      <p className="text-muted-foreground">
-                        {step.description}
-                      </p>
+                      <p className="text-muted-foreground">{step.description}</p>
 
                       {step.records.length > 0 && (
                         <div className="bg-white rounded-lg border p-4">
@@ -417,17 +388,14 @@ export default function EmailDashboard() {
                               <TableBody>
                                 {step.records.map((record, recordIndex) => (
                                   <TableRow key={recordIndex}>
-                                    <TableCell className="font-mono">
-                                      {record.type}
-                                    </TableCell>
+                                    <TableCell className="font-mono">{record.type}</TableCell>
                                     <TableCell className="font-mono">
                                       <Input
                                         value={record.hostname}
                                         onChange={(e) => {
                                           const updatedSteps = [...dnsSteps];
-                                          updatedSteps[index].records[
-                                            recordIndex
-                                          ].hostname = e.target.value;
+                                          updatedSteps[index].records[recordIndex].hostname =
+                                            e.target.value;
                                           setDnsSteps(updatedSteps);
                                         }}
                                         className="w-full"
@@ -438,9 +406,8 @@ export default function EmailDashboard() {
                                         value={record.value}
                                         onChange={(e) => {
                                           const updatedSteps = [...dnsSteps];
-                                          updatedSteps[index].records[
-                                            recordIndex
-                                          ].value = e.target.value;
+                                          updatedSteps[index].records[recordIndex].value =
+                                            e.target.value;
                                           setDnsSteps(updatedSteps);
                                         }}
                                         className="w-full"
@@ -449,13 +416,11 @@ export default function EmailDashboard() {
                                     <TableCell>
                                       {record.isVerified ? (
                                         <span className="flex items-center text-green-500">
-                                          <Check className="mr-2 h-4 w-4" />{" "}
-                                          Verified
+                                          <Check className="mr-2 h-4 w-4" /> Verified
                                         </span>
                                       ) : (
                                         <span className="flex items-center text-yellow-500">
-                                          <AlertCircle className="mr-2 h-4 w-4" />{" "}
-                                          Pending
+                                          <AlertCircle className="mr-2 h-4 w-4" /> Pending
                                         </span>
                                       )}
                                     </TableCell>
@@ -463,9 +428,7 @@ export default function EmailDashboard() {
                                       <Button
                                         variant="ghost"
                                         size="icon"
-                                        onClick={() =>
-                                          handleCopyValue(record.value)
-                                        }
+                                        onClick={() => handleCopyValue(record.value)}
                                         className="w-full sm:w-auto"
                                       >
                                         <Copy className="h-4 w-4" />
@@ -490,14 +453,11 @@ export default function EmailDashboard() {
               ) : (
                 <>
                   <div>
-                    <h2 className="text-xl font-semibold text-[#1E0E4E] mb-2">
-                      Sending email
-                    </h2>
+                    <h2 className="text-xl font-semibold text-[#1E0E4E] mb-2">Sending email</h2>
                     <p className="text-muted-foreground mb-6">
-                      Add a verified email domain to control how your emails
-                      will be sent to your customers. Start sending campaigns
-                      once you verify your domain ownership, start connecting
-                      with your customers through gridape.
+                      Add a verified email domain to control how your emails will be sent to your
+                      customers. Start sending campaigns once you verify your domain ownership,
+                      start connecting with your customers through gridape.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
                       <Button
@@ -517,9 +477,7 @@ export default function EmailDashboard() {
                   </div>
 
                   <div>
-                    <h2 className="text-xl font-semibold text-[#1E0E4E] mb-6">
-                      Existing domains
-                    </h2>
+                    <h2 className="text-xl font-semibold text-[#1E0E4E] mb-6">Existing domains</h2>
                     <div className="overflow-x-auto">
                       <Table>
                         <TableHeader>
@@ -533,9 +491,7 @@ export default function EmailDashboard() {
                         <TableBody>
                           {domains.map((domain) => (
                             <TableRow key={domain.id}>
-                              <TableCell className="font-medium">
-                                {domain.brandName}
-                              </TableCell>
+                              <TableCell className="font-medium">{domain.brandName}</TableCell>
                               <TableCell>{domain.domainAddress}</TableCell>
                               <TableCell>
                                 {domain.isVerified ? (
@@ -544,25 +500,16 @@ export default function EmailDashboard() {
                                   </span>
                                 ) : (
                                   <span className="flex items-center text-yellow-500">
-                                    <AlertCircle className="mr-2 h-4 w-4" />{" "}
-                                    Pending
+                                    <AlertCircle className="mr-2 h-4 w-4" /> Pending
                                   </span>
                                 )}
                               </TableCell>
                               <TableCell>
                                 <div className="flex justify-end gap-2">
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="w-full sm:w-auto"
-                                  >
+                                  <Button variant="ghost" size="icon" className="w-full sm:w-auto">
                                     <Trash2 className="h-4 w-4" />
                                   </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="w-full sm:w-auto"
-                                  >
+                                  <Button variant="ghost" size="icon" className="w-full sm:w-auto">
                                     <MoreHorizontal className="h-4 w-4" />
                                   </Button>
                                 </div>
@@ -584,8 +531,8 @@ export default function EmailDashboard() {
             <DialogHeader>
               <DialogTitle>Verify a domain</DialogTitle>
               <DialogDescription>
-                Please enter an email address with the domain you want to
-                verify. A confirmation link will be sent to you.
+                Please enter an email address with the domain you want to verify. A confirmation
+                link will be sent to you.
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleVerifyDomain} className="space-y-4 py-4">
@@ -600,11 +547,8 @@ export default function EmailDashboard() {
                 />
               </div>
               <div className="text-sm">
-                Already have a domain?{" "}
-                <Button
-                  variant="link"
-                  className="p-0 h-auto text-blue-600 w-full sm:w-auto"
-                >
+                Already have a domain?{' '}
+                <Button variant="link" className="p-0 h-auto text-blue-600 w-full sm:w-auto">
                   Connect here
                 </Button>
               </div>
@@ -642,9 +586,7 @@ export default function EmailDashboard() {
                 <Input
                   id="brandName"
                   value={newDomain.brandName}
-                  onChange={(e) =>
-                    setNewDomain({ ...newDomain, brandName: e.target.value })
-                  }
+                  onChange={(e) => setNewDomain({ ...newDomain, brandName: e.target.value })}
                   required
                 />
               </div>

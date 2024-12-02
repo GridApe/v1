@@ -13,7 +13,6 @@ We're thrilled that you're interested in contributing to our Next.js project! Th
    cd project-name
    ```
 
-
 ## Making Changes
 
 1. **Create a Branch**: Always create a new branch for your changes:
@@ -75,6 +74,7 @@ We're thrilled that you're interested in contributing to our Next.js project! Th
 ## Getting Help
 
 If you have questions or need help, please:
+
 - Check the project's documentation
 - Open an issue for discussion
 - Reach out to the maintainers

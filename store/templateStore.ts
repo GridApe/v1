@@ -1,6 +1,6 @@
-import apiService from "@/lib/api-service";
-import { TemplateTypes } from "@/types/interface";
-import { create } from "zustand";
+import apiService from '@/lib/api-service';
+import { TemplateTypes } from '@/types/interface';
+import { create } from 'zustand';
 
 interface TemplateState {
   templates: TemplateTypes[] | null;
@@ -22,32 +22,32 @@ export const useTemplateStore = create<TemplateState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const response = await apiService.listAllEmailTemplate();
-  
+
       if (!response.data || !Array.isArray(response.data.templates)) {
-        throw new Error("Invalid response format from the server.");
+        throw new Error('Invalid response format from the server.');
       }
-  
+
       set({ templates: response.data.templates, loading: false });
     } catch (error) {
-      console.error("Error fetching templates:", error);
-      set({ loading: false, error: "Unable to fetch templates. Please try again later." });
+      console.error('Error fetching templates:', error);
+      set({ loading: false, error: 'Unable to fetch templates. Please try again later.' });
     }
-  },  
+  },
   savedTemplates: async () => {
     set({ loading: true, error: null });
     try {
       const response = await apiService.savedEmailTemplates();
-  
+
       if (!response.data || !Array.isArray(response.data.templates)) {
-        throw new Error("Invalid response format from the server.");
+        throw new Error('Invalid response format from the server.');
       }
-  
+
       set({ templates: response.data.templates, loading: false });
     } catch (error) {
-      console.error("Error fetching templates:", error);
-      set({ loading: false, error: "Unable to fetch templates. Please try again later." });
+      console.error('Error fetching templates:', error);
+      set({ loading: false, error: 'Unable to fetch templates. Please try again later.' });
     }
-  },  
+  },
 
   // Save a new email template
   saveTemplate: async (data: TemplateTypes) => {
@@ -57,14 +57,14 @@ export const useTemplateStore = create<TemplateState>((set, get) => ({
       const newTemplate = response.data.template;
 
       if (!newTemplate) {
-        throw new Error("Invalid response from the server.");
+        throw new Error('Invalid response from the server.');
       }
 
       const currentTemplates = get().templates || [];
       set({ templates: [...currentTemplates, newTemplate], loading: false });
     } catch (error) {
-      console.error("Error saving template:", error);
-      set({ loading: false, error: "Unable to save template. Please try again later." });
+      console.error('Error saving template:', error);
+      set({ loading: false, error: 'Unable to save template. Please try again later.' });
     }
   },
 
@@ -76,7 +76,7 @@ export const useTemplateStore = create<TemplateState>((set, get) => ({
       const updatedTemplate = response.data.template;
 
       if (!updatedTemplate) {
-        throw new Error("Invalid response from the server.");
+        throw new Error('Invalid response from the server.');
       }
 
       const currentTemplates = get().templates || [];
@@ -86,8 +86,8 @@ export const useTemplateStore = create<TemplateState>((set, get) => ({
 
       set({ templates: updatedTemplates, loading: false });
     } catch (error) {
-      console.error("Error updating template:", error);
-      set({ loading: false, error: "Unable to update template. Please try again later." });
+      console.error('Error updating template:', error);
+      set({ loading: false, error: 'Unable to update template. Please try again later.' });
     }
   },
 
@@ -101,8 +101,8 @@ export const useTemplateStore = create<TemplateState>((set, get) => ({
 
       set({ templates: updatedTemplates, loading: false });
     } catch (error) {
-      console.error("Error deleting template:", error);
-      set({ loading: false, error: "Unable to delete template. Please try again later." });
+      console.error('Error deleting template:', error);
+      set({ loading: false, error: 'Unable to delete template. Please try again later.' });
     }
   },
 }));

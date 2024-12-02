@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useState, useRef, useCallback, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import EmailEditor, { EditorRef, EmailEditorProps } from "react-email-editor";
-import { Button } from "@/components/ui/button";
+import { useState, useRef, useCallback, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import EmailEditor, { EditorRef, EmailEditorProps } from 'react-email-editor';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -11,18 +11,18 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Toast } from "@/components/ui/toast";
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Toast } from '@/components/ui/toast';
 import {
   Loader2,
   Save,
@@ -33,56 +33,53 @@ import {
   Redo,
   Image as ImageIcon,
   Variable,
-} from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { useTemplateStore } from "@/store/templateStore";
-import { useRouter } from "next/navigation";
+} from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { useTemplateStore } from '@/store/templateStore';
+import { useRouter } from 'next/navigation';
 
 export default function EmailTemplateEditor() {
   const emailEditorRef = useRef<EditorRef | null>(null);
-  const [templateName, setTemplateName] = useState<string>("");
+  const [templateName, setTemplateName] = useState<string>('');
   const [previewMode, setPreviewMode] = useState<boolean>(false);
-  const [jsonData, setJsonData] = useState<string>("");
+  const [jsonData, setJsonData] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [canUndo, setCanUndo] = useState<boolean>(false);
   const [canRedo, setCanRedo] = useState<boolean>(false);
   const [showVariableDialog, setShowVariableDialog] = useState<boolean>(false);
-  const [variableName, setVariableName] = useState<string>("");
-  const [variableDescription, setVariableDescription] = useState<string>("");
-  const [variables, setVariables] = useState<
-    { name: string; description: string }[]
-  >([]);
-  const router = useRouter()
+  const [variableName, setVariableName] = useState<string>('');
+  const [variableDescription, setVariableDescription] = useState<string>('');
+  const [variables, setVariables] = useState<{ name: string; description: string }[]>([]);
+  const router = useRouter();
   const { toast } = useToast();
-  const { templates, saveTemplate, listAllTemplates, loading } =
-    useTemplateStore();
+  const { templates, saveTemplate, listAllTemplates, loading } = useTemplateStore();
 
-  const onReady: EmailEditorProps["onReady"] = useCallback(
+  const onReady: EmailEditorProps['onReady'] = useCallback(
     (unlayer: any) => {
       setIsLoading(false);
-      unlayer.addEventListener("design:updated", () => {
+      unlayer.addEventListener('design:updated', () => {
         setCanUndo(unlayer.isUndoable());
         setCanRedo(unlayer.isRedoable());
       });
 
       // Register custom variable tool
       unlayer.registerTool({
-        name: "variable",
-        label: "Variable",
-        icon: "fa-tag",
-        supportedDisplayModes: ["web", "email"],
+        name: 'variable',
+        label: 'Variable',
+        icon: 'fa-tag',
+        supportedDisplayModes: ['web', 'email'],
         options: {
           default: {
             title: null,
           },
           text: {
-            title: "Text",
+            title: 'Text',
             position: 1,
             options: {
               variable: {
-                label: "Variable",
-                defaultValue: "",
-                widget: "dropdown",
+                label: 'Variable',
+                defaultValue: '',
+                widget: 'dropdown',
                 data: {
                   options: variables.map((v) => ({
                     value: `{{${v.name}}}`,
@@ -116,16 +113,16 @@ export default function EmailTemplateEditor() {
       })
         .then(() => {
           toast({
-            title: "Design Saved",
-            description: "Your email template design has been saved.",
+            title: 'Design Saved',
+            description: 'Your email template design has been saved.',
           });
-          router.push('/dashboard/templates/saved')
+          router.push('/dashboard/templates/saved');
         })
         .catch(() => {
           toast({
-            title: "Error",
-            description: "Failed to save template. Please try again later.",
-            variant: "destructive",
+            title: 'Error',
+            description: 'Failed to save template. Please try again later.',
+            variant: 'destructive',
           });
         });
     });
@@ -134,17 +131,17 @@ export default function EmailTemplateEditor() {
   const exportHtml = useCallback(() => {
     emailEditorRef.current?.editor?.exportHtml((data) => {
       const { html } = data;
-      console.log("HTML Output:", html);
-      const blob = new Blob([html], { type: "text/html" });
+      console.log('HTML Output:', html);
+      const blob = new Blob([html], { type: 'text/html' });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
+      const a = document.createElement('a');
       a.href = url;
-      a.download = `${templateName || "email-template"}.html`;
+      a.download = `${templateName || 'email-template'}.html`;
       a.click();
       URL.revokeObjectURL(url);
       toast({
-        title: "Template Exported",
-        description: "Your email template has been exported as HTML.",
+        title: 'Template Exported',
+        description: 'Your email template has been exported as HTML.',
       });
     });
   }, [templateName, toast]);
@@ -153,7 +150,7 @@ export default function EmailTemplateEditor() {
     if (previewMode) {
       emailEditorRef.current?.editor?.hidePreview();
     } else {
-      emailEditorRef.current?.editor?.showPreview("desktop");
+      emailEditorRef.current?.editor?.showPreview('desktop');
     }
     setPreviewMode((prev) => !prev);
   }, [previewMode]);
@@ -163,14 +160,14 @@ export default function EmailTemplateEditor() {
       const design = JSON.parse(jsonData);
       emailEditorRef.current?.editor?.loadDesign(design);
       toast({
-        title: "Design Loaded",
-        description: "Your email template design has been loaded.",
+        title: 'Design Loaded',
+        description: 'Your email template design has been loaded.',
       });
     } catch (error) {
       toast({
-        title: "Error",
+        title: 'Error',
         description: `Failed to load design. Please check your JSON data. ${error}`,
-        variant: "destructive",
+        variant: 'destructive',
       });
     }
   }, [jsonData, toast]);
@@ -192,8 +189,8 @@ export default function EmailTemplateEditor() {
         const dataUrl = e.target?.result as string;
         onSuccess(dataUrl);
         toast({
-          title: "Image Uploaded",
-          description: "Your image has been successfully uploaded.",
+          title: 'Image Uploaded',
+          description: 'Your image has been successfully uploaded.',
         });
       };
       reader.readAsDataURL(file);
@@ -203,15 +200,12 @@ export default function EmailTemplateEditor() {
 
   const addVariable = useCallback(() => {
     if (variableName) {
-      setVariables((prev) => [
-        ...prev,
-        { name: variableName, description: variableDescription },
-      ]);
-      setVariableName("");
-      setVariableDescription("");
+      setVariables((prev) => [...prev, { name: variableName, description: variableDescription }]);
+      setVariableName('');
+      setVariableDescription('');
       setShowVariableDialog(false);
       toast({
-        title: "Variable Added",
+        title: 'Variable Added',
         description: `Variable {{${variableName}}} has been added to the template.`,
       });
     }
@@ -220,18 +214,18 @@ export default function EmailTemplateEditor() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey) {
-        if (e.key === "z") {
+        if (e.key === 'z') {
           e.preventDefault();
           undoAction();
-        } else if (e.key === "y") {
+        } else if (e.key === 'y') {
           e.preventDefault();
           redoAction();
         }
       }
     };
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [undoAction, redoAction]);
 
   return (
@@ -245,9 +239,7 @@ export default function EmailTemplateEditor() {
       <Card className="w-full">
         <CardHeader>
           <CardTitle>Template Editor</CardTitle>
-          <CardDescription>
-            Create your email template using drag and drop
-          </CardDescription>
+          <CardDescription>Create your email template using drag and drop</CardDescription>
         </CardHeader>
         <CardContent className="relative min-h-[500px]">
           <AnimatePresence>
@@ -266,10 +258,10 @@ export default function EmailTemplateEditor() {
             ref={emailEditorRef}
             onReady={onReady}
             minHeight={500}
-            style={{ width: "100%" }}
+            style={{ width: '100%' }}
             options={{
               appearance: {
-                theme: "dark",
+                theme: 'dark',
               },
               features: {
                 stockImages: true,
@@ -292,11 +284,8 @@ export default function EmailTemplateEditor() {
             projectId={1} // Replace with your actual Unlayer project ID
             onLoad={() => {
               emailEditorRef.current?.editor?.addEventListener(
-                "image:added",
-                (
-                  file: File,
-                  done: (arg0: { progress: number; url: string }) => void
-                ) => {
+                'image:added',
+                (file: File, done: (arg0: { progress: number; url: string }) => void) => {
                   if (file) {
                     handleImageUpload(file, (url) => {
                       done({ progress: 100, url });
@@ -339,8 +328,7 @@ export default function EmailTemplateEditor() {
               </DialogContent>
             </Dialog>
             <Button onClick={togglePreview}>
-              <Eye className="mr-2 h-4 w-4" />{" "}
-              {previewMode ? "Edit" : "Preview"}
+              <Eye className="mr-2 h-4 w-4" /> {previewMode ? 'Edit' : 'Preview'}
             </Button>
             <Button onClick={undoAction} disabled={!canUndo}>
               <Undo className="mr-2 h-4 w-4" /> Undo
@@ -372,10 +360,7 @@ export default function EmailTemplateEditor() {
             <Button onClick={exportHtml}>
               <Download className="mr-2 h-4 w-4" /> Export HTML
             </Button>
-            <Dialog
-              open={showVariableDialog}
-              onOpenChange={setShowVariableDialog}
-            >
+            <Dialog open={showVariableDialog} onOpenChange={setShowVariableDialog}>
               <DialogTrigger asChild>
                 <Button variant="outline">
                   <Variable className="mr-2 h-4 w-4" /> Add Variable
@@ -418,25 +403,15 @@ export default function EmailTemplateEditor() {
       <Card>
         <CardHeader>
           <CardTitle>Variable Usage</CardTitle>
-          <CardDescription>
-            How to use variables in your template
-          </CardDescription>
+          <CardDescription>How to use variables in your template</CardDescription>
         </CardHeader>
         <CardContent>
           <p>To use variables in your template, follow these steps:</p>
           <ol className="list-decimal list-inside space-y-2 mt-2">
             <li>Click the "Add Variable" button to define a new variable.</li>
-            <li>
-              In the editor, use the Variable tool to insert variables into your
-              content.
-            </li>
-            <li>
-              Variables will appear in the format {"{{variableName}}"} in your
-              template.
-            </li>
-            <li>
-              When sending emails, replace these variables with actual values.
-            </li>
+            <li>In the editor, use the Variable tool to insert variables into your content.</li>
+            <li>Variables will appear in the format {'{{variableName}}'} in your template.</li>
+            <li>When sending emails, replace these variables with actual values.</li>
           </ol>
           <div className="mt-4">
             <h4 className="font-semibold">Available Variables:</h4>
@@ -454,4 +429,3 @@ export default function EmailTemplateEditor() {
     </motion.div>
   );
 }
-

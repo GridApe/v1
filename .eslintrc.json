@@ -1,4 +1,9 @@
 {
-  "extends": ["next/core-web-vitals", "next/typescript"],
-  "rules": { "@typescript-eslint/no-empty-object-type": "off" } 
+  "extends": ["next/core-web-vitals", "plugin:@typescript-eslint/recommended", "prettier"],
+  "plugins": ["@typescript-eslint", "prettier"],
+  "rules": {
+    "prettier/prettier": "error",
+    "@typescript-eslint/no-unused-vars": "error",
+    "@typescript-eslint/no-explicit-any": "warn"
+  }
 }
