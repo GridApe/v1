@@ -56,7 +56,7 @@ export function NotificationList({
         </div>
         <DropdownMenuSeparator />
         <ScrollArea className="h-[300px] overflow-y-auto">
-          {notifications.length === 0 ? (            
+          {notifications.length === 0 ? (
             <p className="text-center text-muted-foreground py-4">
               No new notifications
             </p>
@@ -71,7 +71,7 @@ export function NotificationList({
                     </span>
                   </div>
                   <p className="text-sm text-muted-foreground mt-1">
-                    {notification.message}
+                    {notification.description}
                   </p>
                 </DropdownMenuItem>
               </React.Fragment>

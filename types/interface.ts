@@ -77,3 +77,11 @@ export interface DashboardTypes {
   audiencePerformance: AudiencePerformance[];
   campaignStats: CampaignStats;
 }
+
+export interface Notification {
+  id: string;
+  title: string;
+  description: string;
+  timestamp: Date;
+  isRead: boolean;
+}
