@@ -10,6 +10,8 @@ interface AuthState {
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  verifyEmail: (email: string, token: string) => Promise<void>;
+  resendOtp: (email: string) => Promise<void>;
   register: (
     email: string,
     password: string,
@@ -46,6 +48,48 @@ export const useAuthStore = create<AuthState>((set) => ({
       }
     } catch (error) {
       console.error('Login error:', error);
+      set({ loading: false });
+      throw error;
+    }
+  },
+  verifyEmail: async (email: string, token: string) => {
+    try {
+      set({ loading: true });
+      
+      const response = await fetch('/api/auth/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, token }),
+      });
+
+      if (response.ok) {
+        set({ loading: false });
+      } else {
+        throw new Error('Verification failed');
+      }
+    } catch (error) {
+      console.error('Verification error:', error);
+      set({ loading: false });
+      throw error;
+    }
+  },
+  resendOtp: async (email: string) => {
+    try {
+      set({ loading: true });
+      
+      const response = await fetch('/api/auth/resend', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+
+      if (response.ok) {
+        set({ loading: false });
+      } else {
+        throw new Error('Verification failed');
+      }
+    } catch (error) {
+      console.error('Verification error:', error);
       set({ loading: false });
       throw error;
     }

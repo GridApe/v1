@@ -7,14 +7,14 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { apiService } from '@/lib/api-service';
 import { useToast } from '@/hooks/use-toast';
 import { AuthCard } from '../auth-card';
+import { useAuthStore } from '@/store/authStore';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function RegisterPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -22,6 +22,9 @@ export default function RegisterPage() {
     first_name: '',
     last_name: '',
   });
+
+  const { register, loading } = useAuthStore();
+  const auth = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,16 +38,16 @@ export default function RegisterPage() {
       return;
     }
 
-    setLoading(true);
+    // setLoading(true);
 
     try {
-      await apiService.register({
-        email: formData.email,
-        password: formData.password,
-        last_name: formData.last_name,
-        first_name: formData.first_name,
-        password_confirmation: formData.confirmPassword,
-      });
+      await auth.register(
+        formData.email,
+        formData.password,
+        formData.confirmPassword,
+        formData.first_name,
+        formData.last_name
+      );
       toast({
         title: 'Success',
         description: 'Registration successful. Please verify your email.',
@@ -56,8 +59,6 @@ export default function RegisterPage() {
         title: 'Error',
         description: error instanceof Error ? error.message : 'Failed to register',
       });
-    } finally {
-      setLoading(false);
     }
   };
 
