@@ -5,10 +5,10 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
-import { apiService } from '@/lib/api-service';
 import { useToast } from '@/hooks/use-toast';
 import { AuthCard } from '../auth-card';
 import { REGEXP_ONLY_DIGITS_AND_CHARS } from 'input-otp';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function OtpPage() {
   const router = useRouter();
@@ -18,17 +18,19 @@ export default function OtpPage() {
   const [loading, setLoading] = useState(false);
   const [otp, setOtp] = useState('');
 
+  const auth = useAuth();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      await apiService.verifyEmail({ email, token: otp });
+      await auth.verify(email, otp);
       toast({
         title: 'Success',
         description: 'Email verified successfully',
       });
-      router.push('/auth/basic-info');
+      router.push('/auth/login');
     } catch (error: any) {
       toast({
         variant: 'destructive',
@@ -42,7 +44,7 @@ export default function OtpPage() {
 
   const handleResendOtp = async () => {
     try {
-      await apiService.resendOtp(email);
+      await auth.resend(email);
       toast({
         title: 'Success',
         description: 'OTP resent successfully',
