@@ -1,7 +1,11 @@
 import * as React from 'react';
 import { Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@radix-ui/react-dropdown-menu';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from '@radix-ui/react-dropdown-menu';
 import { DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 
 interface NotificationDropdownProps {
@@ -9,10 +13,7 @@ interface NotificationDropdownProps {
   onMarkAsRead: () => void;
 }
 
-export function NotificationList({
-  notificationCount,
-  onMarkAsRead,
-}: NotificationDropdownProps) {
+export function NotificationList({ notificationCount, onMarkAsRead }: NotificationDropdownProps) {
   return (
     <div className="relative">
       <DropdownMenu>
@@ -29,10 +30,7 @@ export function NotificationList({
         </DropdownMenuTrigger>
         <DropdownMenuContent className="outline-1 shadow-md w-56 p-2 bg-white rounded-md border-1 border-gray-500">
           <div className="flex justify-end">
-            <Button
-              className="hover:bg-blue-800 mt-5 text-xs p-2"
-              onClick={onMarkAsRead}
-            >
+            <Button className="hover:bg-blue-800 mt-5 text-xs p-2" onClick={onMarkAsRead}>
               Mark as Read
             </Button>
           </div>

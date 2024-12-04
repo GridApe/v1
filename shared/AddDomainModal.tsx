@@ -1,15 +1,21 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Copy, Check, Globe, ShieldCheck, ServerIcon } from 'lucide-react'
-import { useToast } from "@/hooks/use-toast"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { useState } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Copy, Check, Globe, ShieldCheck, ServerIcon } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface DNSRecord {
   type: string;
@@ -17,79 +23,82 @@ interface DNSRecord {
   value: string;
 }
 
-export function AddDomainModal({ 
-  open, 
+export function AddDomainModal({
+  open,
   onOpenChange,
-  onDomainAdded 
-}: { 
-  open: boolean, 
-  onOpenChange: (open: boolean) => void,
-  onDomainAdded?: () => void 
+  onDomainAdded,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onDomainAdded?: () => void;
 }) {
-  const [domain, setDomain] = useState('')
-  const [dnsRecords, setDnsRecords] = useState<DNSRecord[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [copiedRecord, setCopiedRecord] = useState<number | null>(null)
-  const { toast } = useToast()
+  const [domain, setDomain] = useState('');
+  const [dnsRecords, setDnsRecords] = useState<DNSRecord[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [copiedRecord, setCopiedRecord] = useState<number | null>(null);
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
+    e.preventDefault();
+    setIsLoading(true);
     try {
       const response = await fetch('/api/user/settings/add-domain', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ domain }),
       });
-      
+
       if (!response.ok) throw new Error('Domain verification failed');
-      
+
       const responseData = await response.json();
-      const { spf_record, dkim_record, dmarc_record } = responseData.data.domain
-      
+      const { spf_record, dkim_record, dmarc_record } = responseData.data.domain;
+
       setDnsRecords([
         { type: 'TXT (SPF)', hostname: domain, value: spf_record },
         { type: 'TXT (DKIM)', hostname: `default._domainkey.${domain}`, value: dkim_record },
         { type: 'TXT (DMARC)', hostname: `_dmarc.${domain}`, value: dmarc_record },
-      ])
-      
+      ]);
+
       toast({
-        title: "Domain Added",
-        description: "DNS records generated. Configure with your DNS provider.",
-        variant: "default",
-      })
+        title: 'Domain Added',
+        description: 'DNS records generated. Configure with your DNS provider.',
+        variant: 'default',
+      });
 
       onDomainAdded?.();
     } catch (error) {
       console.error('Domain verification error:', error);
       toast({
-        title: "Verification Failed",
-        description: "Unable to add domain. Check domain name and try again.",
-        variant: "destructive",
-      })
+        title: 'Verification Failed',
+        description: 'Unable to add domain. Check domain name and try again.',
+        variant: 'destructive',
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const copyToClipboard = (record: DNSRecord, index: number) => {
     const textToCopy = `${record.type},${record.hostname},${record.value}`;
-    navigator.clipboard.writeText(textToCopy).then(() => {
-      setCopiedRecord(index)
-      setTimeout(() => setCopiedRecord(null), 2000)
-      toast({
-        title: "Copied!",
-        description: "DNS record copied to clipboard.",
+    navigator.clipboard
+      .writeText(textToCopy)
+      .then(() => {
+        setCopiedRecord(index);
+        setTimeout(() => setCopiedRecord(null), 2000);
+        toast({
+          title: 'Copied!',
+          description: 'DNS record copied to clipboard.',
+        });
       })
-    }).catch((err) => {
-      console.error('Clipboard copy failed:', err)
-      toast({
-        title: "Copy Error",
-        description: "Could not copy to clipboard.",
-        variant: "destructive",
-      })
-    })
-  }
+      .catch((err) => {
+        console.error('Clipboard copy failed:', err);
+        toast({
+          title: 'Copy Error',
+          description: 'Could not copy to clipboard.',
+          variant: 'destructive',
+        });
+      });
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -111,7 +120,9 @@ export function AddDomainModal({
             <CardContent className="p-6">
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
-                  <Label htmlFor="domain" className="mb-2 block">Domain Name</Label>
+                  <Label htmlFor="domain" className="mb-2 block">
+                    Domain Name
+                  </Label>
                   <Input
                     id="domain"
                     value={domain}
@@ -125,15 +136,11 @@ export function AddDomainModal({
                     Enter the full domain you want to verify
                   </p>
                 </div>
-                
+
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button 
-                        type="submit" 
-                        disabled={isLoading || !domain} 
-                        className="w-full"
-                      >
+                      <Button type="submit" disabled={isLoading || !domain} className="w-full">
                         {isLoading ? (
                           <>
                             <ShieldCheck className="mr-2 h-4 w-4 animate-pulse" />
@@ -147,9 +154,7 @@ export function AddDomainModal({
                         )}
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>
-                      Initiate domain verification process
-                    </TooltipContent>
+                    <TooltipContent>Initiate domain verification process</TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               </form>
@@ -168,8 +173,8 @@ export function AddDomainModal({
                     Add these records to your DNS provider to complete verification.
                   </p>
                   {dnsRecords.map((record, index) => (
-                    <div 
-                      key={index} 
+                    <div
+                      key={index}
                       className="bg-muted/50 p-4 rounded-lg mb-3 border border-blue-100"
                     >
                       <div className="flex justify-between items-center mb-2">
@@ -180,7 +185,7 @@ export function AddDomainModal({
                           variant="ghost"
                           size="sm"
                           onClick={() => copyToClipboard(record, index)}
-                          className={copiedRecord === index ? "bg-green-100" : ""}
+                          className={copiedRecord === index ? 'bg-green-100' : ''}
                         >
                           {copiedRecord === index ? (
                             <Check className="h-4 w-4 mr-2 text-green-600" />
@@ -192,11 +197,11 @@ export function AddDomainModal({
                       </div>
                       <div className="space-y-1">
                         <p className="text-sm">
-                          <strong>Hostname:</strong> 
+                          <strong>Hostname:</strong>
                           <span className="ml-2 text-muted-foreground">{record.hostname}</span>
                         </p>
                         <p className="text-sm break-all">
-                          <strong>Value:</strong> 
+                          <strong>Value:</strong>
                           <span className="ml-2 text-muted-foreground">{record.value}</span>
                         </p>
                       </div>
@@ -209,5 +214,5 @@ export function AddDomainModal({
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

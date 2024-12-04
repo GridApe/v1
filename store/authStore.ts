@@ -4,7 +4,6 @@ import { create } from 'zustand';
 import Cookies from 'js-cookie';
 import { UserTypes } from '@/types/interface';
 
-
 interface AuthState {
   user: UserTypes | null;
   loading: boolean;
@@ -31,7 +30,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   login: async (email: string, password: string) => {
     try {
       set({ loading: true });
-      
+
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -40,7 +39,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
       if (response.ok) {
         const responseData = await response.json();
-        Cookies.set('token', responseData.data.access_token)
+        Cookies.set('token', responseData.data.access_token);
         await useAuthStore.getState().fetchCurrentUser();
         set({ loading: false });
       } else {
@@ -55,7 +54,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   verifyEmail: async (email: string, token: string) => {
     try {
       set({ loading: true });
-      
+
       const response = await fetch('/api/auth/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -76,7 +75,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   resendOtp: async (email: string) => {
     try {
       set({ loading: true });
-      
+
       const response = await fetch('/api/auth/resend', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -160,7 +159,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({ loading: false });
     }
   },
-   updateUser: async (userData: Partial<UserTypes>) => {
+  updateUser: async (userData: Partial<UserTypes>) => {
     try {
       set({ loading: true });
 
@@ -201,5 +200,4 @@ export const useAuthStore = create<AuthState>((set) => ({
       throw error;
     }
   },
-
 }));

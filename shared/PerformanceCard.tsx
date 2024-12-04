@@ -6,20 +6,14 @@ import { MoreVertical, ArrowUp } from 'lucide-react';
 import clsx from 'clsx';
 
 interface PerformanceCardProps {
-  value: number | string; 
-  change?: string; 
+  value: number | string;
+  change?: string;
   label: string;
   color: string;
-  icon: React.ReactNode; 
+  icon: React.ReactNode;
 }
 
-const PerformanceCard: React.FC<PerformanceCardProps> = ({
-  value,
-  change,
-  label,
-  color,
-  icon,
-}) => {
+const PerformanceCard: React.FC<PerformanceCardProps> = ({ value, change, label, color, icon }) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -55,12 +49,7 @@ const PerformanceCard: React.FC<PerformanceCardProps> = ({
           </div>
         </div>
 
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
-          aria-label="More options"
-        >
+        <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="More options">
           <MoreVertical className="h-4 w-4 text-gray-500" />
         </Button>
       </div>

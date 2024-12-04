@@ -8,7 +8,7 @@ const CSRF_COOKIE_URL =
 
 async function ensureCsrfToken() {
   try {
-    console.log('Fetching CSRF token from:', CSRF_COOKIE_URL); 
+    console.log('Fetching CSRF token from:', CSRF_COOKIE_URL);
     const response = await fetch(CSRF_COOKIE_URL, {
       method: 'GET',
       credentials: 'include',
@@ -40,9 +40,9 @@ export async function handleApiRequest(
 ) {
   let csrfToken;
   try {
-    console.log('Ensuring CSRF token...'); 
+    console.log('Ensuring CSRF token...');
     csrfToken = await ensureCsrfToken();
-    
+
     const cookieStore = cookies();
     const access_token = cookieStore.get('token')?.value;
 
@@ -53,9 +53,9 @@ export async function handleApiRequest(
       'Content-Type': 'application/json',
       'X-Requested-With': 'XMLHttpRequest',
       'X-XSRF-TOKEN': csrfToken || '',
-      Authorization: access_token 
-        ? `Bearer ${access_token}` 
-        : `Bearer 28|XiAfsgLdenpa3KzxrbEClzlvNn0Xg9uT0b7Z1A5h414f7f21`
+      Authorization: access_token
+        ? `Bearer ${access_token}`
+        : `Bearer 28|XiAfsgLdenpa3KzxrbEClzlvNn0Xg9uT0b7Z1A5h414f7f21`,
     };
 
     console.log('Headers prepared for API request:', headers);

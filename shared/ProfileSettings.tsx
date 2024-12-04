@@ -83,13 +83,13 @@ export default function ProfileSettings() {
     try {
       // Implement actual user update logic
       updateUser({
-          ...values,
-          id: '',
-          first_name: '',
-          last_name: '',
-          phone_number: '',
-          address: '',
-          avatar: ''
+        ...values,
+        id: '',
+        first_name: '',
+        last_name: '',
+        phone_number: '',
+        address: '',
+        avatar: '',
       });
 
       toast({
@@ -112,19 +112,17 @@ export default function ProfileSettings() {
         <div>
           <div className="mb-6 flex items-center">
             <div className="relative inline-block mr-4">
-              <UserAvatar 
-                size="xlarge" 
-              />
-              <label 
-                htmlFor="profile-image-upload" 
+              <UserAvatar size="xlarge" />
+              <label
+                htmlFor="profile-image-upload"
                 className="absolute bottom-0 right-0 p-2 bg-primary text-white shadow rounded-full hover:bg-primary/80 transition cursor-pointer"
                 aria-label="Edit profile image"
               >
-                <Input 
+                <Input
                   id="profile-image-upload"
-                  type="file" 
+                  type="file"
                   accept="image/jpeg,image/png,image/gif"
-                  className="hidden" 
+                  className="hidden"
                   onChange={handleImageUpload}
                 />
                 <ImagePlus className="w-4 h-4" />
@@ -253,7 +251,7 @@ export default function ProfileSettings() {
                   </FormItem>
                 )}
               />
-              
+
               <Button type="submit" className="w-full">
                 Reset Password
               </Button>

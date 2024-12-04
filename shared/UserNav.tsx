@@ -1,4 +1,4 @@
-import * as React from "react";
+import * as React from 'react';
 import {
   Cloud,
   CreditCard,
@@ -14,10 +14,10 @@ import {
   User,
   UserPlus,
   Users,
-} from "lucide-react";
+} from 'lucide-react';
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,7 +31,7 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from '@/components/ui/dropdown-menu';
 
 interface UserNavProps {
   avatarSrc?: string;
@@ -39,11 +39,7 @@ interface UserNavProps {
   onLogout?: () => void;
 }
 
-export function UserNav({
-  avatarSrc,
-  avatarFallback = "U",
-  onLogout,
-}: UserNavProps) {
+export function UserNav({ avatarSrc, avatarFallback = 'U', onLogout }: UserNavProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>

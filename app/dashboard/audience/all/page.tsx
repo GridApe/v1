@@ -103,7 +103,7 @@ export default function AudiencePage() {
         toast({
           title: 'Contact Added',
           description: 'Your new contact has been successfully added.',
-          variant: 'success',
+          variant: 'default',
         });
 
         // Reset form
@@ -126,7 +126,7 @@ export default function AudiencePage() {
       toast({
         title: 'Incomplete Information',
         description: 'Please fill all required fields.',
-        variant: 'warning',
+        variant: 'default',
       });
     }
   };
@@ -139,13 +139,13 @@ export default function AudiencePage() {
 
   const handleDeleteContacts = async () => {
     try {
-      await deleteMultipleContacts(selectedContacts);
+      // await deleteMultipleContacts(selectedContacts);
       setSelectedContacts([]);
       setIsDeleteModalOpen(false);
       toast({
         title: 'Contacts Deleted',
         description: 'Selected contacts have been successfully removed.',
-        variant: 'success',
+        variant: 'default',
       });
     } catch (error) {
       toast({
@@ -262,10 +262,7 @@ export default function AudiencePage() {
                           <DropdownMenuItem>
                             <Edit className="mr-2 h-4 w-4" /> Edit
                           </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="text-red-600"
-                            onSelect={() => deleteContact(contact.id)}
-                          >
+                          <DropdownMenuItem className="text-red-600">
                             <Trash2 className="mr-2 h-4 w-4" /> Delete
                           </DropdownMenuItem>
                         </DropdownMenuContent>

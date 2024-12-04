@@ -23,7 +23,7 @@ export default function LoginPage() {
     rememberMe: false,
   });
   const auth = useAuth();
-  const {user, loading} = useAuthStore()
+  const { user, loading } = useAuthStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

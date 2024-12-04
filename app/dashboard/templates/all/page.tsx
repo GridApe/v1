@@ -60,9 +60,10 @@ export default function TemplatesPage() {
   }, [templates, searchQuery, categoryFilter]);
 
   // Filtering logic
-  const filteredTemplates = templates.filter(template => 
-    (searchQuery === '' || template.name.toLowerCase().includes(searchQuery.toLowerCase())) &&
-    (categoryFilter === 'all' || template.category === categoryFilter)
+  const filteredTemplates = templates.filter(
+    (template) =>
+      (searchQuery === '' || template.name.toLowerCase().includes(searchQuery.toLowerCase())) &&
+      (categoryFilter === 'all' || template.category === categoryFilter)
   );
 
   return (
@@ -77,13 +78,16 @@ export default function TemplatesPage() {
 
       <div className="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4">
         <div className="relative w-full">
-          <Input 
-            placeholder="Search templates..." 
-            className="pl-10 w-full" 
+          <Input
+            placeholder="Search templates..."
+            className="pl-10 w-full"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+          <Search
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+            size={18}
+          />
         </div>
         <Select value={categoryFilter} onValueChange={setCategoryFilter}>
           <SelectTrigger className="w-full md:w-auto">
@@ -102,7 +106,7 @@ export default function TemplatesPage() {
 
       {loading ? (
         <div className="text-center py-12">
-          <motion.div 
+          <motion.div
             animate={{ rotate: 360 }}
             transition={{ repeat: Infinity, duration: 1 }}
             className="mx-auto w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full"
@@ -120,10 +124,7 @@ export default function TemplatesPage() {
           transition={{ duration: 0.3 }}
         >
           {filteredTemplates.map((template) => (
-            <Card 
-              key={template.id} 
-              className="hover:shadow-xl transition-all duration-300 group"
-            >
+            <Card key={template.id} className="hover:shadow-xl transition-all duration-300 group">
               <CardHeader>
                 <h2 className="text-lg font-semibold truncate">{template.name}</h2>
               </CardHeader>
@@ -145,8 +146,8 @@ export default function TemplatesPage() {
                   <Edit size={14} />
                   <span>Edit</span>
                 </Button>
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   className="flex items-center space-x-2"
                   onClick={() => setPreviewTemplate(template)}
                 >

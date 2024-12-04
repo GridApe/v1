@@ -32,7 +32,7 @@ const Dashboard = () => {
   const { user } = useAuthStore();
   const [data, setData] = useState<DashboardTypes | null>(null);
   const [loading, setLoading] = useState(true);
-  const router = useRouter()
+  const router = useRouter();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -69,15 +69,21 @@ const Dashboard = () => {
       </div>
 
       <div className="mb-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <Button onClick={() => router.push('/')}  className=" justify-start rounded-xl bg-white p-4 md:py-10  hover:shadow-sm hover:scale-105 transition-shadow transition-transform cursor-pointer text-left">
+        <Button
+          onClick={() => router.push('/')}
+          className=" justify-start rounded-xl bg-white p-4 md:py-10  hover:shadow-sm hover:scale-105 transition-shadow transition-transform cursor-pointer text-left"
+        >
           <MailCheck className=" text-blue-600" size={40} />
           <span className="text-lg font-semibold text-[#1E0E4E]">Create Email</span>
         </Button>
-        <Button onClick={() => router.push('/dashboard/campaign/create')}  className=" justify-start rounded-xl bg-white p-4 md:py-10  hover:shadow-sm hover:scale-105 transition-shadow transition-transform cursor-pointer text-left">
+        <Button
+          onClick={() => router.push('/dashboard/campaign/create')}
+          className=" justify-start rounded-xl bg-white p-4 md:py-10  hover:shadow-sm hover:scale-105 transition-shadow transition-transform cursor-pointer text-left"
+        >
           <MailCheck className=" text-purple-600" size={40} />
           <span className="text-lg font-semibold text-[#1E0E4E]">Create Campaigns</span>
         </Button>
-        
+
         {/* {[
           { icon: Mail, label: 'Create Email', color: 'text-blue-600' },
           { icon: MousePointerClick, label: 'Create Campaigns', color: 'text-purple-600' },

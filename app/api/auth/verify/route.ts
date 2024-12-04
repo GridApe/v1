@@ -1,6 +1,6 @@
-import { handleApiRequest } from '@/lib/api-utils'
-import { NextRequest } from 'next/server'
+import { handleApiRequest } from '@/lib/api-utils';
+import { NextRequest } from 'next/server';
 
 export async function POST(request: NextRequest) {
-  return handleApiRequest(request, '/auth/email/verify', 'POST')
+  return handleApiRequest(request, '/auth/email/verify', 'POST');
 }

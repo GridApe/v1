@@ -11,16 +11,14 @@ const UserAvatar: React.FC<UserAvatarProps> = ({ size = 'medium' }) => {
 
   // Default fallback text or initials from first and last name
   const fallbackText =
-    user?.first_name && user?.last_name
-      ? `${user.first_name[0]}${user.last_name[0]}`
-      : 'GA'; // Default initials if no name
+    user?.first_name && user?.last_name ? `${user.first_name[0]}${user.last_name[0]}` : 'GA'; // Default initials if no name
 
   // Conditional class names based on the size prop
   const avatarSizeClass = {
     small: 'w-8 h-8 text-sm', // 2rem (32px)
     medium: 'w-12 h-12 text-base', // 3rem (48px)
     large: 'w-16 h-16 text-lg', // 4rem (64px)
-    xlarge: 'w-24 h-24'
+    xlarge: 'w-24 h-24',
   };
 
   const sizeClass = avatarSizeClass[size];
