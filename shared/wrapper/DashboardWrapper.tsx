@@ -10,7 +10,6 @@ import { usePathname } from 'next/navigation';
 export default function DashboardWrapper({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [loading, setLoading] = useState(true); // Loading state
   const pathname = usePathname();
 
   useEffect(() => {

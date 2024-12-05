@@ -1,7 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
-import { Mail, MousePointerClick, MailOpenIcon, MailCheck } from 'lucide-react';
+import { MousePointerClick, MailOpenIcon, MailCheck } from 'lucide-react';
 import { BarChart, Bar, XAxis, CartesianGrid } from 'recharts';
 import { useAuthStore } from '@/store/authStore';
 import { useEffect, useState } from 'react';
@@ -28,10 +27,13 @@ import {
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 
+interface DashboardResponse {
+  data: DashboardTypes;
+}
 const Dashboard = () => {
   const { user } = useAuthStore();
   const [data, setData] = useState<DashboardTypes | null>(null);
-  const [loading, setLoading] = useState(true);
+  // const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
@@ -39,15 +41,13 @@ const Dashboard = () => {
       try {
         const response = await fetch('/api/user/dashboard', { credentials: 'include' });
         if (!response.ok) throw new Error('Failed to fetch data');
-        const responseData = await response.json();
+        const responseData = await response.json() as DashboardResponse;
         setData(responseData.data);
       } catch (error) {
         console.error(error);
-      } finally {
-        setLoading(false);
       }
     };
-    fetchData();
+    void fetchData();
   }, []);
 
   const chartConfig = {
@@ -169,8 +169,7 @@ const Dashboard = () => {
                   tickLine={false}
                   tickMargin={10}
                   axisLine={false}
-                  tickFormatter={(value) => value.slice(0, 3)}
-                />
+                  tickFormatter={(value: string): string => value.slice(0, 3)}                  />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <ChartLegend content={<ChartLegendContent />} />
                 <Bar dataKey="value" fill="var(--color-value)" radius={4} />

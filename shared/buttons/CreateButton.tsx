@@ -1,5 +1,4 @@
 import { Button } from '@/components/ui/button';
-import { Wand } from 'lucide-react';
 import React from 'react';
 import { motion } from 'framer-motion';
 import { MagicWandIcon } from '@radix-ui/react-icons';

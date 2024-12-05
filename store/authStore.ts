@@ -27,35 +27,37 @@ export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   loading: false,
 
-  login: async (email: string, password: string) => {
+  login: async (email: string, password: string): Promise<void> => {
     try {
       set({ loading: true });
 
-      const response = await fetch('/api/auth/login', {
+      const response: Response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
 
+      const responseData = await response.json();
+      
       if (response.ok) {
         const responseData = await response.json();
+        
         Cookies.set('token', responseData.data.access_token);
         await useAuthStore.getState().fetchCurrentUser();
         set({ loading: false });
       } else {
-        throw new Error('Login failed');
+        throw new Error(responseData.error);
       }
     } catch (error) {
-      console.error('Login error:', error);
       set({ loading: false });
       throw error;
     }
   },
-  verifyEmail: async (email: string, token: string) => {
+  verifyEmail: async (email: string, token: string): Promise<void> => {
     try {
       set({ loading: true });
 
-      const response = await fetch('/api/auth/verify', {
+      const response: Response = await fetch('/api/auth/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, token }),
@@ -72,11 +74,11 @@ export const useAuthStore = create<AuthState>((set) => ({
       throw error;
     }
   },
-  resendOtp: async (email: string) => {
+  resendOtp: async (email: string): Promise<void> => {
     try {
       set({ loading: true });
 
-      const response = await fetch('/api/auth/resend', {
+      const response: Response = await fetch('/api/auth/resend', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
@@ -94,9 +96,9 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 
-  logout: async () => {
+  logout: async (): Promise<void> => {
     try {
-      const response = await fetch('/api/auth/logout', {
+      const response: Response = await fetch('/api/auth/logout', {
         method: 'POST',
       });
 
@@ -115,11 +117,11 @@ export const useAuthStore = create<AuthState>((set) => ({
     password_confirmation: string,
     first_name: string,
     last_name: string
-  ) => {
+  ): Promise<void> => {
     try {
       set({ loading: true });
 
-      const response = await fetch('/api/auth/register', {
+      const response: Response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -142,28 +144,28 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 
-  fetchCurrentUser: async () => {
+  fetchCurrentUser: async (): Promise<void> => {
     try {
       set({ loading: true });
 
-      const response = await fetch('/api/user/profile', {
+      const response: Response = await fetch('/api/user/profile', {
         credentials: 'include',
       });
 
       if (!response.ok) throw new Error('Failed to fetch user');
 
-      const responseData = await response.json();
+      const responseData: { data: { user: UserTypes } } = await response.json();
       set({ user: responseData.data.user, loading: false });
     } catch (error) {
       console.error('Fetch user error:', error);
       set({ loading: false });
     }
   },
-  updateUser: async (userData: Partial<UserTypes>) => {
+  updateUser: async (userData: Partial<UserTypes>): Promise<void> => {
     try {
       set({ loading: true });
 
-      const response = await fetch('/api/user/profile', {
+      const response: Response = await fetch('/api/user/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -172,7 +174,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
       if (!response.ok) throw new Error('Failed to update user');
 
-      const responseData = await response.json();
+      const responseData: { data: { user: UserTypes } } = await response.json();
       set({ user: { ...useAuthStore.getState().user, ...responseData.data.user }, loading: false });
     } catch (error) {
       console.error('Update user error:', error);
@@ -180,11 +182,11 @@ export const useAuthStore = create<AuthState>((set) => ({
       throw error;
     }
   },
-  updatePassword: async (currentPassword: string, newPassword: string) => {
+  updatePassword: async (currentPassword: string, newPassword: string): Promise<void> => {
     try {
       set({ loading: true });
 
-      const response = await fetch('/api/user/password', {
+      const response: Response = await fetch('/api/user/password', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

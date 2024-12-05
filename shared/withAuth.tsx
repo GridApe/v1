@@ -24,7 +24,7 @@ export function withAuth<P extends object>(WrappedComponent: React.ComponentType
         setIsInitialized(true);
       };
 
-      initializeAuth();
+      initializeAuth().catch((error) => { console.error('Error initializing auth:', error); });
     }, [user, loading, fetchCurrentUser]);
 
     useEffect(() => {

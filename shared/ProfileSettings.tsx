@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
-import { Pen, ImagePlus } from 'lucide-react';
+import { ImagePlus } from 'lucide-react';
 import UserAvatar from './UserAvatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -53,6 +53,7 @@ export default function ProfileSettings() {
     const file = event.target.files?.[0];
     if (file) {
       // Basic file type and size validation
+      console.log(profileImage);
       const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
       const maxSize = 5 * 1024 * 1024; // 5MB
 
@@ -75,13 +76,11 @@ export default function ProfileSettings() {
       }
 
       setProfileImage(file);
-      // Here you would typically upload the image to your server
     }
   };
 
-  const onSubmit = async (values: FormValues) => {
+  const onSubmit = async (values: FormValues): Promise<void> => {
     try {
-      // Implement actual user update logic
       updateUser({
         ...values,
         id: '',
@@ -99,7 +98,7 @@ export default function ProfileSettings() {
     } catch (error) {
       toast({
         title: 'Update Failed',
-        description: 'Unable to update profile. Please try again.',
+        description: `Unable to update profile. Please try again. ${error}`,
         variant: 'destructive',
       });
     }

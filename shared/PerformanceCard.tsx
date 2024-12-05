@@ -3,7 +3,6 @@
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { MoreVertical, ArrowUp } from 'lucide-react';
-import clsx from 'clsx';
 
 interface PerformanceCardProps {
   value: number | string;

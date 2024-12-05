@@ -13,9 +13,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { TemplateTypes } from '@/types/interface';
-import { cn } from '@/lib/utils';
 
 export default function TemplatesPage() {
   const [templates, setTemplates] = useState<TemplateTypes[]>([]);
@@ -27,7 +26,7 @@ export default function TemplatesPage() {
   const iframeRefs = useRef<{ [key: string]: HTMLIFrameElement | null }>({});
 
   useEffect(() => {
-    async function fetchTemplates() {
+    async function fetchTemplates(): Promise<void> {
       try {
         setLoading(true);
         const response = await fetch('/api/templates');
@@ -65,6 +64,7 @@ export default function TemplatesPage() {
       (searchQuery === '' || template.name.toLowerCase().includes(searchQuery.toLowerCase())) &&
       (categoryFilter === 'all' || template.category === categoryFilter)
   );
+
 
   return (
     <div className="container mx-auto p-6 space-y-6">

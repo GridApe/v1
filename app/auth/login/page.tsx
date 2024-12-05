@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -14,7 +13,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { useAuthStore } from '@/store/authStore';
 
 export default function LoginPage() {
-  const router = useRouter();
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -27,7 +25,6 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // setLoading(true);
 
     try {
       await auth.login(formData.email, formData.password);
@@ -37,8 +34,6 @@ export default function LoginPage() {
         title: 'Error',
         description: error instanceof Error ? error.message : 'Failed to login',
       });
-    } finally {
-      // setLoading(false);
     }
   };
 
@@ -50,7 +45,7 @@ export default function LoginPage() {
       transition={{ duration: 0.3 }}
     >
       <AuthCard title="Login">
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
           {user?.email || 3}
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>

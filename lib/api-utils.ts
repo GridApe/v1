@@ -8,7 +8,7 @@ const CSRF_COOKIE_URL =
 
 async function ensureCsrfToken() {
   try {
-    console.log('Fetching CSRF token from:', CSRF_COOKIE_URL);
+    // console.log('Fetching CSRF token from:', CSRF_COOKIE_URL);
     const response = await fetch(CSRF_COOKIE_URL, {
       method: 'GET',
       credentials: 'include',
@@ -25,10 +25,10 @@ async function ensureCsrfToken() {
     const cookieHeader = response.headers.get('set-cookie');
     const csrfTokenMatch = cookieHeader?.match(/XSRF-TOKEN=([^;]+)/);
     const csrfToken = csrfTokenMatch ? csrfTokenMatch[1] : '';
-    console.log('Fetched CSRF token:', csrfToken);
+    // console.log('Fetched CSRF token:', csrfToken);
     return csrfToken;
   } catch (error) {
-    console.error('Error fetching CSRF token:', error);
+    // console.error('Error fetching CSRF token:', error);
     throw new Error('Failed to fetch CSRF token');
   }
 }
@@ -40,13 +40,13 @@ export async function handleApiRequest(
 ) {
   let csrfToken;
   try {
-    console.log('Ensuring CSRF token...');
+    // console.log('Ensuring CSRF token...');
     csrfToken = await ensureCsrfToken();
 
     const cookieStore = cookies();
     const access_token = cookieStore.get('token')?.value;
 
-    console.log('Access token from cookies:', access_token);
+    // console.log('Access token from cookies:', access_token);
 
     const headers: HeadersInit = {
       Accept: 'application/json',
@@ -58,11 +58,11 @@ export async function handleApiRequest(
         : `Bearer 28|XiAfsgLdenpa3KzxrbEClzlvNn0Xg9uT0b7Z1A5h414f7f21`,
     };
 
-    console.log('Headers prepared for API request:', headers);
+    // console.log('Headers prepared for API request:', headers);
 
     const body = method !== 'GET' ? await request.text() : undefined;
 
-    console.log(`Sending ${method} request to: ${BASE_URL}${endpoint}`);
+    // console.log(`Sending ${method} request to: ${BASE_URL}${endpoint}`);
 
     const response = await fetch(`${BASE_URL}${endpoint}`, {
       method,
@@ -74,14 +74,14 @@ export async function handleApiRequest(
     const data = await response.json();
 
     if (!response.ok) {
-      console.error('Error response from API:', data);
-      throw new Error(data.error || 'An error occurred');
+      // console.error('Error response from API:', data);
+      throw new Error(data.message || 'An error occurred');
     }
 
-    console.log('API response data:', data);
+    // console.log('API response data:', data);
     return NextResponse.json(data);
   } catch (error) {
-    console.error('API Error:', error);
+    // console.error('API Error:', error);
     return NextResponse.json(
       {
         error: error instanceof Error ? error.message : 'An unexpected error occurred',
