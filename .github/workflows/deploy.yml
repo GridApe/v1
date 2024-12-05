@@ -52,7 +52,7 @@ jobs:
           cd /home/${{ secrets.SERVER_USER }}/public_html
 
           # Pull the latest code from the dev branch
-          git pull origin dev
+          git pull origin main
 
           # Install production dependencies
           npm install --production
