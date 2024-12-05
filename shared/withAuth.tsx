@@ -24,7 +24,7 @@ export function withAuth<P extends object>(WrappedComponent: React.ComponentType
         setIsInitialized(true);
       };
 
-      initializeAuth();
+      initializeAuth().catch((error) => { console.error('Error initializing auth:', error); });
     }, [user, loading, fetchCurrentUser]);
 
     useEffect(() => {
@@ -45,15 +45,10 @@ export function withAuth<P extends object>(WrappedComponent: React.ComponentType
   };
 }
 
-
-
-const LoadingScreen = ({ 
-  loadingText = "Loading...", 
-  logoSrc = "/logo.svg" 
-}) => {
+const LoadingScreen = ({ loadingText = 'Loading...', logoSrc = '/logo.svg' }) => {
   return (
     <div className="flex flex-col justify-center items-center h-screen bg-primary">
-      <motion.img 
+      <motion.img
         src={logoSrc}
         alt="Loading Logo"
         className="w-24 h-24 mb-6"
@@ -64,7 +59,7 @@ const LoadingScreen = ({
         transition={{
           duration: 0.8,
           repeat: Infinity,
-          ease: "easeInOut"
+          ease: 'easeInOut',
         }}
       />
       <div className="flex items-center">
@@ -75,7 +70,7 @@ const LoadingScreen = ({
           transition={{
             duration: 1,
             repeat: Infinity,
-            ease: "linear"
+            ease: 'linear',
           }}
           className="mr-4"
         >
@@ -85,7 +80,7 @@ const LoadingScreen = ({
       </div>
     </div>
   );
-}
+};
 
 export default LoadingScreen;
 
@@ -96,4 +91,3 @@ function UnauthorizedScreen() {
     </div>
   );
 }
-

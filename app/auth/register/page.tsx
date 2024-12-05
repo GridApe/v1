@@ -23,7 +23,7 @@ export default function RegisterPage() {
     last_name: '',
   });
 
-  const { register, loading } = useAuthStore();
+  const { loading } = useAuthStore();
   const auth = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -70,7 +70,12 @@ export default function RegisterPage() {
       transition={{ duration: 0.3 }}
     >
       <AuthCard title="Sign up">
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form
+          onSubmit={(e) => {
+            void handleSubmit(e);
+          }}
+          className="space-y-4"
+        >
           <div className="space-y-2">
             <Label htmlFor="first_name">First Name</Label>
             <Input

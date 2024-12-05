@@ -36,9 +36,9 @@ import {
   ResponsiveContainer,
   Legend,
   Tooltip,
-} from "recharts";
-import SearchBar from "@/shared/SearchBar";
-import { mockSearchFunction } from "@/lib/mockData";
+} from 'recharts';
+import SearchBar from '@/shared/SearchBar';
+import { mockSearchFunction } from '@/lib/mockData';
 
 const chartData = [
   { month: 'Jan', openRate: 700, ctr: 400, bounceRate: 200 },
@@ -91,14 +91,14 @@ export default function Dashboard() {
   };
   return (
     <div className="p-4 md:p-6 lg:p-8 min-h-screen rounded-lg">
-       <div className='mb-5'>
-         <SearchBar
+      <div className="mb-5">
+        <SearchBar
           searchFunction={mockSearchFunction}
-           avatarSrc="assets/logo.svg"
-           avatarFallback="JD"
-           notificationCount={12}
-         />
-       </div>
+          avatarSrc="assets/logo.svg"
+          avatarFallback="JD"
+          notificationCount={12}
+        />
+      </div>
       <Banner name="Collins" />
 
       <div className="mb-12 grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6 max-w-[800px] mt-12">

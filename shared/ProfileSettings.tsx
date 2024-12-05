@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
-import { Pen, ImagePlus } from 'lucide-react';
+import { ImagePlus } from 'lucide-react';
 import UserAvatar from './UserAvatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -53,6 +53,7 @@ export default function ProfileSettings() {
     const file = event.target.files?.[0];
     if (file) {
       // Basic file type and size validation
+      console.log(profileImage);
       const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
       const maxSize = 5 * 1024 * 1024; // 5MB
 
@@ -75,21 +76,19 @@ export default function ProfileSettings() {
       }
 
       setProfileImage(file);
-      // Here you would typically upload the image to your server
     }
   };
 
-  const onSubmit = async (values: FormValues) => {
+  const onSubmit = async (values: FormValues): Promise<void> => {
     try {
-      // Implement actual user update logic
       updateUser({
-          ...values,
-          id: '',
-          first_name: '',
-          last_name: '',
-          phone_number: '',
-          address: '',
-          avatar: ''
+        ...values,
+        id: '',
+        first_name: '',
+        last_name: '',
+        phone_number: '',
+        address: '',
+        avatar: '',
       });
 
       toast({
@@ -99,7 +98,7 @@ export default function ProfileSettings() {
     } catch (error) {
       toast({
         title: 'Update Failed',
-        description: 'Unable to update profile. Please try again.',
+        description: `Unable to update profile. Please try again. ${error}`,
         variant: 'destructive',
       });
     }
@@ -112,19 +111,17 @@ export default function ProfileSettings() {
         <div>
           <div className="mb-6 flex items-center">
             <div className="relative inline-block mr-4">
-              <UserAvatar 
-                size="xlarge" 
-              />
-              <label 
-                htmlFor="profile-image-upload" 
+              <UserAvatar size="xlarge" />
+              <label
+                htmlFor="profile-image-upload"
                 className="absolute bottom-0 right-0 p-2 bg-primary text-white shadow rounded-full hover:bg-primary/80 transition cursor-pointer"
                 aria-label="Edit profile image"
               >
-                <Input 
+                <Input
                   id="profile-image-upload"
-                  type="file" 
+                  type="file"
                   accept="image/jpeg,image/png,image/gif"
-                  className="hidden" 
+                  className="hidden"
                   onChange={handleImageUpload}
                 />
                 <ImagePlus className="w-4 h-4" />
@@ -253,7 +250,7 @@ export default function ProfileSettings() {
                   </FormItem>
                 )}
               />
-              
+
               <Button type="submit" className="w-full">
                 Reset Password
               </Button>

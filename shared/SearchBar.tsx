@@ -2,9 +2,8 @@ import * as React from 'react';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useSearch } from '@/hooks/useSearch';
-import { NotificationList } from './NotificationList'; 
+import { NotificationList } from './NotificationList';
 import { UserNav } from './UserNav';
-
 
 interface SearchBarProps {
   searchFunction: (query: string) => Promise<any[]>;
@@ -40,10 +39,7 @@ export default function SearchBar({
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className={`flex items-center gap-4 lg:gap-6 ${className}`}
-    >
+    <form onSubmit={handleSubmit} className={`flex items-center gap-4 lg:gap-6 ${className}`}>
       <div className="relative flex-grow">
         <Search className="absolute left-3 top-1/2 h-6 w-6 -translate-y-1/2 transform text-muted-foreground" />
         <Input
@@ -65,13 +61,8 @@ export default function SearchBar({
           notificationCount={currentNotificationCount}
           onMarkAsRead={handleMarkAsRead}
         />
-        <UserNav
-          avatarSrc={avatarSrc}
-          avatarFallback={avatarFallback}
-          onLogout={handleLogout}
-        />
+        <UserNav avatarSrc={avatarSrc} avatarFallback={avatarFallback} onLogout={handleLogout} />
       </div>
     </form>
   );
 }
-

@@ -1,7 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
-import { Mail, MousePointerClick, MailOpenIcon, MailCheck } from 'lucide-react';
+import { MousePointerClick, MailOpenIcon, MailCheck } from 'lucide-react';
 import { BarChart, Bar, XAxis, CartesianGrid } from 'recharts';
 import { useAuthStore } from '@/store/authStore';
 import { useEffect, useState } from 'react';
@@ -28,26 +27,27 @@ import {
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 
+interface DashboardResponse {
+  data: DashboardTypes;
+}
 const Dashboard = () => {
   const { user } = useAuthStore();
   const [data, setData] = useState<DashboardTypes | null>(null);
-  const [loading, setLoading] = useState(true);
-  const router = useRouter()
+  // const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await fetch('/api/user/dashboard', { credentials: 'include' });
         if (!response.ok) throw new Error('Failed to fetch data');
-        const responseData = await response.json();
+        const responseData = await response.json() as DashboardResponse;
         setData(responseData.data);
       } catch (error) {
         console.error(error);
-      } finally {
-        setLoading(false);
       }
     };
-    fetchData();
+    void fetchData();
   }, []);
 
   const chartConfig = {
@@ -69,15 +69,21 @@ const Dashboard = () => {
       </div>
 
       <div className="mb-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <Button onClick={() => router.push('/')}  className=" justify-start rounded-xl bg-white p-4 md:py-10  hover:shadow-sm hover:scale-105 transition-shadow transition-transform cursor-pointer text-left">
+        <Button
+          onClick={() => router.push('/')}
+          className=" justify-start rounded-xl bg-white p-4 md:py-10  hover:shadow-sm hover:scale-105 transition-shadow transition-transform cursor-pointer text-left"
+        >
           <MailCheck className=" text-blue-600" size={40} />
           <span className="text-lg font-semibold text-[#1E0E4E]">Create Email</span>
         </Button>
-        <Button onClick={() => router.push('/dashboard/campaign/create')}  className=" justify-start rounded-xl bg-white p-4 md:py-10  hover:shadow-sm hover:scale-105 transition-shadow transition-transform cursor-pointer text-left">
+        <Button
+          onClick={() => router.push('/dashboard/campaign/create')}
+          className=" justify-start rounded-xl bg-white p-4 md:py-10  hover:shadow-sm hover:scale-105 transition-shadow transition-transform cursor-pointer text-left"
+        >
           <MailCheck className=" text-purple-600" size={40} />
           <span className="text-lg font-semibold text-[#1E0E4E]">Create Campaigns</span>
         </Button>
-        
+
         {/* {[
           { icon: Mail, label: 'Create Email', color: 'text-blue-600' },
           { icon: MousePointerClick, label: 'Create Campaigns', color: 'text-purple-600' },
@@ -163,8 +169,7 @@ const Dashboard = () => {
                   tickLine={false}
                   tickMargin={10}
                   axisLine={false}
-                  tickFormatter={(value) => value.slice(0, 3)}
-                />
+                  tickFormatter={(value: string): string => value.slice(0, 3)}                  />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <ChartLegend content={<ChartLegendContent />} />
                 <Bar dataKey="value" fill="var(--color-value)" radius={4} />
