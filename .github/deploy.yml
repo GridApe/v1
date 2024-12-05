@@ -1,0 +1,64 @@
+on: 
+  push:
+   branches: [main]
+name: 🚀 Deploy website on push
+jobs:
+  web-deploy:
+    name: 🎉 Deploy
+    runs-on: ubuntu-latest
+    steps:
+    - name: 🚚 Get latest code
+      uses: actions/checkout@v4
+
+    - name: Use Node.js 20
+      uses: actions/setup-node@v2
+      with:
+        node-version: '20'
+      
+    - name: 🔨 Build Project
+      run: |
+        npm install
+        npm run build
+
+    # - name: 📂 Sync files
+    #   uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+    #   with:
+    #     server:  ${{ secrets.FTP_SERVER }}
+    #     username: ${{ secrets.FTP_USERNAME }}
+    #     password: ${{ secrets.FTP_PASSWORD }}
+    #     server-dir: /
+    #     protocol: ftps
+
+    - name: Set up SSH
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H vmi2322505.contaboserver.net >> ~/.ssh/known_hosts
+        chmod 644 ~/.ssh/known_hosts
+
+    - name: 📂 Deploy via SSH
+      uses: appleboy/ssh-action@v0.1.7
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: 22
+        script: |
+          # Ensure Node.js, npm, and PM2 are installed on the server
+          node -v || (echo "Node.js is not installed, installing..." && sudo apt update && sudo apt install -y nodejs npm && sudo npm install -g pm2)
+          
+          # Navigate to the project directory
+          cd /home/${{ secrets.SERVER_USER }}/public_html
+
+          # Pull the latest code from the dev branch
+          git pull origin dev
+
+          # Install production dependencies
+          npm install --production
+
+          # Restart PM2 processes
+          pm2 restart all || pm2 start app.js --name "my-app"  # Replace app.js with your app's entry file if needed
+          
+          # Optionally save the process list to restore on reboot
+          pm2 save
