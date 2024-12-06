@@ -27,19 +27,9 @@ jobs:
           yarn build
 
       - name: 🚀 Deploy to Server
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: 22
-          script: |
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
             set -e
-            
-            echo "Installing Node.js..."
-            curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-            sudo apt-get update || { echo "apt-get update failed"; exit 1; }
-            sudo apt-get install -y nodejs || { echo "apt-get install nodejs failed"; exit 1; }
 
             echo "Node.js version installed:"
             node -v
@@ -67,3 +57,6 @@ jobs:
             fi
 
             pm2 save
+          EOF
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
