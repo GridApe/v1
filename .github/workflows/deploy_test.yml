@@ -33,4 +33,3 @@ jobs:
           ssh app@vmi2322505.contaboserver.net "cd /home/app && \
           git pull origin main && \
           yarn install --production && \
-          pm2 restart your_app_name"
