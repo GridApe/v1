@@ -61,7 +61,7 @@ jobs:
 
             cd /home/${{ secrets.SERVER_USER }}/public_html
 
-            git pull origin main || { echo "Git pull failed"; exit 1; }
+            git clone git@github.com:GridApe/v1.git
 
             yarn install --frozen-lockfile || { echo "Dependency installation failed"; exit 1; }
 
