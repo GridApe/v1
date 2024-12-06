@@ -30,6 +30,6 @@ jobs:
       
       - name: Deploy via SSH
         run: |
-          ssh app@vmi2322505.contaboserver.net "cd /home/app && \
+          ssh app@vmi2322505.contaboserver.net "cd /home/app/public_html && \
           git pull origin main && \
           yarn install --production && \
