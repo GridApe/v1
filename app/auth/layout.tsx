@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { ReactNode } from 'react';
+import { ReactNode, Suspense } from 'react';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
@@ -9,13 +9,15 @@ export const metadata: Metadata = {
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
-      <body
+    // <html lang="en">
+      <div
         className={` antialiased min-h-screen flex items-center justify-center bg-[#4338ca] p-4`}
       >
-        <div className="w-full max-w-md">{children}</div>
-        <Toaster />
-      </body>
-    </html>
+        <Suspense fallback={<div>Loading...</div>}>
+          <div className="w-full max-w-md">{children}</div>
+          <Toaster />
+        </Suspense>
+      </div>
+    // </html>div
   );
 }
