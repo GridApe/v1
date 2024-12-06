@@ -38,10 +38,13 @@ jobs:
           ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
             set -e
             
+            echo "Checking disk space..."
+            df -h
+            
             echo "Checking if Yarn is installed..."
             if ! command -v yarn > /dev/null; then
               echo "Yarn is not installed. Installing Yarn locally..."
-              npm install --prefix ~/.local yarn
+              npm install --prefix ~/.local yarn || { echo "Yarn installation failed"; exit 1; }
               export PATH=$HOME/.local/bin:$PATH
             else
               echo "Yarn is already installed."
