@@ -21,10 +21,21 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: 📦 Install and Build
+      - name: 📦 Install and Build with Retry Logic
         run: |
-          yarn install
-          yarn build
+          set -e
+
+          echo "Installing Yarn dependencies with retries..."
+          for i in 1 2 3; do
+            yarn install --network-timeout=60000 && break || {
+              echo "Attempt $i to install dependencies failed. Retrying..."
+              yarn cache clean
+              rm -rf node_modules
+            }
+          done
+
+          echo "Building the application..."
+          yarn build || { echo "Build failed"; exit 1; }
 
       - name: Set up SSH
         run: |
@@ -37,30 +48,34 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
             set -e
-          
+
+            echo "Starting deployment on server..."
+
+            cd /home/${{ secrets.SERVER_USER }}/public_html
+
+            echo "Pulling latest changes..."
+            git pull origin main || { echo "Git pull failed"; exit 1; }
+
             echo "Cleaning Yarn cache..."
-            yarn cache clean || { echo "Failed to clean Yarn cache"; exit 1; }
-          
-            echo "Removing potential npm lockfile conflicts..."
-            rm -f package-lock.json
-          
-            echo "Configuring Yarn registry..."
-            yarn config set registry https://registry.npmjs.org/
-          
-            echo "Testing network connectivity..."
-            curl -I https://registry.npmjs.org/
-          
-            echo "Installing dependencies..."
-            yarn install --frozen-lockfile || { echo "Dependency installation failed"; exit 1; }
-          
+            yarn cache clean
+
+            echo "Installing dependencies with retries..."
+            for i in 1 2 3; do
+              yarn install --network-timeout=60000 && break || {
+                echo "Attempt $i to install dependencies failed. Retrying..."
+                yarn cache clean
+                rm -rf node_modules
+              }
+            done
+
             echo "Building the application..."
             yarn build || { echo "Build failed"; exit 1; }
-          
-            echo "Starting the application with PM2..."
+
+            echo "Starting application with PM2..."
             npx pm2 describe nextjs-app > /dev/null && npx pm2 reload nextjs-app || npx pm2 start yarn --name "nextjs-app" -- run start
-          
+
             echo "Saving PM2 process list..."
             npx pm2 save
-          
-            echo "Deployment successful!"
+
+            echo "Deployment completed successfully!"
           EOF
