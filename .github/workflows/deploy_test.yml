@@ -38,48 +38,32 @@ jobs:
           ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
             set -e
 
-            echo "Checking disk space..."
-            df -h
+            echo "Checking Node.js version..."
+            node -v || echo "Node.js is not installed. Install it first."
 
             echo "Checking if Yarn is installed..."
             if ! command -v yarn > /dev/null; then
-              echo "Yarn is not installed. Installing Yarn directly..."
-              rm -rf ~/.yarn ~/.config/yarn
+              echo "Installing Yarn..."
               curl -o- -L https://yarnpkg.com/install.sh | bash
               export PATH=$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH
-            else
-              echo "Yarn is already installed."
             fi
 
-            echo "Node.js version installed:"
-            node -v
-
-            echo "Yarn version installed:"
-            yarn -v
-
-            echo "Deploying the application..."
-
+            echo "Pulling latest code from Git..."
             cd /home/${{ secrets.SERVER_USER }}/public_html
-
-            echo "Pulling latest changes..."
+            git reset --hard
             git pull origin main || { echo "Git pull failed"; exit 1; }
 
-            echo "Cleaning up Yarn cache and old lock files..."
-            yarn cache clean
-            yarn config set registry https://registry.npmjs.org/
-            rm -f package-lock.json
-
-            echo "Installing dependencies..."
-            yarn install --frozen-lockfile || (yarn cache clean && yarn install --frozen-lockfile) || { echo "Dependency installation failed"; exit 1; }
+            echo "Installing dependencies with Yarn..."
+            yarn install --frozen-lockfile || { echo "Yarn install failed"; exit 1; }
 
             echo "Building the application..."
-            yarn build || { echo "Build process failed"; exit 1; }
+            yarn build || { echo "Build failed"; exit 1; }
 
-            echo "Starting application with PM2..."
+            echo "Starting or reloading the application with PM2..."
             npx pm2 describe nextjs-app > /dev/null && npx pm2 reload nextjs-app || npx pm2 start yarn --name "nextjs-app" -- run start
 
             echo "Saving PM2 process list..."
             npx pm2 save
 
-            echo "Deployment completed successfully!"
+            echo "Deployment successful!"
           EOF
