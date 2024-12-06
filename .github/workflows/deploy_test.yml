@@ -44,11 +44,8 @@ jobs:
             echo "Checking if Yarn is installed..."
             if ! command -v yarn > /dev/null; then
               echo "Yarn is not installed. Cleaning up and installing Yarn directly..."
-              rm -rf ~/.yarn
-              mkdir -p ~/yarn-install
-              curl -o ~/yarn-install/yarn.tar.gz -L https://yarnpkg.com/latest.tar.gz || { echo "Download failed"; exit 1; }
-              tar -xzf ~/yarn-install/yarn.tar.gz -C ~/yarn-install || { echo "Extract failed"; exit 1; }
-              mv ~/yarn-install/dist ~/.yarn
+              rm -rf ~/.yarn ~/.config/yarn
+              curl -o- -L https://yarnpkg.com/install.sh | bash
               export PATH=$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH
             else
               echo "Yarn is already installed."
