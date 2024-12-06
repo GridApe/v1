@@ -49,9 +49,15 @@ jobs:
           ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
             set -e
 
-            echo "Starting deployment on server..."
 
-            cd /home/${{ secrets.SERVER_USER }}/public_html
+            echo "Navigating to project directory..."
+            cd /home/***/public_html || { echo "Project directory not found"; exit 1; }
+          
+            echo "Checking for package.json..."
+            if [ ! -f package.json ]; then
+              echo "Error: package.json not found in $(pwd). Exiting..."
+              exit 1
+            fi
 
             echo "Pulling latest changes..."
             git pull origin main || { echo "Git pull failed"; exit 1; }
