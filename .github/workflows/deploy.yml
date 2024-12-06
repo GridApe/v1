@@ -1,75 +1,79 @@
-name: 🚀 Deploy Next.js App
-
-on:
+on: 
   push:
-    branches: [main]
-
+   branches: [main]
+name: 🚀 Deploy website on push
 jobs:
-  build-and-deploy:
-    name: 🎉 Build and Deploy
+  web-deploy:
+    name: 🎉 Deploy
     runs-on: ubuntu-latest
-
-    env:
-      NODE_VERSION: 20
-
     steps:
-      - name: 🚚 Checkout Repository
-        uses: actions/checkout@v4
+    - name: 🚚 Get latest code
+      uses: actions/checkout@v4
 
-      - name: 🛠 Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ env.NODE_VERSION }}
+    - name: Use Node.js 20
+      uses: actions/setup-node@v2
+      with:
+        node-version: '20'
+      
+    - name: 🔨 Build Project
+      run: |
+        npm install
+        npm run build
 
-      - name: 📦 Install Dependencies and Build
-        run: |
-          npm install
-          npm run build
+    # - name: 📂 Sync files
+    #   uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+    #   with:
+    #     server:  ${{ secrets.FTP_SERVER }}
+    #     username: ${{ secrets.FTP_USERNAME }}
+    #     password: ${{ secrets.FTP_PASSWORD }}
+    #     server-dir: /
+    #     protocol: ftps
 
-      - name: 🚀 Deploy to Server
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: 22
-          script: |
-            set -e  # Exit on errors
-            
-            echo "Navigating to the project directory..."
-            cd /home/${{ secrets.SERVER_USER }}/public_html || { echo "Directory not found"; exit 1; }
-            
-            echo "Checking for package.json..."
-            if [ ! -f package.json ]; then
-              echo "Error: package.json not found in $(pwd). Exiting..."
-              exit 1
-            fi
-            
-            echo "Cleaning Yarn cache..."
-            yarn cache clean || { echo "Failed to clean Yarn cache"; exit 1; }
+    - name: Set up SSH
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H vmi2322505.contaboserver.net >> ~/.ssh/known_hosts
+        chmod 644 ~/.ssh/known_hosts
 
-            echo "Removing potential npm lockfile conflicts..."
-            rm -f package-lock.json
+    - name: 📂 Deploy via SSH
+      uses: appleboy/ssh-action@v0.1.7
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: 22
+        script: |
+          # Ensure Node.js, npm, and PM2 are installed on the server
+          node -v || (echo "Node.js is not installed, installing..." && sudo apt update && sudo apt install -y nodejs npm && sudo npm install -g pm2)
+          
+          # Navigate to the project directory
+          cd /home/${{ secrets.SERVER_USER }}/public_html
 
-            echo "Configuring Yarn registry..."
-            yarn config set registry https://registry.npmjs.org/
+          # Pull the latest code from the dev branch
+          git pull origin main
 
-            echo "Installing dependencies..."
-            yarn install --frozen-lockfile || { echo "Dependency installation failed"; exit 1; }
+          # Install production dependencies
+          npm install --production
 
-            echo "Building the application..."
-            yarn build || { echo "Build process failed"; exit 1; }
+          echo "Cleaning Yarn cache..."
+          yarn cache clean
 
-            echo "Checking for PM2 process..."
-            if npx pm2 describe nextjs-app > /dev/null; then
-              echo "Reloading existing PM2 process..."
-              npx pm2 reload nextjs-app || { echo "PM2 reload failed"; exit 1; }
-            else
-              echo "Starting a new PM2 process..."
-              npx pm2 start yarn --name "nextjs-app" -- run start || { echo "PM2 start failed"; exit 1; }
-            fi
+          echo "Installing dependencies with retries..."
+          for i in 1 2 3; do
+          yarn install --network-timeout=60000 && break || {
+          echo "Attempt $i to install dependencies failed. Retrying..."
+          yarn cache clean
+          rm -rf node_modules
+          }
+          done
 
-            echo "Saving PM2 process list..."
-            npx pm2 save || { echo "Failed to save PM2 process list"; exit 1; }
+          echo "Building the application..."
+          yarn build || { echo "Build failed"; exit 1; }
 
-            echo "Deployment completed successfully!"
+          echo "Starting application with PM2..."
+          pm2 describe nextjs-app > /dev/null && pm2 reload nextjs-app || pm2 start yarn --name "nextjs-app" -- run dev
+
+          # Optionally save the process list to restore on reboot
+          pm2 save
