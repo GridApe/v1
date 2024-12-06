@@ -35,13 +35,14 @@ jobs:
 
       - name: Deploy via SSH
         run: |
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
             set -e
-
+            
             echo "Checking if Yarn is installed..."
             if ! command -v yarn > /dev/null; then
-              echo "Yarn is not installed. Installing Yarn..."
-              npm install -g yarn
+              echo "Yarn is not installed. Installing Yarn locally..."
+              npm install --prefix ~/.local yarn
+              export PATH=$HOME/.local/bin:$PATH
             else
               echo "Yarn is already installed."
             fi
