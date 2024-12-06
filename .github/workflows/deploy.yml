@@ -29,38 +29,52 @@ jobs:
           ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
 
-      - name: 📂 Deploy via SSH
-        uses: appleboy/ssh-action@v0.1.7
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: 22
-          script: |
-            # Ensure required tools are installed
-            node -v || (echo "Node.js not found. Installing..." && sudo apt update && sudo apt install -y nodejs yarn)
-            yarn -v || sudo npm install -g yarn
-            pm2 -v || sudo npm install -g pm2
-            
-            # Navigate to project directory or clone if not exists
-            PROJECT_DIR="/home/${{ secrets.SERVER_USER }}/public_html"
-            if [ ! -d "$PROJECT_DIR" ]; then
-              echo "Project directory not found. Cloning repository..."
-              git clone ${{ secrets.REPO_URL }} $PROJECT_DIR
-            fi
-            cd $PROJECT_DIR
-            
-            # Pull latest changes
-            git fetch origin
-            git reset --hard origin/main
-
-            # Install dependencies and rebuild
-            yarn install --production
-            yarn build
-
-            # Ensure `.next` build output is served by PM2
-            pm2 delete all || true
-            pm2 start yarn --name "next-app" -- start
-            
-            # Save PM2 process list for server reboots
-            pm2 save
+          - name: 📂 Deploy via SSH
+          uses: appleboy/ssh-action@v0.1.7
+          with:
+            host: ${{ secrets.SERVER_HOST }}
+            username: ${{ secrets.SERVER_USER }}
+            key: ${{ secrets.SSH_PRIVATE_KEY }}
+            port: 22
+            script: |
+              # Ensure Node.js is installed
+              if ! command -v node &> /dev/null; then
+                echo "Installing Node.js..."
+                sudo apt update && sudo apt install -y nodejs npm
+              fi
+        
+              # Install yarn if missing
+              if ! command -v yarn &> /dev/null; then
+                echo "Installing Yarn..."
+                npm install -g yarn
+              fi
+        
+              # Install PM2 if missing
+              if ! command -v pm2 &> /dev/null; then
+                echo "Installing PM2..."
+                npm install -g pm2
+              fi
+        
+              # Set up project directory
+              PROJECT_DIR="/home/${{ secrets.SERVER_USER }}/public_html"
+              if [ ! -d "$PROJECT_DIR" ]; then
+                echo "Project directory not found. Cloning repository..."
+                git clone ${{ secrets.REPO_URL }} $PROJECT_DIR
+              fi
+              cd $PROJECT_DIR
+        
+              # Pull latest code
+              git fetch origin
+              git reset --hard origin/main
+        
+              # Install dependencies and build
+              yarn install --production
+              yarn build
+        
+              # Restart with PM2
+              pm2 delete all || true
+              pm2 start "yarn dev" --name "next-app"
+        
+              # Save PM2 processes
+              pm2 save
+        
