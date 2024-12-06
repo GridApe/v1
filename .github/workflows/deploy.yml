@@ -60,15 +60,6 @@ jobs:
           echo "Cleaning Yarn cache..."
           yarn cache clean
 
-          echo "Installing dependencies with retries..."
-          for i in 1 2 3; do
-          yarn install --network-timeout=60000 && break || {
-          echo "Attempt $i to install dependencies failed. Retrying..."
-          yarn cache clean
-          rm -rf node_modules
-          }
-          done
-
           echo "Building the application..."
           yarn build || { echo "Build failed"; exit 1; }
 
