@@ -1,35 +1,69 @@
-name: Continuous Integration and Deployment
+name: 🚀 Deploy Next.js App
 on:
   push:
-    branches: 
-      - "main"
-
+    branches: [main]
 jobs:
-  Deployment:
+  build-and-deploy:
+    name: 🎉 Build and Deploy
     runs-on: ubuntu-latest
+    env:
+      NODE_VERSION: 20
     steps:
-      - uses: actions/checkout@v3
-      
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: '20'
-      
-      - name: Install Dependencies
-        run: yarn install
-      
-      - name: Build the Application
-        run: yarn build
-      
-      - name: Set up SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H vmi2322505.contaboserver.net >> ~/.ssh/known_hosts
-      
-      - name: Deploy via SSH
-        run: |
-          ssh app@vmi2322505.contaboserver.net "cd /home/app/public_html && \
-          git pull origin main && \
-          yarn install --production && \
+    - name: 🚚 Checkout Repository
+      uses: actions/checkout@v4
+    
+    - name: 🛠 Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+    
+    - name: 📦 Install and Build
+      run: |
+        npm install
+        npm run build
+    
+    - name: 🚀 Deploy to Server
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: 22
+        script: |
+          set -e  # Exit immediately if a command exits with a non-zero status
+          
+          # Ensure required tools are in PATH
+          export PATH=$HOME/.local/bin:$HOME/.npm-global/bin:$PATH
+          
+          # Install or update nvm if not present
+          if [ ! -d "$HOME/.nvm" ]; then
+            curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+          fi
+          
+          # Install Node.js using nvm
+          nvm install ${{ env.NODE_VERSION }}
+          nvm use ${{ env.NODE_VERSION }}
+          
+          # Install yarn and pm2 globally
+          npm install -g yarn pm2
+          
+          # Navigate to the project directory
+          cd /home/${{ secrets.SERVER_USER }}/public_html
+          
+          # Pull the latest code
+          git pull origin main || { echo "Git pull failed"; exit 1; }
+          
+          # Install dependencies and build
+          npm ci --omit=dev || { echo "Dependency installation failed"; exit 1; }
+          npm run build || { echo "Build process failed"; exit 1; }
+          
+          if pm2 describe nextjs-app > /dev/null; then
+            pm2 reload nextjs-app || { echo "PM2 reload failed"; exit 1; }
+          else
+            pm2 start npm --name "nextjs-app" -- run start || { echo "PM2 start failed"; exit 1; }
+          fi
+          
+          # Save the PM2 process list
+          pm2 save
