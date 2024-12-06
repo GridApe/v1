@@ -17,8 +17,8 @@ jobs:
       
     - name: 🔨 Build Project
       run: |
-        npm install
-        npm run build
+        yarn install
+        yarn build
 
     # - name: 📂 Sync files
     #   uses: SamKirkland/FTP-Deploy-Action@v4.3.5
@@ -45,8 +45,8 @@ jobs:
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         port: 22
         script: |
-          # Ensure Node.js, npm, and PM2 are installed on the server
-          node -v || (echo "Node.js is not installed, installing..." && sudo apt update && sudo apt install -y nodejs npm && sudo npm install -g pm2)
+          # Ensure Node.js, yarn, and PM2 are installed on the server
+          node -v || (echo "Node.js is not installed, installing..." && sudo apt update && sudo apt install -y nodejs yarn && sudo yarn add -g pm2)
           
           # Navigate to the project directory
           cd /home/${{ secrets.SERVER_USER }}/public_html
@@ -55,7 +55,7 @@ jobs:
           git pull origin main
 
           # Install production dependencies
-          npm install --production
+          yarn install --production
 
           # Restart PM2 processes
           pm2 restart all || pm2 start app.js --name "my-app"  # Replace app.js with your app's entry file if needed
