@@ -77,7 +77,7 @@ jobs:
             yarn build || { echo "Build failed"; exit 1; }
 
             echo "Starting application with PM2..."
-            npx pm2 describe nextjs-app > /dev/null && npx pm2 reload nextjs-app || npx pm2 start yarn --name "nextjs-app" -- run start
+            npx pm2 describe nextjs-app > /dev/null && npx pm2 reload nextjs-app || npx pm2 start yarn --name "nextjs-app" -- run dev
 
             echo "Saving PM2 process list..."
             npx pm2 save
