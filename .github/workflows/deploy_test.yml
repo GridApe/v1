@@ -1,0 +1,36 @@
+name: Continuous Integration and Deployment
+on:
+  push:
+    branches: 
+      - "main"
+
+jobs:
+  Deployment:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+      
+      - name: Install Dependencies
+        run: yarn install
+      
+      - name: Build the Application
+        run: yarn build
+      
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H vmi2322505.contaboserver.net >> ~/.ssh/known_hosts
+      
+      - name: Deploy via SSH
+        run: |
+          ssh app@vmi2322505.contaboserver.net "cd /home/app && \
+          git pull origin main && \
+          yarn install --production && \
+          pm2 restart your_app_name"
