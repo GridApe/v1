@@ -62,7 +62,7 @@ export async function handleApiRequest(
 
     const body = method !== 'GET' ? await request.text() : undefined;
 
-    // console.log(`Sending ${method} request to: ${BASE_URL}${endpoint}`);
+    console.log(`Sending ${method} request to: ${BASE_URL}${endpoint}`);
 
     const response = await fetch(`${BASE_URL}${endpoint}`, {
       method,
@@ -73,12 +73,12 @@ export async function handleApiRequest(
 
     const data = await response.json();
 
-    if (!response.ok) {
-      // console.error('Error response from API:', data);
+    if (!response.ok) { 
+      console.error('Error response from API:', data);
       throw new Error(data.message || 'An error occurred');
     }
 
-    // console.log('API response data:', data);
+    console.log('API response data:', data);
     return NextResponse.json(data);
   } catch (error) {
     // console.error('API Error:', error);

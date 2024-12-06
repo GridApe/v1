@@ -46,7 +46,6 @@ export default function LoginPage() {
     >
       <AuthCard title="Login">
         <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
-          {user?.email || 3}
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input

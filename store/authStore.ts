@@ -40,7 +40,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       const responseData = await response.json();
       
       if (response.ok) {
-        const responseData = await response.json();
+        // const responseData = await response.json();
         
         Cookies.set('token', responseData.data.access_token);
         await useAuthStore.getState().fetchCurrentUser();
@@ -135,7 +135,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
       if (!response.ok) throw new Error('Registration failed');
 
-      await useAuthStore.getState().fetchCurrentUser();
+      // await useAuthStore.getState().fetchCurrentUser();
       set({ loading: false });
     } catch (error) {
       console.error('Registration error:', error);
