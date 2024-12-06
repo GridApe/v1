@@ -61,14 +61,25 @@ jobs:
 
             cd /home/${{ secrets.SERVER_USER }}/public_html
 
+            echo "Pulling latest changes..."
             git pull origin main || { echo "Git pull failed"; exit 1; }
 
-            yarn install --frozen-lockfile || { echo "Dependency installation failed"; exit 1; }
+            echo "Cleaning up Yarn cache and old lock files..."
+            yarn cache clean
+            yarn config set registry https://registry.npmjs.org/
+            rm -f package-lock.json
 
+            echo "Installing dependencies..."
+            yarn install --frozen-lockfile || (yarn cache clean && yarn install --frozen-lockfile) || { echo "Dependency installation failed"; exit 1; }
+
+            echo "Building the application..."
             yarn build || { echo "Build process failed"; exit 1; }
 
             echo "Starting application with PM2..."
             npx pm2 describe nextjs-app > /dev/null && npx pm2 reload nextjs-app || npx pm2 start yarn --name "nextjs-app" -- run start
 
+            echo "Saving PM2 process list..."
             npx pm2 save
+
+            echo "Deployment completed successfully!"
           EOF
