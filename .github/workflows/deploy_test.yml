@@ -26,37 +26,22 @@ jobs:
           yarn install
           yarn build
 
-      - name: 🚀 Deploy to Server
+      - name: Set up SSH
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
-            set -e
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
 
-            echo "Node.js version installed:"
-            node -v
-
-            echo "Yarn version installed:"
-            yarn -v
-
-            echo "Installing global dependencies..."
-            yarn global add pm2 || { echo "Yarn global add pm2 failed"; exit 1; }
-
-            echo "Deploying the application..."
-
-            cd /home/${{ secrets.SERVER_USER }}/public_html
-
-            git pull origin main || { echo "Git pull failed"; exit 1; }
-
-            yarn install --frozen-lockfile || { echo "Dependency installation failed"; exit 1; }
-
-            yarn build || { echo "Build process failed"; exit 1; }
-
-            if pm2 describe nextjs-app > /dev/null; then
-              pm2 reload nextjs-app || { echo "PM2 reload failed"; exit 1; }
-            else
-              pm2 start yarn --name "nextjs-app" -- run start || { echo "PM2 start failed"; exit 1; }
-            fi
-
-            pm2 save
-          EOF
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Deploy via SSH
+        run: |
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "cd /home/${{ secrets.SERVER_USER }}/public_html &&
+                                git pull origin main &&
+                                yarn install --frozen-lockfile &&
+                                yarn build &&
+                                if pm2 describe nextjs-app > /dev/null; then
+                                  pm2 reload nextjs-app;
+                                else
+                                  pm2 start yarn --name 'nextjs-app' -- run start;
+                                fi &&
+                                pm2 save"
