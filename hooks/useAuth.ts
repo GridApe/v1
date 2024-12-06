@@ -11,6 +11,7 @@ export function useAuth() {
     // Create an async function inside the useEffect to handle the async operation
     const fetchUserData = async () => {
       try {
+        console.log(3333)
         await fetchCurrentUser();
       } catch (error) {
         console.error('Error fetching current user:', error);
