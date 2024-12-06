@@ -29,12 +29,22 @@ jobs:
         port: 22
         envs: NODE_VERSION
         script: |
-          # Update and install necessary packages
-          sudo apt update
-          sudo apt install -y nodejs npm
-          sudo npm install -g n
-          sudo n $NODE_VERSION
-          sudo npm install -g yarn pm2
+          # Ensure required tools are in PATH
+          export PATH=$HOME/.local/bin:$HOME/.npm-global/bin:$PATH
+
+          # Install or update nvm if not present
+          if [ ! -d "$HOME/.nvm" ]; then
+            curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+          fi
+
+          # Install Node.js using nvm
+          nvm install $NODE_VERSION
+          nvm use $NODE_VERSION
+
+          # Install yarn and pm2 globally
+          npm install -g yarn pm2
 
           # Navigate to the project directory
           cd /home/${{ secrets.SERVER_USER }}/public_html
@@ -47,8 +57,7 @@ jobs:
           yarn build
 
           # Start or restart the Next.js app with PM2
-          pm2 describe nextjs-app > /dev/null
-          if [ $? -eq 0 ]; then
+          if pm2 describe nextjs-app > /dev/null; then
             pm2 reload nextjs-app
           else
             pm2 start yarn --name "nextjs-app" -- start
