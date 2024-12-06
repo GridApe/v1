@@ -1,27 +1,31 @@
 name: 🚀 Deploy Next.js App
+
 on:
   push:
     branches: [main]
+
 jobs:
   build-and-deploy:
     name: 🎉 Build and Deploy
     runs-on: ubuntu-latest
+
     env:
       NODE_VERSION: 20
+
     steps:
       - name: 🚚 Checkout Repository
         uses: actions/checkout@v4
-      
+
       - name: 🛠 Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
-      
+
       - name: 📦 Install and Build
         run: |
-          npm install
-          npm run build
-      
+          yarn install
+          yarn build
+
       - name: 🚀 Deploy to Server
         uses: appleboy/ssh-action@v1.0.0
         with:
@@ -30,44 +34,36 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
           script: |
-            # Update package lists and install Node.js
             set -e
             
             echo "Installing Node.js..."
             curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-            apt-get update
-            apt-get install -y nodejs
-            
+            apt-get update || { echo "apt-get update failed"; exit 1; }
+            apt-get install -y nodejs || { echo "apt-get install nodejs failed"; exit 1; }
+
             echo "Node.js version installed:"
             node -v
-            
-            echo "NPM version installed:"
-            npm -v
-            
+
+            echo "Yarn version installed:"
+            yarn -v
+
             echo "Installing global dependencies..."
-            npm install -g yarn pm2
-            
+            yarn global add pm2 || { echo "Yarn global add pm2 failed"; exit 1; }
+
             echo "Deploying the application..."
-            
-            # Navigate to the deployment directory
+
             cd /home/${{ secrets.SERVER_USER }}/public_html
-            
-            # Pull latest changes from the repository
+
             git pull origin main || { echo "Git pull failed"; exit 1; }
-            
-            # Install dependencies
-            npm ci --omit=dev || { echo "Dependency installation failed"; exit 1; }
-            
-            # Build the application
-            npm run build || { echo "Build process failed"; exit 1; }
-            
-            # Start or reload the application using PM2
+
+            yarn install --frozen-lockfile || { echo "Dependency installation failed"; exit 1; }
+
+            yarn build || { echo "Build process failed"; exit 1; }
+
             if pm2 describe nextjs-app > /dev/null; then
               pm2 reload nextjs-app || { echo "PM2 reload failed"; exit 1; }
             else
-              pm2 start npm --name "nextjs-app" -- run start || { echo "PM2 start failed"; exit 1; }
+              pm2 start yarn --name "nextjs-app" -- run start || { echo "PM2 start failed"; exit 1; }
             fi
-            
-            # Save PM2 process list
-            pm2 save
 
+            pm2 save
