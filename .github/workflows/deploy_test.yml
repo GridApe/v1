@@ -37,33 +37,30 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
             set -e
-
-            echo "Checking Node.js version..."
-            node -v || echo "Node.js is not installed. Install it first."
-
-            echo "Checking if Yarn is installed..."
-            if ! command -v yarn > /dev/null; then
-              echo "Installing Yarn..."
-              curl -o- -L https://yarnpkg.com/install.sh | bash
-              export PATH=$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH
-            fi
-
-            echo "Pulling latest code from Git..."
-            cd /home/${{ secrets.SERVER_USER }}/public_html
-            git reset --hard
-            git pull origin main || { echo "Git pull failed"; exit 1; }
-
-            echo "Installing dependencies with Yarn..."
-            yarn install --frozen-lockfile || { echo "Yarn install failed"; exit 1; }
-
+          
+            echo "Cleaning Yarn cache..."
+            yarn cache clean || { echo "Failed to clean Yarn cache"; exit 1; }
+          
+            echo "Removing potential npm lockfile conflicts..."
+            rm -f package-lock.json
+          
+            echo "Configuring Yarn registry..."
+            yarn config set registry https://registry.npmjs.org/
+          
+            echo "Testing network connectivity..."
+            curl -I https://registry.npmjs.org/
+          
+            echo "Installing dependencies..."
+            yarn install --frozen-lockfile || { echo "Dependency installation failed"; exit 1; }
+          
             echo "Building the application..."
             yarn build || { echo "Build failed"; exit 1; }
-
-            echo "Starting or reloading the application with PM2..."
+          
+            echo "Starting the application with PM2..."
             npx pm2 describe nextjs-app > /dev/null && npx pm2 reload nextjs-app || npx pm2 start yarn --name "nextjs-app" -- run start
-
+          
             echo "Saving PM2 process list..."
             npx pm2 save
-
+          
             echo "Deployment successful!"
           EOF
