@@ -1,80 +1,67 @@
+name: 🚀 Deploy Next.js App
+
 on:
   push:
     branches: [main]
-name: 🚀 Deploy Next.js AppRouter Website
 
 jobs:
-  web-deploy:
-    name: 🎉 Deploy Next.js App
+  build-and-deploy:
+    name: 🎉 Build and Deploy
     runs-on: ubuntu-latest
+
     steps:
-      - name: 🚚 Get latest code
-        uses: actions/checkout@v4
+    - name: 🚚 Checkout Repository
+      uses: actions/checkout@v4
 
-      - name: Use Node.js 20
-        uses: actions/setup-node@v2
-        with:
-          node-version: '20'
+    - name: 🛠 Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20'
 
-      - name: 🔨 Install and Build Project
-        run: |
-          yarn install
+    - name: 📂 Deploy to Server
+      uses: appleboy/ssh-action@v1.0.0
+      env:
+        NODE_VERSION: 20
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: 22
+        envs: NODE_VERSION
+        script: |
+          # Ensure required tools are in PATH
+          export PATH=$HOME/.local/bin:$HOME/.npm-global/bin:$PATH
+
+          # Install or update nvm if not present
+          if [ ! -d "$HOME/.nvm" ]; then
+            curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+          fi
+
+          # Install Node.js using nvm
+          nvm install $NODE_VERSION
+          nvm use $NODE_VERSION
+
+          # Install yarn and pm2 globally
+          npm install -g yarn pm2
+
+          # Navigate to the project directory
+          cd /home/${{ secrets.SERVER_USER }}/public_html
+
+          # Pull the latest code
+          git pull origin main
+
+          # Install dependencies and build
+          yarn install --frozen-lockfile
           yarn build
 
-      - name: Set up SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
-          chmod 644 ~/.ssh/known_hosts
+          # Start or restart the Next.js app with PM2
+          if pm2 describe nextjs-app > /dev/null; then
+            pm2 reload nextjs-app
+          else
+            pm2 start yarn --name "nextjs-app" -- start
+          fi
 
-          - name: 📂 Deploy via SSH
-          uses: appleboy/ssh-action@v0.1.7
-          with:
-            host: ${{ secrets.SERVER_HOST }}
-            username: ${{ secrets.SERVER_USER }}
-            key: ${{ secrets.SSH_PRIVATE_KEY }}
-            port: 22
-            script: |
-              # Ensure Node.js is installed
-              if ! command -v node &> /dev/null; then
-                echo "Installing Node.js..."
-                sudo apt update && sudo apt install -y nodejs npm
-              fi
-        
-              # Install yarn if missing
-              if ! command -v yarn &> /dev/null; then
-                echo "Installing Yarn..."
-                npm install -g yarn
-              fi
-        
-              # Install PM2 if missing
-              if ! command -v pm2 &> /dev/null; then
-                echo "Installing PM2..."
-                npm install -g pm2
-              fi
-        
-              # Set up project directory
-              PROJECT_DIR="/home/${{ secrets.SERVER_USER }}/public_html"
-              if [ ! -d "$PROJECT_DIR" ]; then
-                echo "Project directory not found. Cloning repository..."
-                git clone ${{ secrets.REPO_URL }} $PROJECT_DIR
-              fi
-              cd $PROJECT_DIR
-        
-              # Pull latest code
-              git fetch origin
-              git reset --hard origin/main
-        
-              # Install dependencies and build
-              yarn install --production
-              yarn build
-        
-              # Restart with PM2
-              pm2 delete all || true
-              pm2 start "yarn dev" --name "next-app"
-        
-              # Save PM2 processes
-              pm2 save
-        
+          # Save the PM2 process list
+          pm2 save

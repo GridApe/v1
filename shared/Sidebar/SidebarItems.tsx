@@ -42,7 +42,7 @@ export const SidebarItems: React.FC = () => {
       name: 'Campaigns',
       icon: SendIcon,
       subitems: [
-        { name: 'All campaigns', path: '/dashboard/campaigns/all' },
+        { name: 'All campaigns', path: '/dashboard/campaign/all' },
         { name: 'Create campaign', path: '/dashboard/campaign/create' },
       ],
       expandable: true,
