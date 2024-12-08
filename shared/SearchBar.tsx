@@ -1,9 +1,11 @@
+"use client"
 import * as React from 'react';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useSearch } from '@/hooks/useSearch';
 import { NotificationList } from './NotificationList';
 import { UserNav } from './UserNav';
+import { useNotificationStore } from '@/store/notificationStore';
 
 interface SearchBarProps {
   searchFunction: (query: string) => Promise<any[]>;
@@ -11,32 +13,36 @@ interface SearchBarProps {
   avatarSrc?: string;
   avatarFallback?: string;
   className?: string;
-  notificationCount?: number;
 }
 
 export default function SearchBar({
   searchFunction,
-  placeholder = 'Search anything....',
+  placeholder = "Search anything....",
   avatarSrc,
-  avatarFallback = 'U',
-  className = '',
-  notificationCount = 0,
+  avatarFallback = "U",
+  className = "",
 }: SearchBarProps) {
   const { query, isSearching, handleSearch } = useSearch({ searchFunction });
+  const {
+    notifications,
+    fetchNotifications,
+    markAllAsRead,
+    markAsRead,
+    deleteNotification
+  } = useNotificationStore();
 
-  const [currentNotificationCount, setNotificationCount] = React.useState(notificationCount);
-
-  const handleMarkAsRead = () => {
-    setNotificationCount(0);
-  };
-
-  const handleLogout = () => {
-    console.log('User logged out');
-  };
+  React.useEffect(() => {
+    fetchNotifications();
+  }, [fetchNotifications]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
   };
+
+  function handleLogout(): void {
+    console.log('Logout clicked');
+    // Implement logout functionality here
+  }
 
   return (
     <form onSubmit={handleSubmit} className={`flex items-center gap-4 lg:gap-6 ${className}`}>
@@ -58,11 +64,14 @@ export default function SearchBar({
       </div>
       <div className="hidden items-center gap-4 md:flex">
         <NotificationList
-          notificationCount={currentNotificationCount}
-          onMarkAsRead={handleMarkAsRead}
+          notifications={notifications}
+          onMarkAsRead={markAsRead}
+          onMarkAllAsRead={markAllAsRead}
+          onRemove={deleteNotification}
         />
         <UserNav avatarSrc={avatarSrc} avatarFallback={avatarFallback} onLogout={handleLogout} />
       </div>
     </form>
   );
 }
+
