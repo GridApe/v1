@@ -51,7 +51,7 @@ export default function LoginPage() {
     >
       <AuthCard title="Login">
         <form onSubmit={handleSubmit} className="space-y-4">
-          {user?.email || 3}
+          {user?.email || ""}
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input

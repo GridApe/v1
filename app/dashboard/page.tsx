@@ -56,7 +56,7 @@ const Dashboard = () => {
           searchFunction={mockSearchFunction}
           avatarSrc={user?.avatar}
           avatarFallback={user?.first_name}
-          notificationCount={12}
+          // notificationCount={12}
         />
       </div>
 
