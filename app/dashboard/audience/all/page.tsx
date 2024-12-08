@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -47,9 +47,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import Rocket from '@/shared/Rocket';
-import { useContactStore } from '@/store/contactStore';
 import { ContactTypes } from '@/types/interface';
 import { toast } from '@/hooks/use-toast';
+
+const API_BASE_URL = 'https://api.gridape.com/api/v1/user';
 
 export default function AudiencePage() {
   const [activeTab, setActiveTab] = useState('all-contacts');
@@ -57,9 +58,11 @@ export default function AudiencePage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
-  const [newContact, setNewContact] = useState<
-    Omit<ContactTypes, 'id' | 'contactDate' | 'user_id'>
-  >({
+  const [contacts, setContacts] = useState<ContactTypes[]>([]);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+
+  const [loading, setLoading] = useState(true);
+  const [newContact, setNewContact] = useState<Omit<ContactTypes, 'id' | 'contactDate' | 'user_id'>>({
     first_name: '',
     last_name: '',
     email: '',
@@ -68,45 +71,63 @@ export default function AudiencePage() {
     address: '',
   });
 
-  const { contacts, loading, listAllContacts, addContact } = useContactStore();
-
   useEffect(() => {
-    listAllContacts();
-  }, [listAllContacts]);
+    fetchContacts();
+  }, []);
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { duration: 0.5 } },
+  const fetchContacts = async () => {
+    setLoading(true);
+    setFetchError(null);
+    try {
+      const response = await fetch("/api/user/audience/all");
+      if (!response.ok) {
+        throw new Error('Failed to fetch contacts');
+      }
+      const result = await response.json();
+      
+      // Updated to match the new response structure
+      const contactsData = result.data?.contacts || [];
+      setContacts(contactsData);
+      
+      if (contactsData.length === 0) {
+        toast({
+          title: 'No Contacts',
+          description: 'You currently have no contacts.',
+          variant: 'default',
+        });
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+      setFetchError(errorMessage);
+      toast({
+        title: 'Error',
+        description: `Failed to fetch contacts: ${errorMessage}`,
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
   };
-
-  const filteredContacts =
-    contacts?.filter(
-      (contact) =>
-        `${contact.first_name} ${contact.last_name}`
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        contact.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        contact.phone.includes(searchTerm)
-    ) || [];
-
   const handleAddContact = async () => {
-    if (newContact.first_name && newContact.last_name && newContact.email && newContact.phone) {
+    if (newContact.first_name && newContact.last_name && newContact.email) {
       try {
-        await addContact(
-          newContact.first_name,
-          newContact.last_name,
-          newContact.email,
-          newContact.phone,
-          newContact.group
-        );
+        const response = await fetch("/api/user/audience/add", {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(newContact),
+        });
+        if (!response.ok) {
+          throw new Error('Failed to add contact');
+        }
         setIsAddContactOpen(false);
         toast({
           title: 'Contact Added',
           description: 'Your new contact has been successfully added.',
-          variant: 'success',
+          variant: 'default',
         });
-
-        // Reset form
+        fetchContacts();
         setNewContact({
           first_name: '',
           last_name: '',
@@ -126,27 +147,29 @@ export default function AudiencePage() {
       toast({
         title: 'Incomplete Information',
         description: 'Please fill all required fields.',
-        variant: 'warning',
+        variant: 'default',
       });
     }
   };
 
-  const handleSelectContact = (contactId: string) => {
-    setSelectedContacts((prev) =>
-      prev.includes(contactId) ? prev.filter((id) => id !== contactId) : [...prev, contactId]
-    );
-  };
-
   const handleDeleteContacts = async () => {
     try {
-      await deleteMultipleContacts(selectedContacts);
+      await Promise.all(selectedContacts.map(async (id) => {
+        const response = await fetch(`${API_BASE_URL}/contacts/${id}`, {
+          method: 'DELETE',
+        });
+        if (!response.ok) {
+          throw new Error(`Failed to delete contact with id ${id}`);
+        }
+      }));
       setSelectedContacts([]);
       setIsDeleteModalOpen(false);
       toast({
         title: 'Contacts Deleted',
         description: 'Selected contacts have been successfully removed.',
-        variant: 'success',
+        variant: 'default',
       });
+      fetchContacts();
     } catch (error) {
       toast({
         title: 'Delete Failed',
@@ -154,6 +177,81 @@ export default function AudiencePage() {
         variant: 'destructive',
       });
     }
+  };
+
+  const handleBulkUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+        const response = await fetch(`${API_BASE_URL}/contacts/bulk-upload`, {
+          method: 'POST',
+          body: formData,
+        });
+        if (!response.ok) {
+          throw new Error('Failed to upload contacts');
+        }
+        toast({
+          title: 'Contacts Uploaded',
+          description: 'Your contacts have been successfully uploaded.',
+          variant: 'default',
+        });
+        fetchContacts();
+      } catch (error) {
+        toast({
+          title: 'Upload Failed',
+          description: 'Failed to upload contacts. Please try again.',
+          variant: 'destructive',
+        });
+      }
+    }
+  };
+
+  const handleExport = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/contacts/export`);
+      if (!response.ok) {
+        throw new Error('Failed to export contacts');
+      }
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'contacts.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      toast({
+        title: 'Export Failed',
+        description: 'Failed to export contacts. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+  const handleRetryFetch = () => {
+    fetchContacts();
+  };
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { duration: 0.5 } },
+  };
+
+  const filteredContacts = contacts?.filter(
+    (contact) =>
+      `${contact.first_name} ${contact.last_name}`
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      contact.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      contact.phone.includes(searchTerm)
+  ) || [];
+
+  const handleSelectContact = (contactId: string) => {
+    setSelectedContacts((prev) =>
+      prev.includes(contactId) ? prev.filter((id) => id !== contactId) : [...prev, contactId]
+    );
   };
 
   return (
@@ -166,9 +264,21 @@ export default function AudiencePage() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-[#0D0F56]">Audience Management</h1>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleExport}>
             <FileUp className="mr-2 h-4 w-4" /> Export
           </Button>
+          <label htmlFor="bulk-upload">
+            <Button variant="outline" size="sm">
+              <Plus className="mr-2 h-4 w-4" /> Bulk Upload
+            </Button>
+          </label>
+          <input
+            id="bulk-upload"
+            type="file"
+            accept=".xlsx"
+            className="hidden"
+            onChange={handleBulkUpload}
+          />
           <Button size="sm" onClick={() => setIsAddContactOpen(true)}>
             <Plus className="mr-2 h-4 w-4" /> Add Contact
           </Button>
@@ -262,10 +372,7 @@ export default function AudiencePage() {
                           <DropdownMenuItem>
                             <Edit className="mr-2 h-4 w-4" /> Edit
                           </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="text-red-600"
-                            onSelect={() => deleteContact(contact.id)}
-                          >
+                          <DropdownMenuItem className="text-red-600">
                             <Trash2 className="mr-2 h-4 w-4" /> Delete
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -405,3 +512,4 @@ export default function AudiencePage() {
     </motion.div>
   );
 }
+

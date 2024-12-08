@@ -31,11 +31,9 @@ import {
   Download,
   Undo,
   Redo,
-  Image as ImageIcon,
   Variable,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useTemplateStore } from '@/store/templateStore';
 import { useRouter } from 'next/navigation';
 
 export default function EmailTemplateEditor() {
@@ -52,7 +50,44 @@ export default function EmailTemplateEditor() {
   const [variables, setVariables] = useState<{ name: string; description: string }[]>([]);
   const router = useRouter();
   const { toast } = useToast();
-  const { templates, saveTemplate, listAllTemplates, loading } = useTemplateStore();
+
+  const saveTemplate = async ({
+    name,
+    content,
+    html,
+  }: {
+    name: string;
+    content: string;
+    html: string;
+  }): Promise<{ success: boolean; message: string }> => {
+    try {
+      const payload = {
+        name,
+        content,
+        html,
+      };
+  
+      const response = await fetch('/api/user/templates/save', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        return { success: false, message: errorData.message || 'Failed to save template' };
+      }
+  
+      const data = await response.json();
+      return { success: true, message: 'Template saved successfully!' };
+    } catch (error: any) {
+      console.error('Error saving template:', error);
+      return { success: false, message: error.message || 'Something went wrong' };
+    }
+  };
+
 
   const onReady: EmailEditorProps['onReady'] = useCallback(
     (unlayer: any) => {
@@ -103,28 +138,36 @@ export default function EmailTemplateEditor() {
     },
     [variables]
   );
+  
 
   const saveDesign = useCallback(() => {
     emailEditorRef.current?.editor?.saveDesign((design: any) => {
       setJsonData(JSON.stringify(design));
-      saveTemplate({
-        name: templateName,
-        content: jsonData,
-      })
-        .then(() => {
-          toast({
-            title: 'Design Saved',
-            description: 'Your email template design has been saved.',
-          });
-          router.push('/dashboard/templates/saved');
+      emailEditorRef.current?.editor?.exportHtml((data: { html: string }) => {
+        saveTemplate({
+          name: templateName,
+          content: JSON.stringify(design),
+          html: data.html,
         })
-        .catch(() => {
-          toast({
-            title: 'Error',
-            description: 'Failed to save template. Please try again later.',
-            variant: 'destructive',
+          .then((result) => {
+            if (result.success) {
+              toast({
+                title: 'Design Saved',
+                description: 'Your email template design has been saved.',
+              });
+              // router.push('/dashboard/templates/saved');
+            } else {
+              throw new Error(result.message);
+            }
+          })
+          .catch((error) => {
+            toast({
+              title: 'Error',
+              description: error.message || 'Failed to save template. Please try again later.',
+              variant: 'destructive',
+            });
           });
-        });
+      });
     });
   }, [toast, saveTemplate, templateName]);
 
@@ -150,7 +193,7 @@ export default function EmailTemplateEditor() {
     if (previewMode) {
       emailEditorRef.current?.editor?.hidePreview();
     } else {
-      emailEditorRef.current?.editor?.showPreview('desktop');
+      emailEditorRef.current?.editor?.showPreview({device: "desktop"});
     }
     setPreviewMode((prev) => !prev);
   }, [previewMode]);
@@ -429,3 +472,11 @@ export default function EmailTemplateEditor() {
     </motion.div>
   );
 }
+
+// import React from 'react';
+
+// const page = () => {
+//   return <div>page</div>;
+// };
+
+// export default page;

@@ -76,3 +76,15 @@
     text-wrap: balance;
   }
 }
+
+@keyframes auto-scroll {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-100%);
+  }
+}
+.animate-auto-scroll {
+  animation: auto-scroll 10s linear infinite;
+}

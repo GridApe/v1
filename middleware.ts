@@ -1,14 +1,12 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
   // Protected routes that require authentication
-  const protectedPaths = ['/api/user', '/api/contacts']
+  const protectedPaths = ['/api/user', '/api/contacts'];
 
   // Check if the current path is protected
-  const isProtectedPath = protectedPaths.some(path =>
-    request.nextUrl.pathname.startsWith(path)
-  )
+  const isProtectedPath = protectedPaths.some((path) => request.nextUrl.pathname.startsWith(path));
 
   // Access token from cookies directly (server-side)
   const token = request.cookies.get('token')?.value; // Server-side cookie access
@@ -25,19 +23,19 @@ export function middleware(request: NextRequest) {
         message: 'No token provided, please login first.',
       },
       { status: 401 }
-    )
+    );
   }
 
   // If token exists for protected path, add it to the request headers
   if (isProtectedPath && token) {
-    const response = NextResponse.next()
-    response.headers.set('Authorization', `Bearer ${token}`)
-    return response
+    const response = NextResponse.next();
+    response.headers.set('Authorization', `Bearer ${token}`);
+    return response;
   }
 
-  return NextResponse.next()
+  return NextResponse.next();
 }
 
 export const config = {
   matcher: '/api/:path*', // Apply middleware only for paths that match the protected routes
-}
+};

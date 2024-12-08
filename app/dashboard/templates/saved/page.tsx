@@ -1,12 +1,10 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
-import { Plus, Search, Bell } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useEffect, useState, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Plus, Eye, Edit, Search, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import DOMPurify from 'dompurify';
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
 import {
   Select,
   SelectContent,
@@ -15,151 +13,174 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { useAuthStore } from '@/store/authStore';
-import { useTemplateStore } from '@/store/templateStore';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { TemplateTypes } from '@/types/interface';
-import EmailEditor, { EditorRef } from 'react-email-editor';
 
 export default function TemplatesPage() {
-  const { user } = useAuthStore();
-  const { templates, savedTemplates, loading, error } = useTemplateStore();
+  const [templates, setTemplates] = useState<TemplateTypes[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [previewTemplate, setPreviewTemplate] = useState<TemplateTypes | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const iframeRefs = useRef<{ [key: string]: HTMLIFrameElement | null }>({});
 
   useEffect(() => {
-    async function fetchTemplates() {
+    async function fetchTemplates(): Promise<void> {
       try {
-        await savedTemplates();
+        setLoading(true);
+        const response = await fetch('/api/user/templates/all');
+        if (!response.ok) {
+          throw new Error('Failed to fetch templates');
+        }
+        const responseData = await response.json();
+        setTemplates(responseData.data.templates || []);
       } catch (err) {
+        setError((err as Error).message);
         console.error('Error fetching templates:', err);
+      } finally {
+        setLoading(false);
       }
     }
     fetchTemplates();
-  }, [savedTemplates]);
+  }, []);
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="sticky top-0 z-10 border-b bg-background">
-        <div className="flex h-16 items-center gap-4 px-6">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src="/assets/logo.svg" alt="Logo" />
-            <AvatarFallback>Logo</AvatarFallback>
-          </Avatar>
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search document, template,...."
-                className="w-full max-w-lg pl-8"
-              />
-            </div>
-          </div>
-          <Button size="icon" variant="ghost" className="relative">
-            <Bell className="h-5 w-5" />
-            <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
-              12
-            </span>
-          </Button>
-          <Avatar>
-            <AvatarImage src={user?.avatar} />
-            <AvatarFallback>{user?.first_name?.charAt(0)}</AvatarFallback>
-          </Avatar>
-        </div>
-      </header>
-
-      <main className="p-6">
-        <div className="mb-6 flex items-center gap-2 text-sm text-muted-foreground">
-          <span>Create email</span>
-          <span>/</span>
-          <span className="text-foreground">use template</span>
-        </div>
-
-        <div className="mb-8 flex gap-4">
-          <Select defaultValue="all">
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Email purpose" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All purposes</SelectItem>
-              <SelectItem value="marketing">Marketing</SelectItem>
-              <SelectItem value="sales">Sales</SelectItem>
-              <SelectItem value="support">Support</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Button variant="outline" className="rounded-full">
-            All
-          </Button>
-          <Button variant="outline" className="rounded-full">
-            Saved template
-          </Button>
-        </div>
-
-        {/* Loading, Error or Templates */}
-        {loading ? (
-          <p>Loading templates...</p>
-        ) : error ? (
-          <p className="text-red-500">Error: {error}</p>
-        ) : templates && templates.length > 0 ? (
-          <motion.div
-            className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-          >
-            <Card className="border-dashed">
-              <CardContent className="flex min-h-[300px] flex-col items-center justify-center gap-4">
-                <div className="rounded-full border-2 border-dashed p-4">
-                  <Plus className="h-6 w-6 text-muted-foreground" />
-                </div>
-                <p className="font-medium">Add new template</p>
-              </CardContent>
-            </Card>
-
-            {templates.map((template) => (
-              <Card key={template.id}>
-                <CardHeader>
-                  <h3 className="font-semibold">{template.name}</h3>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <p className="text-sm text-muted-foreground">{template.name}</p>
-                  </div>
-                  <div
-                    className="aspect-video rounded-md bg-muted p-4 overflow-hidden"
-                    dangerouslySetInnerHTML={{
-                      __html: DOMPurify.sanitize(template.content),
-                    }}
-                  />
-                </CardContent>
-                <CardFooter className="text-sm text-muted-foreground">
-                  {template.name && `Type: ${template.name}`}
-                </CardFooter>
-              </Card>
-            ))}
-          </motion.div>
-        ) : (
-          <p>No templates found.</p>
-        )}
-      </main>
-    </div>
-  );
-}
-
-interface EmailTemplatePreviewProps {
-  content: string; // JSON string for the email template
-}
-
-function EmailTemplatePreview({ content }: EmailTemplatePreviewProps): JSX.Element {
-  const emailEditorRef = useRef<EditorRef | null>(null);
-
+  // Responsive iframe logic
   useEffect(() => {
-    if (emailEditorRef.current) {
-      emailEditorRef.current.editor?.loadDesign(JSON.parse(content));
-    }
-  }, [content]);
+    Object.values(iframeRefs.current).forEach((iframe) => {
+      if (iframe) {
+        const resizeIframe = () => {
+          iframe.style.height = `${iframe.contentWindow?.document.body?.scrollHeight || 240}px`;
+        };
+        iframe.addEventListener('load', resizeIframe);
+        return () => iframe.removeEventListener('load', resizeIframe);
+      }
+    });
+  }, [templates, searchQuery, categoryFilter]);
+
+  // Filtering logic
+  const filteredTemplates = templates.filter(
+    (template) =>
+      (searchQuery === '' || template.name.toLowerCase().includes(searchQuery.toLowerCase())) &&
+      (categoryFilter === 'all' || template.category === categoryFilter)
+  );
+
 
   return (
-    <div className="h-[300px] overflow-hidden">
-      <EmailEditor ref={emailEditorRef} options={{ displayMode: 'email' }} />
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+        <h1 className="text-3xl font-bold tracking-tight">Templates Library</h1>
+        <Button className="w-full md:w-auto flex items-center space-x-2">
+          <Plus size={16} />
+          <span>Create New Template</span>
+        </Button>
+      </div>
+
+      <div className="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4">
+        <div className="relative w-full">
+          <Input
+            placeholder="Search templates..."
+            className="pl-10 w-full"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <Search
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+            size={18}
+          />
+        </div>
+        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+          <SelectTrigger className="w-full md:w-auto">
+            <div className="flex items-center space-x-2">
+              <Filter size={16} />
+              <SelectValue placeholder="Filter by category" />
+            </div>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Categories</SelectItem>
+            <SelectItem value="category1">Category 1</SelectItem>
+            <SelectItem value="category2">Category 2</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {loading ? (
+        <div className="text-center py-12">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ repeat: Infinity, duration: 1 }}
+            className="mx-auto w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full"
+          />
+        </div>
+      ) : error ? (
+        <div className="bg-red-50 border border-red-200 p-4 rounded text-red-700">
+          Error: {error}
+        </div>
+      ) : filteredTemplates.length > 0 ? (
+        <motion.div
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          {filteredTemplates.map((template) => (
+            <Card key={template.id} className="hover:shadow-xl transition-all duration-300 group">
+              <CardHeader>
+                <h2 className="text-lg font-semibold truncate">{template.name}</h2>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
+                  <iframe
+                    ref={(el) => {
+                      if (el) iframeRefs.current[template.id] = el;
+                    }}
+                    srcDoc={template.html}
+                    title={`Template Preview - ${template.name}`}
+                    className="w-full h-full object-cover"
+                    sandbox="allow-same-origin allow-scripts allow-popups"
+                  />
+                </div>
+              </CardContent>
+              <CardFooter className="flex justify-between">
+                <Button variant="outline" size="sm" className="flex items-center space-x-2">
+                  <Edit size={14} />
+                  <span>Edit</span>
+                </Button>
+                <Button
+                  size="sm"
+                  className="flex items-center space-x-2"
+                  onClick={() => setPreviewTemplate(template)}
+                >
+                  <Eye size={14} />
+                  <span>Preview</span>
+                </Button>
+              </CardFooter>
+            </Card>
+          ))}
+        </motion.div>
+      ) : (
+        <div className="text-center py-12 bg-gray-50 rounded-lg">
+          <p className="text-muted-foreground">No templates found matching your search.</p>
+        </div>
+      )}
+
+      <AnimatePresence>
+        {previewTemplate && (
+          <Dialog open onOpenChange={() => setPreviewTemplate(null)}>
+            <DialogContent className="max-w-4xl">
+              <DialogTitle>{previewTemplate.name}</DialogTitle>
+              <div className="w-full aspect-video border border-gray-300 rounded overflow-hidden">
+                <iframe
+                  srcDoc={previewTemplate.html}
+                  title={`Preview - ${previewTemplate.name}`}
+                  className="w-full h-full"
+                  sandbox="allow-same-origin allow-scripts allow-popups"
+                />
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
