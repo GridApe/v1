@@ -41,14 +41,14 @@ export function NotificationList({ notifications, onMarkAsRead, onMarkAllAsRead,
       >
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">Notifications</h2>
-          <Button
+          {notifications.length !== 0 && (<Button
             variant="outline"
             size="sm"
             onClick={onMarkAllAsRead}
             className="text-xs border border-gray-300"
           >
             Mark all as read
-          </Button>
+          </Button>)}
         </div>
         <div className="space-y-2">
           {notifications.length === 0 ? (
@@ -57,9 +57,8 @@ export function NotificationList({ notifications, onMarkAsRead, onMarkAllAsRead,
             notifications.map((notification) => (
               <div
                 key={notification.id}
-                className={`rounded-md transition-colors duration-200 ease-in-out ${
-                  notification.is_read ? 'bg-background' : 'bg-accent'
-                } hover:bg-accent-hover cursor-pointer`}
+                className={`rounded-md transition-colors duration-200 ease-in-out ${notification.is_read ? 'bg-background' : 'bg-accent'
+                  } hover:bg-accent-hover cursor-pointer`}
                 onClick={() => onMarkAsRead(notification.id)}
               >
                 <div className="flex items-start justify-between hover:bg-gray-200 p-1 rounded-sm">
