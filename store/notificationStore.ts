@@ -1,8 +1,5 @@
-import apiService from "@/lib/api-service";
-import { Notification } from "@/types/interface";
 import { create } from "zustand";
-
-
+import { Notification } from "@/types/interface";
 
 interface NotificationStore {
   notifications: Notification[];
@@ -22,10 +19,15 @@ export const useNotificationStore = create<NotificationStore>((set) => ({
   fetchNotifications: async () => {
     set({ loading: true, error: null });
     try {
-      const response = await apiService.listNotifications();
-      set({ notifications: response.data, loading: false });
-      console.log(response.data);
-      
+      const response = await fetch('/api/user/notification');
+      if (!response.ok) throw new Error('Failed to fetch notifications');
+      const data = await response.json();
+      console.log('Fetch Notifications Response:', data);
+      if (data && data.data && Array.isArray(data.data.notifications)) {
+        set({ notifications: data.data.notifications, loading: false });
+      } else {
+        throw new Error('Invalid data structure received from API');
+      }
     } catch (error: any) {
       set({
         error: error.message || "Failed to fetch notifications",
@@ -35,38 +37,64 @@ export const useNotificationStore = create<NotificationStore>((set) => ({
     }
   },
 
-  markAsRead: async (notificationId) => {
+  markAsRead: async (notificationId: string) => {
     try {
-      await apiService.markNotificationAsRead(notificationId);
+      const response = await fetch(`/api/user/notification?notificationId=${notificationId}&action=markAsRead`, {
+        method: 'POST',
+      });
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to mark notification as read: ${errorText}`);
+      }
+      const data = await response.json();
+      console.log('Mark as Read Response:', data);
       set((state) => ({
         notifications: state.notifications.map((notification) =>
           notification.id === notificationId
-            ? { ...notification, read: true }
+            ? { ...notification, is_read: true }
             : notification
         ),
       }));
     } catch (error: any) {
       console.error("Mark as Read Error:", error);
+      set({ error: error.message });
     }
   },
 
   markAllAsRead: async () => {
     try {
-      await apiService.markAllNotificationsAsRead();
+      const response = await fetch('/api/user/notification?action=markAllAsRead', {
+        method: 'POST',
+      });
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to mark all notifications as read: ${errorText}`);
+      }
+      const data = await response.json();
+      console.log('Mark All as Read Response:', data);
       set((state) => ({
         notifications: state.notifications.map((notification) => ({
           ...notification,
-          read: true,
+          is_read: true,
         })),
       }));
     } catch (error: any) {
       console.error("Mark All as Read Error:", error);
+      set({ error: error.message });
     }
   },
 
-  deleteNotification: async (notificationId) => {
+  deleteNotification: async (notificationId: string) => {
     try {
-      await apiService.deleteNotification(notificationId);
+      const response = await fetch(`/api/user/notification?notificationId=${notificationId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to delete notification: ${errorText}`);
+      }
+      const data = await response.json();
+      console.log('Delete Notification Response:', data);
       set((state) => ({
         notifications: state.notifications.filter(
           (notification) => notification.id !== notificationId
@@ -74,6 +102,8 @@ export const useNotificationStore = create<NotificationStore>((set) => ({
       }));
     } catch (error: any) {
       console.error("Delete Notification Error:", error);
+      set({ error: error.message });
     }
   },
 }));
+

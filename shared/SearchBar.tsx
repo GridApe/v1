@@ -1,9 +1,11 @@
+"use client"
 import * as React from 'react';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useSearch } from '@/hooks/useSearch';
 import { NotificationList } from './NotificationList';
 import { UserNav } from './UserNav';
+import { useNotificationStore } from '@/store/notificationStore';
 
 interface SearchBarProps {
   searchFunction: (query: string) => Promise<any[]>;
@@ -25,15 +27,22 @@ export default function SearchBar({
     notifications,
     fetchNotifications,
     markAllAsRead,
+    markAsRead,
+    deleteNotification
   } = useNotificationStore();
 
-  useEffect(() => {
+  React.useEffect(() => {
     fetchNotifications();
   }, [fetchNotifications]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
   };
+
+  function handleLogout(): void {
+    console.log('Logout clicked');
+    // Implement logout functionality here
+  }
 
   return (
     <form onSubmit={handleSubmit} className={`flex items-center gap-4 lg:gap-6 ${className}`}>
@@ -56,10 +65,13 @@ export default function SearchBar({
       <div className="hidden items-center gap-4 md:flex">
         <NotificationList
           notifications={notifications}
-          onMarkAsRead={markAllAsRead}
+          onMarkAsRead={markAsRead}
+          onMarkAllAsRead={markAllAsRead}
+          onRemove={deleteNotification}
         />
         <UserNav avatarSrc={avatarSrc} avatarFallback={avatarFallback} onLogout={handleLogout} />
       </div>
     </form>
   );
 }
+

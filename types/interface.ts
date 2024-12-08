@@ -84,7 +84,7 @@ export interface DashboardTypes {
 export interface Notification {
   id: string;
   title: string;
-  description: string;
-  timestamp: Date;
-  isRead: boolean;
+  message: string;
+  created_at: string;
+  is_read: boolean;
 }

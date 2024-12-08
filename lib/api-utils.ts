@@ -36,7 +36,7 @@ async function ensureCsrfToken() {
 export async function handleApiRequest(
   request: NextRequest,
   endpoint: string,
-  method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET'
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' = 'GET'
 ) {
   let csrfToken;
   try {
@@ -53,9 +53,7 @@ export async function handleApiRequest(
       'Content-Type': 'application/json',
       'X-Requested-With': 'XMLHttpRequest',
       'X-XSRF-TOKEN': csrfToken || '',
-      Authorization: access_token
-        ? `Bearer ${access_token}`
-        : `Bearer 28|XiAfsgLdenpa3KzxrbEClzlvNn0Xg9uT0b7Z1A5h414f7f21`,
+      Authorization: `Bearer ${access_token}`,
     };
 
     // console.log('Headers prepared for API request:', headers);
