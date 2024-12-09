@@ -199,8 +199,30 @@ class ApiService {
   async saveEmailTemplate(data: TemplateTypes) {
     return this.executeApiCall<any>('post', '/user/email-templates', data);
   }
-}
 
+  // // Notifications
+  // async listNotifications() {
+  //   return this.executeApiCall<any>("get", "/user/notifications/");
+  // }
+
+  // async markNotificationAsRead(notificationId: string) {
+  //   return this.executeApiCall<any>(
+  //     "post",
+  //     `/user/notifications/${notificationId}/read`
+  //   );
+  // }
+
+  // async markAllNotificationsAsRead() {
+  //   return this.executeApiCall<any>("post", "/user/notifications/mark-all-read");
+  // }
+
+  // async deleteNotification(notificationId: string) {
+  //   return this.executeApiCall<any>(
+  //     "delete",
+  //     `/user/notifications/${notificationId}`
+  //   );
+  // }
+}
 // Error class remains the same
 class ApiError extends Error {
   constructor(
