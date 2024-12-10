@@ -212,7 +212,7 @@ export default function ProfileSettings() {
                     <FormItem>
                       <FormLabel>Email</FormLabel>
                       <FormControl>
-                        <Input type="email" placeholder="john.doe@example.com" {...field} />
+                        <Input type="email" placeholder="john.doe@example.com" {...field} disabled  />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
