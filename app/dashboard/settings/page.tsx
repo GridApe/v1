@@ -1,87 +1,46 @@
+'use client';
+
+import React from 'react';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Card } from '@/components/ui/card';
+import { User, Globe } from 'lucide-react';
 import DomainSettings from '@/shared/DomainSettings';
 import ProfileSettings from '@/shared/ProfileSettings';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@radix-ui/react-tabs';
-import React from 'react';
 
 export default function Settings() {
   return (
-    <div>
-      <h2>Settings</h2>
-      <Tabs defaultValue="profile" className="">
-        <TabsList className="w-full">
-          <TabsTrigger
-            className="px-8 py-2 border-b-2  hover:border-b-2 hover:border-b-blue-500"
-            value="profile"
-          >
-            Profile
-          </TabsTrigger>
-          <TabsTrigger
-            className="px-8 py-2 border-b-2 hover:border-b-2 hover:border-b-blue-500"
-            value="password"
-          >
-            Domain
-          </TabsTrigger>
-        </TabsList>
-        <TabsContent value="profile">
-          <ProfileSettings />
-        </TabsContent>
-        <TabsContent value="password">
-          <DomainSettings />.
-        </TabsContent>
-      </Tabs>
-
-      {/* <Tabs defaultValue="account" className="w-[400px]">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="account">Account</TabsTrigger>
-          <TabsTrigger value="password">Password</TabsTrigger>
-        </TabsList>
-        <TabsContent value="account">
-          <Card>
-            <CardHeader>
-              <CardTitle>Account</CardTitle>
-              <CardDescription>
-                Make changes to your account here. Click save when you're done.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="space-y-1">
-                <Label htmlFor="name">Name</Label>
-                <Input id="name" defaultValue="Pedro Duarte" />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="username">Username</Label>
-                <Input id="username" defaultValue="@peduarte" />
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button>Save changes</Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
-        <TabsContent value="password">
-          <Card>
-            <CardHeader>
-              <CardTitle>Password</CardTitle>
-              <CardDescription>
-                Change your password here. After saving, you'll be logged out.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="space-y-1">
-                <Label htmlFor="current">Current password</Label>
-                <Input id="current" type="password" />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="new">New password</Label>
-                <Input id="new" type="password" />
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button>Save password</Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
-      </Tabs> */}
+    <div className="container mx-auto px-4 py-8 max-w-6xl">
+      <h1 className="text-3xl font-bold mb-8 flex items-center">
+        <User className="mr-4 text-blue-600" /> Account Settings
+      </h1>
+      
+      <Card className="bg-white shadow-sm">
+        <Tabs defaultValue="profile" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 bg-gray-100 p-1 rounded-t-lg">
+            <TabsTrigger 
+              value="profile" 
+              className="data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm transition-all"
+            >
+              <User className="mr-2 h-4 w-4" /> Profile
+            </TabsTrigger>
+            <TabsTrigger 
+              value="domain" 
+              className="data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm transition-all"
+            >
+              <Globe className="mr-2 h-4 w-4" /> Domains
+            </TabsTrigger>
+          </TabsList>
+          
+          <div className="p-6">
+            <TabsContent value="profile" className="mt-0">
+              <ProfileSettings />
+            </TabsContent>
+            <TabsContent value="domain" className="mt-0">
+              <DomainSettings />
+            </TabsContent>
+          </div>
+        </Tabs>
+      </Card>
     </div>
   );
 }
