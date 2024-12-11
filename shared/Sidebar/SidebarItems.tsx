@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ChevronDownIcon, LockClosedIcon } from '@radix-ui/react-icons';
+
 import {
   BarChartIcon,
   CogIcon,
@@ -9,6 +10,8 @@ import {
   PuzzleIcon,
   SendIcon,
   UsersIcon,
+  House,
+  FileStack
 } from 'lucide-react';
 import React from 'react';
 import { motion } from 'framer-motion';
@@ -25,16 +28,15 @@ interface SidebarItem {
 
 export const SidebarItems: React.FC = () => {
   const items: SidebarItem[] = [
-    { name: 'Analytics', icon: BarChartIcon, path: '/dashboard/' },
-    { name: 'Landing page', icon: FileTextIcon, locked: true, path: '/dashboard/landing' },
+    { name: 'Dashboard', icon: House, path: '/dashboard/' },
+    { name: 'Analytics', icon: BarChartIcon, locked: true, path: '/dashboard/' },
     {
       name: 'Template',
       icon: LayoutTemplateIcon,
       subitems: [
         { name: 'All templates', path: '/dashboard/templates/all' },
         { name: 'Create Template', path: '/dashboard/templates/create' },
-        { name: 'Saved templates', path: '/dashboard/templates/saved' },
-        { name: 'My files', path: '/dashboard/templates/my-files' },
+        { name: 'My templates', path: '/dashboard/templates/saved' },
       ],
       expandable: true,
     },
@@ -47,13 +49,10 @@ export const SidebarItems: React.FC = () => {
       ],
       expandable: true,
     },
+    { name: 'Landing page', icon: FileTextIcon, locked: true, path: '/dashboard/landing' },
     { name: 'Integration', icon: PuzzleIcon, locked: true, path: '/dashboard/integration' },
-    {
-      name: 'Audience',
-      icon: UsersIcon,
-      subitems: [{ name: 'All contacts', path: '/dashboard/audience/all' }],
-      expandable: true,
-    },
+    { name: 'Audience', icon: UsersIcon,  path: '/dashboard/audience/all' },
+    { name: 'My files', icon: FileStack, path: '/dashboard/templates/my-files' },
     { name: 'Settings', icon: CogIcon, path: '/dashboard/settings' },
   ];
 
