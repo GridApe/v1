@@ -17,13 +17,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "18.x"
-          cache: "yarn"
+          cache: "npm"
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: npm ci
 
       - name: Build application
-        run: yarn build
+        run: npm run build
 
       - name: Setup SSH
         run: |
@@ -74,10 +74,10 @@ jobs:
             fi
 
             echo "Installing dependencies..."
-            yarn install --frozen-lockfile || { echo "Dependency installation failed."; exit 1; }
+            npm ci || { echo "Dependency installation failed."; exit 1; }
 
             echo "Building application..."
-            yarn build || { 
+            npm run build || { 
               echo "Build failed. Restoring backup...";
               if [ -d ".next-backup" ]; then
                 rm -rf .next
@@ -96,10 +96,10 @@ jobs:
                 pm2 restart v1
               else
                 echo "Starting new PM2 process..."
-                pm2 start yarn --name "v1" -- start
+                pm2 start npm --name "v1" -- start
               fi
             else
-              echo "Error: PM2 not found. Install globally: yarn global add pm2"
+              echo "Error: PM2 not found. Install globally: npm install -g pm2"
               exit 1
             fi
 
