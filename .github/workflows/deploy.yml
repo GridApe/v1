@@ -1,71 +1,123 @@
-on: 
+name: Deploy to Contabo VPS
+
+on:
   push:
-   branches: [main]
-name: 🚀 Deploy website on push
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
 jobs:
-  web-deploy:
-    name: 🎉 Deploy
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: 🚚 Get latest code
-      uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Use Node.js 20
-      uses: actions/setup-node@v2
-      with:
-        node-version: '20'
-      
-    - name: 🔨 Build Project
-      run: |
-        npm install
-        npm run build
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18.x"
+          cache: "npm"
 
-    # - name: 📂 Sync files
-    #   uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-    #   with:
-    #     server:  ${{ secrets.FTP_SERVER }}
-    #     username: ${{ secrets.FTP_USERNAME }}
-    #     password: ${{ secrets.FTP_PASSWORD }}
-    #     server-dir: /
-    #     protocol: ftps
+      - name: Install dependencies
+        run: npm ci
 
-    - name: Set up SSH
-      run: |
-        mkdir -p ~/.ssh
-        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-        ssh-keyscan -H vmi2322505.contaboserver.net >> ~/.ssh/known_hosts
-        chmod 644 ~/.ssh/known_hosts
+      - name: Build application
+        run: npm run build
 
-    - name: 📂 Deploy via SSH
-      uses: appleboy/ssh-action@v0.1.7
-      with:
-        host: ${{ secrets.SERVER_HOST }}
-        username: ${{ secrets.SERVER_USER }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        port: 22
-        script: |
-          # Ensure Node.js, npm, and PM2 are installed on the server
-          node -v || (echo "Node.js is not installed, installing..." && sudo apt update && sudo apt install -y nodejs npm && sudo npm install -g pm2)
-          
-          # Navigate to the project directory
-          cd /home/${{ secrets.SERVER_USER }}/public_html
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
 
-          # Pull the latest code from the dev branch
-          git pull origin main
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            echo "Starting deployment..."
+            
+            # Create deployment directory if it doesn't exist
+            DEPLOY_DIR="/home/${{ secrets.SERVER_USER }}/public_html"
+            mkdir -p $DEPLOY_DIR
+            cd $DEPLOY_DIR
 
-          # Install production dependencies
-          npm install --production
+            # Check available disk space
+            echo "Checking disk space..."
+            df -h .
+            
+            # Check and clean npm cache if needed
+            echo "Cleaning npm cache..."
+            npm cache clean --force
+            
+            # Remove existing node_modules to prevent conflicts
+            echo "Removing existing node_modules..."
+            rm -rf node_modules
 
-          echo "Cleaning Yarn cache..."
-          yarn cache clean
+            # Clone or pull repository
+            if [ ! -d ".git" ]; then
+                echo "Initializing new repository..."
+                git init
+                git remote add origin https://x-access-token:${{ secrets.SECRET_PAT }}@github.com/gridape/v1.git
+                git fetch origin main
+                git checkout -f main
+            else
+                echo "Updating existing repository..."
+                git fetch origin main
+                git reset --hard origin/main
+            fi
 
-          echo "Building the application..."
-          yarn build || { echo "Build failed"; exit 1; }
+            # Backup existing .next directory
+            if [ -d ".next" ]; then
+                echo "Backing up .next directory..."
+                mv .next .next-backup
+            fi
 
-          echo "Starting application with PM2..."
-          pm2 describe nextjs-app > /dev/null && pm2 reload nextjs-app || pm2 start yarn --name "nextjs-app" -- run dev
+            # Install dependencies with increased memory limit and verbose logging
+            echo "Installing dependencies..."
+            export NODE_OPTIONS="--max_old_space_size=4096"
+            npm ci --verbose || {
+                echo "Dependency installation failed. Retrying with clean install..."
+                rm -rf node_modules package-lock.json
+                npm install
+            }
 
-          # Optionally save the process list to restore on reboot
-          pm2 save
+            # Build application
+            echo "Building application..."
+            npm run build || { 
+                echo "Build failed. Restoring backup..."
+                if [ -d ".next-backup" ]; then
+                    rm -rf .next
+                    mv .next-backup .next
+                fi
+                exit 1
+            }
+
+            # Clean up backup
+            rm -rf .next-backup
+
+            # Install PM2 globally if not present
+            if ! command -v pm2 &> /dev/null; then
+                echo "Installing PM2..."
+                npm install -g pm2
+            fi
+
+            # Update PM2 process
+            if pm2 list | grep -q "v1"; then
+                echo "Restarting PM2 process..."
+                pm2 reload v1 --update-env
+            else
+                echo "Starting new PM2 process..."
+                pm2 start npm --name "v1" -- start
+            fi
+
+            # Save PM2 process list
+            pm2 save
+
+            echo "Deployment completed successfully."

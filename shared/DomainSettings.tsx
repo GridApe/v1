@@ -62,7 +62,7 @@ export default function DomainSettings() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl">
+    <div className="container mx-auto px-4 py-8">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <Card className="md:col-span-2 bg-gradient-to-br shadow-none from-blue-50 to-blue-100/50">
           <CardHeader className="border-b border-blue-200/50">
