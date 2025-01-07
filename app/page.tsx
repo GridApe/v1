@@ -96,7 +96,7 @@ export default function Dashboard() {
           searchFunction={mockSearchFunction}
           avatarSrc="assets/logo.svg"
           avatarFallback="JD"
-          notificationCount={12}
+          // notificationCount={12}
         />
       </div>
       <Banner name="Collins" />
