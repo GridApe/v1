@@ -9,7 +9,7 @@ import ProfileSettings from '@/shared/ProfileSettings';
 
 export default function Settings() {
   return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl">
+    <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8 flex items-center">
         <User className="mr-4 text-blue-600" /> Account Settings
       </h1>
@@ -31,7 +31,7 @@ export default function Settings() {
             </TabsTrigger>
           </TabsList>
           
-          <div className="p-6">
+          <div className="p-3">
             <TabsContent value="profile" className="mt-0">
               <ProfileSettings />
             </TabsContent>

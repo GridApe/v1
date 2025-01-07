@@ -1,71 +1,106 @@
-on: 
+name: Deploy to Contabo VPS
+
+on:
   push:
-   branches: [main]
-name: 🚀 Deploy website on push
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
 jobs:
-  web-deploy:
-    name: 🎉 Deploy
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: 🚚 Get latest code
-      uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Use Node.js 20
-      uses: actions/setup-node@v2
-      with:
-        node-version: '20'
-      
-    - name: 🔨 Build Project
-      run: |
-        npm install
-        npm run build
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18.x"
+          cache: "yarn"
 
-    # - name: 📂 Sync files
-    #   uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-    #   with:
-    #     server:  ${{ secrets.FTP_SERVER }}
-    #     username: ${{ secrets.FTP_USERNAME }}
-    #     password: ${{ secrets.FTP_PASSWORD }}
-    #     server-dir: /
-    #     protocol: ftps
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
 
-    - name: Set up SSH
-      run: |
-        mkdir -p ~/.ssh
-        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-        ssh-keyscan -H vmi2322505.contaboserver.net >> ~/.ssh/known_hosts
-        chmod 644 ~/.ssh/known_hosts
+      - name: Build application
+        run: yarn build
 
-    - name: 📂 Deploy via SSH
-      uses: appleboy/ssh-action@v0.1.7
-      with:
-        host: ${{ secrets.SERVER_HOST }}
-        username: ${{ secrets.SERVER_USER }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        port: 22
-        script: |
-          # Ensure Node.js, npm, and PM2 are installed on the server
-          node -v || (echo "Node.js is not installed, installing..." && sudo apt update && sudo apt install -y nodejs npm && sudo npm install -g pm2)
-          
-          # Navigate to the project directory
-          cd /home/${{ secrets.SERVER_USER }}/public_html
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H vmi2322505.contaboserver.net >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+          echo "SSH key and known hosts set up successfully."
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@213.199.61.72 "echo 'SSH Connection Successful'"
 
-          # Pull the latest code from the dev branch
-          git pull origin main
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: 213.199.61.72
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          debug: true
+          script: |
+            echo "Starting deployment..."
 
-          # Install production dependencies
-          npm install --production
+            if [ ! -d "/home/${{ secrets.SERVER_USER }}/public_html" ]; then
+                echo "Project directory missing. Cloning repository..."
+                mkdir -p /home/${{ secrets.SERVER_USER }}/public_html
+                cd /home/${{ secrets.SERVER_USER }}/public_html
+                git clone https://x-access-token:${{ secrets.SECRET_PAT }}@github.com/gridape/v1.git .
+            else
+                cd /home/${{ secrets.SERVER_USER }}/public_html
+                echo "Project directory exists. Pulling latest changes..."
+                if [ ! -d ".git" ]; then
+                echo "No .git repository found. Initializing repository..."
+                git init
+                git remote add origin https://x-access-token:${{ secrets.SECRET_PAT }}@github.com/gridape/v1.git
+                fi
+                git fetch origin main
+                git reset --hard origin/main
+            fi
 
-          echo "Cleaning Yarn cache..."
-          yarn cache clean
+            echo "Current directory: $(pwd)"
 
-          echo "Building the application..."
-          yarn build || { echo "Build failed"; exit 1; }
+            # Backup existing .next directory
+            if [ -d ".next" ]; then
+                echo "Backing up .next directory..."
+                mv .next .next-backup
+            else
+                echo "No .next directory found."
+            fi
 
-          echo "Starting application with PM2..."
-          pm2 describe nextjs-app > /dev/null && pm2 reload nextjs-app || pm2 start yarn --name "nextjs-app" -- run dev
+            echo "Installing dependencies..."
+            yarn install --frozen-lockfile || { echo "Dependency installation failed."; exit 1; }
 
-          # Optionally save the process list to restore on reboot
-          pm2 save
+            echo "Building application..."
+            yarn build || { 
+              echo "Build failed. Restoring backup...";
+              if [ -d ".next-backup" ]; then
+                rm -rf .next
+                mv .next-backup .next
+              fi
+              exit 1
+            }
+
+            echo "Build successful. Cleaning up backup..."
+            rm -rf .next-backup
+
+            # Manage application with PM2
+            if command -v pm2 &> /dev/null; then
+              if pm2 list | grep -q "v1"; then
+                echo "Restarting PM2 process..."
+                pm2 restart v1
+              else
+                echo "Starting new PM2 process..."
+                pm2 start yarn --name "v1" -- start
+              fi
+            else
+              echo "Error: PM2 not found. Install globally: yarn global add pm2"
+              exit 1
+            fi
+
+            echo "Deployment completed successfully."
