@@ -41,6 +41,7 @@ export default function SearchBar({
 
   function handleLogout(): void {
     console.log('Logout clicked');
+    // Implement logout functionality here
   }
 
   return (

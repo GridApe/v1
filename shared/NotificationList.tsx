@@ -90,3 +90,4 @@ export function NotificationList({ notifications, onMarkAsRead, onMarkAllAsRead,
     </DropdownMenu>
   );
 }
+

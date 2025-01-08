@@ -2,19 +2,19 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
+  // Protected routes that require authentication
   const protectedPaths = ['/api/user', '/api/contacts'];
+
+  // Check if the current path is protected
   const isProtectedPath = protectedPaths.some((path) => request.nextUrl.pathname.startsWith(path));
-  const isHomePage = request.nextUrl.pathname === '/';
-  const token = request.cookies.get('token')?.value;
 
-  if (isHomePage) {
-    if (token) {
-      return NextResponse.redirect(new URL('/dashboard', request.url));
-    } else {
-      return NextResponse.redirect(new URL('/login', request.url));
-    }
-  }
+  // Access token from cookies directly (server-side)
+  const token = request.cookies.get('token')?.value; // Server-side cookie access
 
+  // Log the token (useful for debugging)
+  console.log('Token from cookies:', token);
+
+  // If it's a protected path and there's no token, return 401
   if (isProtectedPath && !token) {
     return NextResponse.json(
       {
@@ -26,6 +26,7 @@ export function middleware(request: NextRequest) {
     );
   }
 
+  // If token exists for protected path, add it to the request headers
   if (isProtectedPath && token) {
     const response = NextResponse.next();
     response.headers.set('Authorization', `Bearer ${token}`);
@@ -36,5 +37,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/', '/api/:path*'],
+  matcher: '/api/:path*', // Apply middleware only for paths that match the protected routes
 };
