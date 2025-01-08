@@ -99,7 +99,7 @@ export default function ProfileSettings() {
 
   const onProfileSubmit = async (values: z.infer<typeof profileFormSchema>): Promise<void> => {
     try {
-      await updateUser({
+      updateUser({
         ...values,
         id: user?.id || '',
         first_name: values.firstname,
