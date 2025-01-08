@@ -6,5 +6,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 }
 
 export async function PUT(request: NextRequest): Promise<NextResponse> {
-  return handleApiRequest(request, '/user/profile', 'GET');
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get('id');
+  return handleApiRequest(request, `/user/profile/${id}`, 'PUT');
 }

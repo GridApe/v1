@@ -163,9 +163,14 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
   updateUser: async (userData: Partial<UserTypes>): Promise<void> => {
     try {
-      set({ loading: true });
+      // set({ loading: true });
+      const { id } = userData;
 
-      const response: Response = await fetch('/api/user/profile', {
+      if (!id) {
+        throw new Error("User ID is required to update the profile");
+      }
+
+      const response: Response = await fetch(`/api/user/profile?id=${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -175,10 +180,9 @@ export const useAuthStore = create<AuthState>((set) => ({
       if (!response.ok) throw new Error('Failed to update user');
 
       const responseData: { data: { user: UserTypes } } = await response.json();
-      set({ user: { ...useAuthStore.getState().user, ...responseData.data.user }, loading: false });
+      set({ user: { ...useAuthStore.getState().user, ...responseData.data.user } });
     } catch (error) {
       console.error('Update user error:', error);
-      set({ loading: false });
       throw error;
     }
   },
