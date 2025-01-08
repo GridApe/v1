@@ -79,7 +79,7 @@ export async function handleApiRequest(
     console.log('API response data:', data);
     return NextResponse.json(data);
   } catch (error) {
-    // console.error('API Error:', error);
+    console.error('API Error:', error);
     return NextResponse.json(
       {
         error: error instanceof Error ? error.message : 'An unexpected error occurred',
