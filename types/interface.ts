@@ -88,3 +88,24 @@ export interface Notification {
   created_at: string;
   is_read: boolean;
 }
+
+export interface DNSRecordTypes {
+  type: string;
+  hostname: string;
+  value: string;
+}
+
+export interface DomainTypes {
+  id: string;
+  user_id: string;
+  domain: string;
+  default_email: string | null;
+  verification_token: string;
+  is_verified: number;
+  created_at: string;
+  updated_at: string;
+  spf_record: string;
+  dkim_record: string;
+  dmarc_record: string;
+  status?: string; 
+}

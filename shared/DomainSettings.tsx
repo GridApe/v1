@@ -18,8 +18,13 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
+import { DNSRecordTypes, DomainTypes } from '@/types/interface';
+import { DNSRecordModal } from './DNSRecordModal';
 
 interface Domain {
+  spf_record: string;
+  dkim_record: string;
+  dmarc_record: string;
   id: string;
   brandName: string;
   domain: string;
@@ -31,6 +36,9 @@ export default function DomainSettings() {
   const [isAddDomainOpen, setIsAddDomainOpen] = useState(false);
   const [domains, setDomains] = useState<Domain[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showDNSModal, setShowDNSModal] = useState(false);
+  const [dnsRecords, setDnsRecords] = useState<DNSRecordTypes[]>([]);
+  const [selectedDomain, setSelectedDomain] = useState<Domain | null>(null);
   const { toast } = useToast();
 
   const fetchDomains = async () => {
@@ -133,6 +141,7 @@ export default function DomainSettings() {
                   <TableHead className="w-[150px]">Brand Name</TableHead>
                   <TableHead>Domain Address</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead className="w-[100px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -148,7 +157,7 @@ export default function DomainSettings() {
                       <TableCell>
                         <Skeleton className="h-4 w-[80px]" />
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell>
                         <Skeleton className="h-4 w-[70px]" />
                       </TableCell>
                     </TableRow>
@@ -187,11 +196,48 @@ export default function DomainSettings() {
                           {domain.status?.charAt(0).toUpperCase() + domain.status?.slice(1)}
                         </Badge>
                       </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setDnsRecords([
+                              {
+                                type: 'TXT (SPF)',
+                                hostname: domain.domain,
+                                value: domain.spf_record
+                              },
+                              {
+                                type: 'TXT (DKIM)',
+                                hostname: `default._domainkey.${domain.domain}`,
+                                value: domain.dkim_record
+                              },
+                              {
+                                type: 'TXT (DMARC)',
+                                hostname: `_dmarc.${domain.domain}`,
+                                value: domain.dmarc_record
+                              }
+                            ]);
+                            setSelectedDomain(domain);
+                            setShowDNSModal(true);
+                            console.log(domain);
+
+                          }}
+                          className="w-full"
+                        >
+                          View Details
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))
                 )}
               </TableBody>
             </Table>
+            <DNSRecordModal
+              open={showDNSModal}
+              onOpenChange={setShowDNSModal}
+              dnsRecords={dnsRecords}
+            />
           </CardContent>
         </Card>
       </div>
