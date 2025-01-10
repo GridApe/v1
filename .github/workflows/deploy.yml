@@ -68,3 +68,19 @@ jobs:
             npm run build || { echo "Build failed."; exit 1; }
             echo "Deployment completed successfully."
 
+            rm -rf .next-backup
+
+            # Manage application with PM2
+            if command -v pm2 &> /dev/null; then
+              if pm2 list | grep -q "landing-page"; then
+                echo "Restarting PM2 process..."
+                pm2 restart landing-page
+              else
+                echo "Starting new PM2 process..."
+                pm2 start npm --name "landing-page" -- start
+              fi
+            else
+              echo "Error: PM2 not found. Install globally: npm install -g pm2"
+              exit 1
+            fi
+
