@@ -20,8 +20,12 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci
-
+        run: |
+          echo "Cleaning npm cache..."
+          npm cache clean --force
+          echo "Installing dependencies with legacy peer deps..."
+          npm install --legacy-peer-deps || npm install --no-optional || npm install
+          
       - name: Build application
         run: npm run build
 
@@ -32,8 +36,6 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H vmi2322505.contaboserver.net >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
-          echo "SSH key and known hosts set up successfully."
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@213.199.61.72 "echo 'SSH Connection Successful'"
 
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v0.1.7
@@ -42,45 +44,60 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
-          debug: true
           script: |
             set -e
             echo "Starting deployment..."
-            if [ ! -d "/home/${{ secrets.SERVER_USER }}/public_html" ]; then
-                echo "Project directory missing. Cloning repository..."
-                mkdir -p /home/${{ secrets.SERVER_USER }}/public_html
-                cd /home/${{ secrets.SERVER_USER }}/public_html
-                git clone https://x-access-token:${{ secrets.SECRET_PAT }}@github.com/gridape/v1.git .
-            else
-                cd /home/${{ secrets.SERVER_USER }}/public_html
-                echo "Project directory exists. Pulling latest changes..."
-                if [ ! -d ".git" ]; then
-                    echo "No .git repository found. Initializing repository..."
-                    git init
-                    git remote add origin https://x-access-token:${{ secrets.SECRET_PAT }}@github.com/gridape/v1.git
-                fi
-                git fetch origin main
-                git reset --hard origin/main
+            
+            # Create deployment directory if it doesn't exist
+            DEPLOY_DIR="/home/${{ secrets.SERVER_USER }}/public_html"
+            mkdir -p $DEPLOY_DIR
+            cd $DEPLOY_DIR
+
+            # Setup or update git repository
+            if [ ! -d ".git" ]; then
+                git init
+                git remote add origin https://x-access-token:${{ secrets.SECRET_PAT }}@github.com/gridape/v1.git
             fi
+            
+            # Fetch latest changes
+            git fetch origin main
+            git reset --hard origin/main
+
+            # Clear npm cache and node_modules
+            echo "Cleaning up..."
+            npm cache clean --force
+            rm -rf node_modules package-lock.json
+
+            # Install dependencies with fallbacks
             echo "Installing dependencies..."
-            npm ci || { echo "Dependency installation failed."; df -h; exit 1; }
+            npm install --legacy-peer-deps || npm install --no-optional || npm install
+
+            # Build application
             echo "Building application..."
-            npm run build || { echo "Build failed."; exit 1; }
-            echo "Deployment completed successfully."
+            npm run build
 
-            rm -rf .next-backup
-
-            # Manage application with PM2
-            if command -v pm2 &> /dev/null; then
-              if pm2 list | grep -q "landing-page"; then
-                echo "Restarting PM2 process..."
-                pm2 restart landing-page
-              else
-                echo "Starting new PM2 process..."
-                pm2 start npm --name "landing-page" -- start
-              fi
-            else
-              echo "Error: PM2 not found. Install globally: npm install -g pm2"
-              exit 1
+            # Backup and cleanup
+            if [ -d ".next" ]; then
+              rm -rf .next-backup
+              mv .next .next-backup
             fi
+
+            # PM2 process management
+            if ! command -v pm2 &> /dev/null; then
+              echo "Installing PM2..."
+              npm install -g pm2
+            fi
+
+            # Update PM2 process
+            if pm2 list | grep -q "landing-page"; then
+              echo "Restarting PM2 process..."
+              pm2 restart landing-page
+            else
+              echo "Starting new PM2 process..."
+              pm2 start npm --name "landing-page" -- start
+            fi
+
+            pm2 save
+
+            echo "Deployment completed successfully."
 
