@@ -1,4 +1,4 @@
-name: Deploy to Contabo VPS
+name: CI/CD Pipeline
 
 on:
   push:
@@ -6,98 +6,188 @@ on:
   pull_request:
     branches: ["main"]
 
+env:
+  NODE_VERSION: "18.x"
+  PM2_PROCESS_NAME: "dashboard"
+
 jobs:
-  deploy:
+  test:
+    name: Test Application
     runs-on: ubuntu-latest
-
+    
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Use Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "18.x"
-          cache: "npm"
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
 
       - name: Install dependencies
         run: |
-          echo "Cleaning npm cache..."
           npm cache clean --force
-          echo "Installing dependencies with legacy peer deps..."
+          npm cache verify
+          npm set registry https://registry.npmjs.org/
+          npm config set fetch-retry-maxtimeout 600000
           npm install --legacy-peer-deps || npm install --no-optional || npm install
-          
+
+  build:
+    name: Build Application
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          npm cache clean --force
+          npm cache verify
+          npm set registry https://registry.npmjs.org/
+          npm config set fetch-retry-maxtimeout 600000
+          npm install --legacy-peer-deps || npm install --no-optional || npm install
+
       - name: Build application
         run: npm run build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-output
+          path: |
+            .next
+            public
+            package.json
+            package-lock.json
+
+  deploy:
+    name: Deploy to Production
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: build-output
 
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H vmi2322505.contaboserver.net >> ~/.ssh/known_hosts
+          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
 
       - name: Deploy to VPS
-        uses: appleboy/ssh-action@v0.1.7
+        uses: appleboy/ssh-action@v1.0.0
         with:
-          host: 213.199.61.72
+          host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
           script: |
+            # Exit on any error
             set -e
+
             echo "Starting deployment..."
             
-            # Create deployment directory if it doesn't exist
+            # Setup deployment directory
             DEPLOY_DIR="/home/${{ secrets.SERVER_USER }}/public_html"
+            BACKUP_DIR="/home/${{ secrets.SERVER_USER }}/backups"
+            TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+            
+            # Create directories if they don't exist
             mkdir -p $DEPLOY_DIR
+            mkdir -p $BACKUP_DIR
+            
+            # Navigate to deployment directory
             cd $DEPLOY_DIR
-
+            
+            # Backup current version if it exists
+            if [ -d ".next" ]; then
+              echo "Backing up current version..."
+              tar -czf $BACKUP_DIR/backup_$TIMESTAMP.tar.gz .next public package.json package-lock.json
+            fi
+            
             # Setup or update git repository
             if [ ! -d ".git" ]; then
-                git init
-                git remote add origin https://x-access-token:${{ secrets.SECRET_PAT }}@github.com/gridape/v1.git
+              echo "Initializing git repository..."
+              git init
+              git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
             fi
             
             # Fetch latest changes
+            echo "Fetching latest changes..."
             git fetch origin main
             git reset --hard origin/main
-
-            # Clear npm cache and node_modules
-            echo "Cleaning up..."
-            npm cache clean --force
-            rm -rf node_modules package-lock.json
-
-            # Install dependencies with fallbacks
+            
+            # Clean npm cache and install dependencies
             echo "Installing dependencies..."
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            nvm use ${{ env.NODE_VERSION }} || nvm install ${{ env.NODE_VERSION }}
+            
+            npm cache clean --force
+            npm cache verify
+            rm -rf node_modules package-lock.json
+            
+            # Install dependencies with fallbacks
             npm install --legacy-peer-deps || npm install --no-optional || npm install
-
+            
             # Build application
             echo "Building application..."
             npm run build
-
-            # Backup and cleanup
-            if [ -d ".next" ]; then
-              rm -rf .next-backup
-              mv .next .next-backup
-            fi
-
-            # PM2 process management
+            
+            # Install and setup PM2 if not already installed
             if ! command -v pm2 &> /dev/null; then
               echo "Installing PM2..."
               npm install -g pm2
             fi
-
+            
             # Update PM2 process
-            if pm2 list | grep -q "landing-page"; then
+            if pm2 list | grep -q "${{ env.PM2_PROCESS_NAME }}"; then
               echo "Restarting PM2 process..."
-              pm2 restart landing-page
+              pm2 reload ${{ env.PM2_PROCESS_NAME }}
             else
-              echo "Starting new PM2 process..."
-              pm2 start npm --name "landing-page" -- start
+              echo "Creating new PM2 process..."
+              pm2 start npm --name "${{ env.PM2_PROCESS_NAME }}" -- start
             fi
-
+            
+            # Save PM2 process list
             pm2 save
+            
+            echo "Deployment completed successfully!"
 
-            echo "Deployment completed successfully."
+  notify:
+    name: Notify on Status
+    needs: [deploy]
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: Check deployment status
+        if: needs.deploy.result == 'success'
+        run: |
+          echo "Deployment completed successfully!"
+          # Add notification logic here (e.g., Slack, Discord, etc.)
+
+      - name: Notify on failure
+        if: needs.deploy.result == 'failure'
+        run: |
+          echo "Deployment failed!"
+          # Add failure notification logic here
 
