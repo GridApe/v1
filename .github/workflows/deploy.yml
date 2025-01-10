@@ -7,7 +7,7 @@ on:
     branches: ["main"]
 
 env:
-  NODE_VERSION: "18.x"
+  NODE_VERSION: "18.17.1"
   PM2_PROCESS_NAME: "dashboard"
 
 jobs:
@@ -84,13 +84,11 @@ jobs:
         with:
           name: build-output
 
-      - name: Setup SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
-          chmod 644 ~/.ssh/known_hosts
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
 
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v1.0.0
@@ -100,93 +98,37 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
           script: |
-            # Exit on any error
             set -e
-
             echo "Starting deployment..."
             
-            # Setup deployment directory
             DEPLOY_DIR="/home/${{ secrets.SERVER_USER }}/public_html"
             BACKUP_DIR="/home/${{ secrets.SERVER_USER }}/backups"
             TIMESTAMP=$(date +%Y%m%d_%H%M%S)
             
-            # Create directories if they don't exist
-            mkdir -p $DEPLOY_DIR
-            mkdir -p $BACKUP_DIR
-            
-            # Navigate to deployment directory
+            mkdir -p $DEPLOY_DIR $BACKUP_DIR
             cd $DEPLOY_DIR
             
-            # Backup current version if it exists
             if [ -d ".next" ]; then
               echo "Backing up current version..."
               tar -czf $BACKUP_DIR/backup_$TIMESTAMP.tar.gz .next public package.json package-lock.json
             fi
             
-            # Setup or update git repository
-            if [ ! -d ".git" ]; then
-              echo "Initializing git repository..."
-              git init
-              git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
-            fi
-            
-            # Fetch latest changes
             echo "Fetching latest changes..."
+            git init || true
+            git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git || true
             git fetch origin main
             git reset --hard origin/main
             
-            # Clean npm cache and install dependencies
             echo "Installing dependencies..."
-            export NVM_DIR="$HOME/.nvm"
-            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-            nvm use ${{ env.NODE_VERSION }} || nvm install ${{ env.NODE_VERSION }}
-            
             npm cache clean --force
-            npm cache verify
-            rm -rf node_modules package-lock.json
-            
-            # Install dependencies with fallbacks
             npm install --legacy-peer-deps || npm install --no-optional || npm install
             
-            # Build application
             echo "Building application..."
             npm run build
             
-            # Install and setup PM2 if not already installed
-            if ! command -v pm2 &> /dev/null; then
-              echo "Installing PM2..."
-              npm install -g pm2
-            fi
-            
-            # Update PM2 process
-            if pm2 list | grep -q "${{ env.PM2_PROCESS_NAME }}"; then
-              echo "Restarting PM2 process..."
-              pm2 reload ${{ env.PM2_PROCESS_NAME }}
-            else
-              echo "Creating new PM2 process..."
-              pm2 start npm --name "${{ env.PM2_PROCESS_NAME }}" -- start
-            fi
-            
-            # Save PM2 process list
+            echo "Configuring PM2..."
+            npm install -g pm2 || true
+            pm2 reload ${{ env.PM2_PROCESS_NAME }} || pm2 start npm --name "${{ env.PM2_PROCESS_NAME }}" -- start
             pm2 save
             
             echo "Deployment completed successfully!"
-
-  notify:
-    name: Notify on Status
-    needs: [deploy]
-    runs-on: ubuntu-latest
-    if: always()
-
-    steps:
-      - name: Check deployment status
-        if: needs.deploy.result == 'success'
-        run: |
-          echo "Deployment completed successfully!"
-          # Add notification logic here (e.g., Slack, Discord, etc.)
-
-      - name: Notify on failure
-        if: needs.deploy.result == 'failure'
-        run: |
-          echo "Deployment failed!"
-          # Add failure notification logic here
