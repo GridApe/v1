@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, ChangeEvent, KeyboardEvent } from 'react';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -13,40 +12,41 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { NavigationBar } from './NavigationBar';
-import { EmailToolbar } from './EmailToolbar';
 import { EmailPreview } from './EmailPreview';
 import { RecipientList } from './RecipientList';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { useEmailComposer } from './useEmailComposer';
+import { ChangeEvent } from 'react';
 
-interface EmailComposerProps {
-  userEmail?: string;
-  userAvatar?: string;
-  userName?: string;
-}
 
-const EmailComposer: React.FC<EmailComposerProps> = ({
-  userEmail = 'lyndaada80@gmail.com',
-  userAvatar = 'https://github.com/shadcn.png',
-  userName = 'Lynda Ada',
-}) => {
-  const [showPreview, setShowPreview] = useState<boolean>(true);
-  const [emailContent, setEmailContent] = useState<string>('');
-  const [subject, setSubject] = useState<string>('Design Proposal');
-  const [recipients, setRecipients] = useState<string[]>([]);
-  const [newRecipient, setNewRecipient] = useState<string>('');
-
-  const handleAddRecipient = () => {
-    if (newRecipient && /\S+@\S+\.\S+/.test(newRecipient)) {
-      setRecipients([...recipients, newRecipient]);
-      setNewRecipient('');
-    }
-  };
-
-  const removeRecipient = (email: string) => {
-    setRecipients(recipients.filter((r) => r !== email));
-  };
+const EmailComposer: React.FC = () => {
+  const {
+    showPreview,
+    subject,
+    recipients,
+    newRecipient,
+    filteredContacts,
+    isDropdownOpen,
+    templates,
+    selectedTemplate,
+    isTemplateDropdownOpen,
+    senderEmails,
+    selectedSenderEmail,
+    setShowPreview,
+    setSubject,
+    handleAddRecipient,
+    removeRecipient,
+    handleInputChange,
+    toggleAllContacts,
+    handleTemplateSelect,
+    setIsDropdownOpen,
+    setIsTemplateDropdownOpen,
+    setSelectedSenderEmail,
+    handleTemplateAction,
+  } = useEmailComposer();
 
   return (
     <div className="min-h-screen bg-gray-50 rounded-2xl">
@@ -78,38 +78,33 @@ const EmailComposer: React.FC<EmailComposerProps> = ({
                   <Label htmlFor="from" className="w-20">
                     From:
                   </Label>
-                  <Select defaultValue="default">
+                  <Select
+                    value={selectedSenderEmail}
+                    onValueChange={(value) => setSelectedSenderEmail(value)}
+                  >
                     <SelectTrigger className="w-full sm:w-[300px]">
                       <SelectValue>
                         <div className="flex items-center gap-2">
                           <Avatar className="h-6 w-6">
-                            <AvatarImage src={userAvatar} alt={userName} />
-                            <AvatarFallback>
-                              {userName
-                                .split(' ')
-                                .map((n) => n[0])
-                                .join('')}
-                            </AvatarFallback>
+                            <AvatarImage src="https://www.transparentpng.com/thumb/user/gray-user-profile-icon-png-fP8Q1P.png" alt="User Avatar" />
+                            <AvatarFallback>U</AvatarFallback>
                           </Avatar>
-                          {userEmail}
+                          {senderEmails.find(email => email.email === selectedSenderEmail)?.email || selectedSenderEmail}
                         </div>
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="default">
-                        <div className="flex items-center gap-2">
-                          <Avatar className="h-6 w-6">
-                            <AvatarImage src={userAvatar} alt={userName} />
-                            <AvatarFallback>
-                              {userName
-                                .split(' ')
-                                .map((n) => n[0])
-                                .join('')}
-                            </AvatarFallback>
-                          </Avatar>
-                          {userEmail}
-                        </div>
-                      </SelectItem>
+                      {senderEmails.map((email) => (
+                        <SelectItem key={email.email} value={email.email}>
+                          <div className="flex items-center gap-2">
+                            <Avatar className="h-6 w-6">
+                              <AvatarImage src="https://www.transparentpng.com/thumb/user/gray-user-profile-icon-png-fP8Q1P.png" alt="User Avatar" />
+                              <AvatarFallback>U</AvatarFallback>
+                            </Avatar>
+                            {email.email || email.name}
+                          </div>
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -122,25 +117,66 @@ const EmailComposer: React.FC<EmailComposerProps> = ({
                     </Label>
                     <div className="flex flex-1 items-center gap-2 flex-wrap">
                       <div className="flex-1">
-                        <Input
-                          id="to"
-                          value={newRecipient}
-                          onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                            setNewRecipient(e.target.value)
-                          }
-                          placeholder="Enter recipient email"
-                          className="flex-1"
-                          onKeyPress={(e: KeyboardEvent<HTMLInputElement>) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              handleAddRecipient();
-                            }
-                          }}
-                        />
+                        <Popover open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
+                          <PopoverTrigger asChild>
+                            <Input
+                              id="to"
+                              value={newRecipient}
+                              onChange={handleInputChange}
+                              placeholder="Enter recipient email or name"
+                              className="flex-1"
+                            />
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[300px] p-0" align="start">
+                            <div className="p-2">
+                              <div className="flex items-center space-x-2">
+                                <Checkbox
+                                  id="all"
+                                  checked={filteredContacts.every((contact) =>
+                                    recipients.includes(contact.email)
+                                  )}
+                                  onCheckedChange={toggleAllContacts}
+                                />
+                                <label
+                                  htmlFor="all"
+                                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                >
+                                  Select All
+                                </label>
+                              </div>
+                            </div>
+                            <ul className="max-h-[200px] overflow-auto">
+                              {filteredContacts.map((contact) => (
+                                <li
+                                  key={contact.id}
+                                  className="flex items-center space-x-2 p-2 hover:bg-gray-100"
+                                >
+                                  <Checkbox
+                                    id={`contact-${contact.id}`}
+                                    checked={recipients.includes(contact.email)}
+                                    onCheckedChange={(checked) => {
+                                      if (checked) {
+                                        handleAddRecipient(contact.email);
+                                      } else {
+                                        removeRecipient(contact.email);
+                                      }
+                                    }}
+                                  />
+                                  <label
+                                    htmlFor={`contact-${contact.id}`}
+                                    className="flex-1 text-sm"
+                                  >
+                                    {`${contact.first_name} ${contact.last_name}`} ({contact.email})
+                                  </label>
+                                </li>
+                              ))}
+                            </ul>
+                          </PopoverContent>
+                        </Popover>
                       </div>
                       <Button
                         variant="outline"
-                        onClick={handleAddRecipient}
+                        onClick={() => handleAddRecipient(newRecipient)}
                         className="whitespace-nowrap"
                       >
                         <Users className="h-4 w-4 mr-2" />
@@ -166,18 +202,44 @@ const EmailComposer: React.FC<EmailComposerProps> = ({
                   />
                 </div>
 
-                {/* Content field */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between flex-wrap gap-4">
-                    <Label>Content</Label>
-                    <EmailToolbar />
+                {/* Template field */}
+                <div className="flex items-center gap-4 flex-wrap">
+                  <Label htmlFor="template" className="w-20">
+                    Content:
+                  </Label>
+                  <div className="flex-1 flex items-center justify-end gap-4">
+                    {/* <div className="flex-1">
+                      <Popover open={isTemplateDropdownOpen} onOpenChange={setIsTemplateDropdownOpen}>
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" className="w-full justify-start">
+                            {selectedTemplate ? selectedTemplate.name : "Select a template"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[300px] p-0" align="start">
+                          <ul className="max-h-[200px] overflow-auto">
+                            {templates.map((template) => (
+                              <li
+                                key={template.id}
+                                className="flex items-center space-x-2 p-2 hover:bg-gray-100 cursor-pointer"
+                                onClick={() => {
+                                  handleTemplateSelect(template.id);
+                                  setIsTemplateDropdownOpen(false);
+                                }}
+                              >
+                                <span className="flex-1 text-sm">{template.name}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </PopoverContent>
+                      </Popover>
+                    </div> */}
+                    <Button
+                      variant="secondary"
+                      onClick={handleTemplateAction}
+                    >
+                      {selectedTemplate ? "Edit Content" : "Choose Template"}
+                    </Button>
                   </div>
-                  <Textarea
-                    className="min-h-[300px] p-4"
-                    placeholder="Write your email content here..."
-                    value={emailContent}
-                    onChange={(e) => setEmailContent(e.target.value)}
-                  />
                 </div>
               </div>
             </div>
@@ -190,14 +252,21 @@ const EmailComposer: React.FC<EmailComposerProps> = ({
               animate={{ opacity: 1, x: 0 }}
             >
               <div className="sticky top-32">
-                <EmailPreview
-                  userName={userName}
-                  userEmail={userEmail}
-                  userAvatar={userAvatar}
-                  recipients={recipients}
-                  subject={subject}
-                  emailContent={emailContent}
-                />
+                <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+                  <div className="p-4 border-b">
+                    <h2 className="text-lg font-semibold">Email Preview</h2>
+                  </div>
+                  <div className="p-4">
+                    <EmailPreview
+                      userName={senderEmails.find(email => email.email === selectedSenderEmail)?.name || selectedSenderEmail}
+                      userEmail={selectedSenderEmail}
+                      userAvatar="https://www.transparentpng.com/thumb/user/gray-user-profile-icon-png-fP8Q1P.png"
+                      recipients={recipients}
+                      subject={subject}
+                      emailContent={selectedTemplate}
+                    />
+                  </div>
+                </div>
               </div>
             </motion.div>
           )}
@@ -208,3 +277,4 @@ const EmailComposer: React.FC<EmailComposerProps> = ({
 };
 
 export default EmailComposer;
+
