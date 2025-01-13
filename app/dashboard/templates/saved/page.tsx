@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Eye, Edit, Search, Filter } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
 import {
@@ -17,6 +18,7 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { TemplateTypes } from '@/types/interface';
 
 export default function TemplatesPage() {
+  const router = useRouter();
   const [templates, setTemplates] = useState<TemplateTypes[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,7 +47,6 @@ export default function TemplatesPage() {
     fetchTemplates();
   }, []);
 
-  // Responsive iframe logic
   useEffect(() => {
     Object.values(iframeRefs.current).forEach((iframe) => {
       if (iframe) {
@@ -58,13 +59,15 @@ export default function TemplatesPage() {
     });
   }, [templates, searchQuery, categoryFilter]);
 
-  // Filtering logic
   const filteredTemplates = templates.filter(
     (template) =>
       (searchQuery === '' || template.name.toLowerCase().includes(searchQuery.toLowerCase())) &&
       (categoryFilter === 'all' || template.category === categoryFilter)
   );
 
+  const handleTemplateSelect = (templateId: string) => {
+    router.push(`/dashboard/templates/edit/${templateId}`);
+  };
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -124,7 +127,15 @@ export default function TemplatesPage() {
           transition={{ duration: 0.3 }}
         >
           {filteredTemplates.map((template) => (
-            <Card key={template.id} className="hover:shadow-xl transition-all duration-300 group">
+            <Card key={template.id} className="group relative hover:shadow-xl transition-all duration-300">
+              <div className="absolute rounded-xl inset-0 bg-black/0 group-hover:bg-black/60 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center z-10">
+                <Button 
+                  onClick={() => handleTemplateSelect(template.id)}
+                  className="scale-0 group-hover:scale-100 transition-transform duration-300 px-10"
+                >
+                  Select
+                </Button>
+              </div>
               <CardHeader>
                 <h2 className="text-lg font-semibold truncate">{template.name}</h2>
               </CardHeader>
