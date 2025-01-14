@@ -2,7 +2,7 @@ name: Docker Deploy
 
 on:
   push:
-    branches: [ Collins ]
+    branches: [ main ]
   pull_request:
     branches: [ main ]
 
@@ -22,14 +22,21 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       
+      - name: Prepare Docker Tags
+        id: prep
+        run: |
+          # Convert repository name to lowercase
+          REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          echo "REPO_LOWER=${REPO_LOWER}" >> $GITHUB_ENV
+      
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}:latest
-            ghcr.io/${{ github.repository }}:${{ github.sha }}
+            ghcr.io/${{ env.REPO_LOWER }}:latest
+            ghcr.io/${{ env.REPO_LOWER }}:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
       
@@ -43,15 +50,18 @@ jobs:
             # Login to GitHub Container Registry
             echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             
+            # Use lowercase repository name
+            REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+            
             # Pull the latest image
-            docker pull ghcr.io/${{ github.repository }}:latest
+            docker pull ghcr.io/${REPO_LOWER}:latest
             
             # Create or update docker-compose.yml
             cat > docker-compose.yml << EOL
             version: '3.8'
             services:
               web:
-                image: ghcr.io/${{ github.repository }}:latest
+                image: ghcr.io/${REPO_LOWER}:latest
                 ports:
                   - "3000:3000"
                 environment:
@@ -70,4 +80,3 @@ jobs:
             
             # Cleanup
             docker system prune -f
-
