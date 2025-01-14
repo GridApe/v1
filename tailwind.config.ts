@@ -62,6 +62,8 @@ const config: Config = {
       },
       animation: {
         'auto-scroll': 'auto-scroll 10s linear infinite',
+        'spin-slow': 'spin 3s linear infinite',
+
       },
       keyframes: {
         'auto-scroll': {
