@@ -66,9 +66,6 @@ jobs:
             # Check disk space
             df -h /home/${{ secrets.SERVER_USER }}
             
-            # Ensure proper ownership and permissions
-            sudo chown -R ${{ secrets.SERVER_USER }}:${{ secrets.SERVER_USER }} /home/${{ secrets.SERVER_USER }}/public_html
-            sudo chmod -R 755 /home/${{ secrets.SERVER_USER }}/public_html
 
             # Remove any existing Git lock file
             rm -f /home/${{ secrets.SERVER_USER }}/public_html/.git/index.lock
