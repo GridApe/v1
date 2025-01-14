@@ -17,13 +17,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "18.x"
+          check-latest: true
           cache: "npm"
-
-      # - name: Install dependencies
-      #   run: npm ci
-
-      # - name: Build application
-      #   run: npm run build
 
       - name: Setup SSH
         run: |
@@ -65,52 +60,55 @@ jobs:
 
             echo "Current directory: $(pwd)"
 
-            # Backup existing .next directory
-            if [ -d ".next" ]; then
-                echo "Backing up .next directory..."
-                mv .next .next-backup
-            else
-                echo "No .next directory found."
-            fi
-
-            # Ensure correct Node.js version
+            # Install and setup NVM
+            echo "Setting up NVM..."
             export NVM_DIR="$HOME/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            
+            # Install latest Node.js 18
+            echo "Installing latest Node.js 18..."
+            nvm install 18
             nvm use 18
+            
+            # Verify versions
+            echo "Node.js version: $(node -v)"
+            echo "NPM version: $(npm -v)"
 
-            echo "Cleaning npm cache and node_modules..."
+            # Clean and prepare
+            echo "Cleaning previous build..."
+            rm -rf node_modules .next package-lock.json
             npm cache clean --force
-            rm -rf node_modules package-lock.json .next
 
-            # Install dependencies globally and locally
-            echo "Installing global dependencies..."
-            npm install -g next
-
-            echo "Installing project dependencies..."
-            export NODE_ENV=production
-            npm install --production=false --legacy-peer-deps
-
-            echo "Building application..."
-            NODE_ENV=production npm run build || { 
-              echo "Build failed.";
-              exit 1;
+            # Install dependencies
+            echo "Installing dependencies..."
+            npm install --legacy-peer-deps --no-audit --no-fund || {
+              echo "First install attempt failed, retrying with force..."
+              npm install --force --legacy-peer-deps --no-audit --no-fund
             }
 
-            echo "Build successful. Cleaning up backup..."
-            rm -rf .next-backup
-
-            # Manage application with PM2
-            if command -v pm2 &> /dev/null; then
-              if pm2 list | grep -q "dashboard"; then
-                echo "Restarting PM2 process..."
-                pm2 restart dashboard
-              else
-                echo "Starting new PM2 process..."
-                pm2 start npm --name "dashboard" -- start
-              fi
-            else
-              echo "Error: PM2 not found. Install globally: npm install -g pm2"
+            # Build application
+            echo "Building application..."
+            NODE_ENV=production npx next build || {
+              echo "Build failed"
               exit 1
+            }
+
+            # PM2 process management
+            if ! command -v pm2 &> /dev/null; then
+              echo "Installing PM2..."
+              npm install -g pm2
             fi
 
+            if pm2 list | grep -q "dashboard"; then
+              echo "Restarting PM2 process..."
+              pm2 restart dashboard --update-env
+            else
+              echo "Starting new PM2 process..."
+              NODE_ENV=production pm2 start npm --name "dashboard" -- start
+            fi
+
+            # Verify deployment
+            echo "Verifying PM2 process..."
+            pm2 list
+            
             echo "Deployment completed successfully."
