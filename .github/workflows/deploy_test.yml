@@ -17,13 +17,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20.x"
-          cache: "npm"
+          cache: "yarn"
+
+      - name: Install Yarn
+        run: npm install -g yarn
 
       - name: Install dependencies
-        run: npm ci
+        run: yarn install
 
       - name: Build application
-        run: npm run build
+        run: yarn build
 
       - name: Setup SSH
         run: |
@@ -46,9 +49,6 @@ jobs:
           script: |
             echo "Starting deployment..."
 
-            chown -R ${{ secrets.SERVER_USER }}:${{ secrets.SERVER_USER }} /home/${{ secrets.SERVER_USER }}/public_html
-            chmod -R 755 /home/${{ secrets.SERVER_USER }}/public_html
-            
             if [ ! -d "/home/${{ secrets.SERVER_USER }}/public_html" ]; then
                 echo "Project directory missing. Cloning repository..."
                 mkdir -p /home/${{ secrets.SERVER_USER }}/public_html
@@ -58,9 +58,9 @@ jobs:
                 cd /home/${{ secrets.SERVER_USER }}/public_html
                 echo "Project directory exists. Pulling latest changes..."
                 if [ ! -d ".git" ]; then
-                echo "No .git repository found. Initializing repository..."
-                git init
-                git remote add origin https://x-access-token:${{ secrets.SECRET_PAT }}@github.com/gridape/v1.git
+                  echo "No .git repository found. Initializing repository..."
+                  git init
+                  git remote add origin https://x-access-token:${{ secrets.SECRET_PAT }}@github.com/gridape/v1.git
                 fi
                 git fetch origin main
                 git reset --hard origin/main
@@ -77,17 +77,17 @@ jobs:
             fi
 
             echo "Cleaning environment..."
-            npm cache clean --force
-            rm -rf node_modules package-lock.json .next || true
+            yarn cache clean
+            rm -rf node_modules yarn.lock .next || true
 
             echo "Installing dependencies..."
-            npm install --no-audit --no-fund --prefer-offline || {
-              echo "First install attempt failed, retrying with force..."
-              npm install --force
+            yarn install --frozen-lockfile || {
+              echo "First install attempt failed, retrying..."
+              yarn install
             }
 
             echo "Building application..."
-            npm run build || { 
+            yarn build || { 
               echo "Build failed. Restoring backup...";
               if [ -d ".next-backup" ]; then
                 rm -rf .next
@@ -106,7 +106,7 @@ jobs:
                 pm2 restart dashboard
               else
                 echo "Starting new PM2 process..."
-                pm2 start npm --name "dashboard" -- start
+                pm2 start yarn --name "dashboard" -- start
               fi
             else
               echo "Error: PM2 not found. Install globally: npm install -g pm2"
