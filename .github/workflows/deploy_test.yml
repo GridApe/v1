@@ -73,9 +73,9 @@ jobs:
                 echo "No .next directory found."
             fi
 
-            echo "Cleaning npm cache and node_modules..."
+            echo "Cleaning environment..."
             npm cache clean --force
-            rm -rf node_modules package-lock.json .next
+            rm -rf node_modules package-lock.json .next || true
 
             echo "Installing dependencies..."
             npm install --no-audit --no-fund --prefer-offline || {
