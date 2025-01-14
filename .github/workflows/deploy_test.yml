@@ -1,86 +1,106 @@
-name: 🚀 Deploy Next.js App
+name: Deploy to Contabo VPS
 
 on:
   push:
-    branches: [main]
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
 
 jobs:
-  build-and-deploy:
-    name: 🎉 Build and Deploy
+  deploy:
     runs-on: ubuntu-latest
 
-    env:
-      NODE_VERSION: 20
-
     steps:
-      - name: 🚚 Checkout Repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: 🛠 Setup Node.js
-        uses: actions/setup-node@v3
+      - name: Use Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: "18.x"
+          cache: "npm"
 
-      - name: 📦 Install and Build with Retry Logic
-        run: |
-          set -e
+      - name: Install dependencies
+        run: npm ci
 
-          echo "Installing Yarn dependencies with retries..."
-          for i in 1 2 3; do
-            yarn install --network-timeout=60000 && break || {
-              echo "Attempt $i to install dependencies failed. Retrying..."
-              yarn cache clean
-              rm -rf node_modules
-            }
-          done
+      - name: Build application
+        run: npm run build
 
-          echo "Building the application..."
-          yarn build || { echo "Build failed"; exit 1; }
-
-      - name: Set up SSH
+      - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H vmi2322505.contaboserver.net >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+          echo "SSH key and known hosts set up successfully."
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@213.199.61.72 "echo 'SSH Connection Successful'"
 
-      - name: Deploy via SSH
-        run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
-            set -e
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: 213.199.61.72
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          debug: true
+          script: |
+            echo "Starting deployment..."
 
-            echo "Navigating to project directory..."
-            cd /home/${{ secrets.SERVER_USER }}/public_html || { echo "Project directory not found"; exit 1; }
-          
-            echo "Checking for package.json..."
-            if [ ! -f package.json ]; then
-              echo "Error: package.json not found in $(pwd). Exiting..."
-              exit 1;
+            if [ ! -d "/home/${{ secrets.SERVER_USER }}/public_html" ]; then
+                echo "Project directory missing. Cloning repository..."
+                mkdir -p /home/${{ secrets.SERVER_USER }}/public_html
+                cd /home/${{ secrets.SERVER_USER }}/public_html
+                git clone https://x-access-token:${{ secrets.SECRET_PAT }}@github.com/gridape/v1.git .
+            else
+                cd /home/${{ secrets.SERVER_USER }}/public_html
+                echo "Project directory exists. Pulling latest changes..."
+                if [ ! -d ".git" ]; then
+                echo "No .git repository found. Initializing repository..."
+                git init
+                git remote add origin https://x-access-token:${{ secrets.SECRET_PAT }}@github.com/gridape/v1.git
+                fi
+                git fetch origin main
+                git reset --hard origin/main
             fi
 
-            echo "Pulling latest changes..."
-            git pull origin main || { echo "Git pull failed"; exit 1; }
+            echo "Current directory: $(pwd)"
 
-            echo "Cleaning Yarn cache..."
-            yarn cache clean
+            # Backup existing .next directory
+            if [ -d ".next" ]; then
+                echo "Backing up .next directory..."
+                mv .next .next-backup
+            else
+                echo "No .next directory found."
+            fi
 
-            echo "Installing dependencies with retries..."
-            for i in 1 2 3; do
-              yarn install --network-timeout=60000 && break || {
-                echo "Attempt $i to install dependencies failed. Retrying..."
-                yarn cache clean
-                rm -rf node_modules
-              }
-            done
+            echo "Installing dependencies..."
+            npm ci || { echo "Dependency installation failed."; exit 1; }
 
-            echo "Building the application..."
-            yarn build || { echo "Build failed"; exit 1; }
+            echo "Building application..."
+            npm run build || { 
+              echo "Build failed. Restoring backup...";
+              if [ -d ".next-backup" ]; then
+                rm -rf .next
+                mv .next-backup .next
+              fi
+              exit 1
+            }
 
-            echo "Starting application with PM2..."
-            npx pm2 describe nextjs-app > /dev/null && npx pm2 reload nextjs-app || npx pm2 start yarn --name "nextjs-app" -- run dev
+            echo "Build successful. Cleaning up backup..."
+            rm -rf .next-backup
 
-            echo "Saving PM2 process list..."
-            npx pm2 save
+            # Manage application with PM2
+            if command -v pm2 &> /dev/null; then
+              if pm2 list | grep -q "dashboard"; then
+                echo "Restarting PM2 process..."
+                pm2 restart dashboard
+              else
+                echo "Starting new PM2 process..."
+                pm2 start npm --name "dashboard" -- start
+              fi
+            else
+              echo "Error: PM2 not found. Install globally: npm install -g pm2"
+              exit 1
+            fi
 
-            echo "Deployment completed successfully!"
-          EOF
+            echo "Deployment completed successfully."
