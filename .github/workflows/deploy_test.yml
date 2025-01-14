@@ -17,16 +17,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20.x"
-          cache: "yarn"
-
-      - name: Install Yarn
-        run: npm install -g yarn
+          cache: "npm"
 
       - name: Install dependencies
-        run: yarn install
+        run: npm ci
 
       - name: Build application
-        run: yarn build
+        run: npm run build
 
       - name: Setup SSH
         run: |
@@ -49,6 +46,7 @@ jobs:
           script: |
             echo "Starting deployment..."
 
+       
             if [ ! -d "/home/${{ secrets.SERVER_USER }}/public_html" ]; then
                 echo "Project directory missing. Cloning repository..."
                 mkdir -p /home/${{ secrets.SERVER_USER }}/public_html
@@ -58,9 +56,9 @@ jobs:
                 cd /home/${{ secrets.SERVER_USER }}/public_html
                 echo "Project directory exists. Pulling latest changes..."
                 if [ ! -d ".git" ]; then
-                  echo "No .git repository found. Initializing repository..."
-                  git init
-                  git remote add origin https://x-access-token:${{ secrets.SECRET_PAT }}@github.com/gridape/v1.git
+                echo "No .git repository found. Initializing repository..."
+                git init
+                git remote add origin https://x-access-token:${{ secrets.SECRET_PAT }}@github.com/gridape/v1.git
                 fi
                 git fetch origin main
                 git reset --hard origin/main
@@ -77,23 +75,23 @@ jobs:
             fi
 
             echo "Cleaning environment..."
-            yarn cache clean
-            rm -rf node_modules yarn.lock .next || true
+            npm cache clean --force
+            rm -rf node_modules package-lock.json .next || true
 
             echo "Installing dependencies..."
-            yarn install --frozen-lockfile || {
-              echo "First install attempt failed, retrying..."
-              yarn install
+            yarn install --prefer-offline || {
+                echo "First install attempt failed, retrying with force..."
+                yarn install --force
             }
 
             echo "Building application..."
-            yarn build || { 
-              echo "Build failed. Restoring backup...";
-              if [ -d ".next-backup" ]; then
-                rm -rf .next
-                mv .next-backup .next
-              fi
-              exit 1
+            yarn build || {
+                echo "Build failed. Restoring backup...";
+                if [ -d ".next-backup" ]; then
+                    rm -rf .next
+                    mv .next-backup .next
+                fi
+                exit 1
             }
 
             echo "Build successful. Cleaning up backup..."
@@ -101,16 +99,16 @@ jobs:
 
             # Manage application with PM2
             if command -v pm2 &> /dev/null; then
-              if pm2 list | grep -q "dashboard"; then
-                echo "Restarting PM2 process..."
-                pm2 restart dashboard
-              else
-                echo "Starting new PM2 process..."
-                pm2 start yarn --name "dashboard" -- start
-              fi
+                if pm2 list | grep -q "dashboard"; then
+                    echo "Restarting PM2 process..."
+                    pm2 restart dashboard
+                else
+                    echo "Starting new PM2 process..."
+                    pm2 start yarn --name "dashboard" -- start
+                fi
             else
-              echo "Error: PM2 not found. Install globally: npm install -g pm2"
-              exit 1
+                echo "Error: PM2 not found. Install globally: yarn global add pm2"
+                exit 1
             fi
 
             echo "Deployment completed successfully."
