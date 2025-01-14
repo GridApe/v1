@@ -73,15 +73,22 @@ jobs:
                 echo "No .next directory found."
             fi
 
+            # Ensure correct Node.js version
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            nvm use 18
+
             echo "Cleaning npm cache and node_modules..."
             npm cache clean --force
             rm -rf node_modules package-lock.json .next
 
-            echo "Installing dependencies..."
-            npm install --no-audit --no-fund --prefer-offline || {
-              echo "First install attempt failed, retrying with force..."
-              npm install --force
-            }
+            # Install dependencies globally and locally
+            echo "Installing global dependencies..."
+            npm install -g next
+
+            echo "Installing project dependencies..."
+            export NODE_ENV=production
+            npm install --production=false --legacy-peer-deps
 
             echo "Building application..."
             NODE_ENV=production npm run build || { 
