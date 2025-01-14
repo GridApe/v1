@@ -41,6 +41,26 @@ jobs:
           script: |
             echo "Starting deployment..."
 
+            # Check disk space
+            echo "Checking disk space..."
+            df -h
+            available_space=$(df . | awk 'NR==2 {print $4}' | sed 's/G//')
+            if (( $(echo "$available_space < 10" | bc -l) )); then
+              echo "Error: Insufficient disk space. Need at least 10GB free."
+              exit 1
+            fi
+
+            # Create and use temporary directory for npm cache
+            export TMPDIR="/home/${{ secrets.SERVER_USER }}/tmp"
+            mkdir -p $TMPDIR
+            npm config set cache $TMPDIR/.npm
+
+            # Clean up old files
+            echo "Cleaning up old files..."
+            rm -rf $TMPDIR/* || true
+            rm -rf /home/${{ secrets.SERVER_USER }}/public_html/node_modules || true
+            rm -rf /home/${{ secrets.SERVER_USER }}/public_html/.next || true
+
             if [ ! -d "/home/${{ secrets.SERVER_USER }}/public_html" ]; then
                 echo "Project directory missing. Cloning repository..."
                 mkdir -p /home/${{ secrets.SERVER_USER }}/public_html
@@ -50,15 +70,21 @@ jobs:
                 cd /home/${{ secrets.SERVER_USER }}/public_html
                 echo "Project directory exists. Pulling latest changes..."
                 if [ ! -d ".git" ]; then
-                echo "No .git repository found. Initializing repository..."
-                git init
-                git remote add origin https://x-access-token:${{ secrets.SECRET_PAT }}@github.com/gridape/v1.git
+                  echo "No .git repository found. Initializing repository..."
+                  git init
+                  git remote add origin https://x-access-token:${{ secrets.SECRET_PAT }}@github.com/gridape/v1.git
                 fi
                 git fetch origin main
                 git reset --hard origin/main
             fi
 
             echo "Current directory: $(pwd)"
+
+            # Fix permissions
+            echo "Setting correct permissions..."
+            sudo chown -R $USER:$USER .
+            find . -type d -exec chmod 755 {} \;
+            find . -type f -exec chmod 644 {} \;
 
             # Install and setup NVM
             echo "Setting up NVM..."
@@ -78,20 +104,28 @@ jobs:
             echo "Node.js version: $(node -v)"
             echo "NPM version: $(npm -v)"
 
-            # Clean and prepare
+            # Clean and prepare with error handling
             echo "Cleaning previous build..."
-            rm -rf node_modules .next package-lock.json
-            npm cache clean --force
+            rm -rf node_modules .next package-lock.json || true
+            npm cache clean --force || true
 
-            # Install dependencies
+            # Install dependencies with retry mechanism
             echo "Installing dependencies..."
-            npm install --no-audit --no-fund || {
-              echo "First install attempt failed, retrying with legacy peer deps..."
-              npm install --legacy-peer-deps --no-audit --no-fund
-            }
+            for i in {1..3}; do
+              echo "Attempt $i of 3"
+              if npm install --no-audit --no-fund --prefer-offline; then
+                break
+              elif [ $i -eq 3 ]; then
+                echo "Failed to install dependencies after 3 attempts"
+                exit 1
+              fi
+              echo "Retrying..."
+              sleep 5
+            done
 
-            # Build application
+            # Build application with increased memory limit
             echo "Building application..."
+            export NODE_OPTIONS="--max-old-space-size=4096"
             NODE_ENV=production npx next build || {
               echo "Build failed"
               exit 1
@@ -110,6 +144,10 @@ jobs:
               echo "Starting new PM2 process..."
               NODE_ENV=production pm2 start npm --name "dashboard" -- start
             fi
+
+            # Clean up temporary files
+            echo "Cleaning up..."
+            rm -rf $TMPDIR/*
 
             # Verify deployment
             echo "Verifying PM2 process..."
