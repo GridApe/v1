@@ -9,9 +9,6 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
-    env:
-      NODE_OPTIONS: --max-old-space-size=4096
 
     steps:
       - uses: actions/checkout@v4
@@ -23,9 +20,7 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: |
-          npm ci
-          npm cache verify
+        run: npm ci
 
       - name: Build application
         run: npm run build
@@ -37,6 +32,8 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H vmi2322505.contaboserver.net >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
+          echo "SSH key and known hosts set up successfully."
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@213.199.61.72 "echo 'SSH Connection Successful'"
 
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v0.1.7
@@ -45,96 +42,75 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
+          debug: true
           script: |
-            set -e
             echo "Starting deployment..."
 
-            # Define cleanup function
-            cleanup() {
-              echo "Cleaning up..."
-              if [ -d "/home/${{ secrets.SERVER_USER }}/public_html/.next-backup" ]; then
+            chown -R ${{ secrets.SERVER_USER }}:${{ secrets.SERVER_USER }} /home/${{ secrets.SERVER_USER }}/public_html
+            chmod -R 755 /home/${{ secrets.SERVER_USER }}/public_html
+            
+            if [ ! -d "/home/${{ secrets.SERVER_USER }}/public_html" ]; then
+                echo "Project directory missing. Cloning repository..."
+                mkdir -p /home/${{ secrets.SERVER_USER }}/public_html
                 cd /home/${{ secrets.SERVER_USER }}/public_html
-                rm -rf .next
-                mv .next-backup .next
-              fi
-              pm2 list | grep -q "dashboard" && pm2 stop dashboard || true
-            }
-
-            # Set trap for cleanup on error
-            trap cleanup ERR
-
-            # Check disk space
-            df -h /home/${{ secrets.SERVER_USER }}
-            
-
-            
-            # Navigate to project directory
-            cd /home/${{ secrets.SERVER_USER }}/public_html
-
-            # Initialize or update repository
-            if [ ! -d ".git" ]; then
-              echo "Initializing new repository..."
-              git init
-              git remote add origin https://x-access-token:${{ secrets.SECRET_PAT }}@github.com/gridape/v1.git
+                git clone https://x-access-token:${{ secrets.SECRET_PAT }}@github.com/gridape/v1.git .
             else
-              echo "Updating existing repository..."
-              git remote set-url origin https://x-access-token:${{ secrets.SECRET_PAT }}@github.com/gridape/v1.git
+                cd /home/${{ secrets.SERVER_USER }}/public_html
+                echo "Project directory exists. Pulling latest changes..."
+                if [ ! -d ".git" ]; then
+                echo "No .git repository found. Initializing repository..."
+                git init
+                git remote add origin https://x-access-token:${{ secrets.SECRET_PAT }}@github.com/gridape/v1.git
+                fi
+                git fetch origin main
+                git reset --hard origin/main
             fi
 
-            # Fetch and reset to latest changes
-            git fetch origin main
-            git reset --hard origin/main
+            echo "Current directory: $(pwd)"
 
             # Backup existing .next directory
             if [ -d ".next" ]; then
-              echo "Backing up .next directory..."
-              mv .next .next-backup
+                echo "Backing up .next directory..."
+                mv .next .next-backup
+            else
+                echo "No .next directory found."
             fi
 
-            # Clean npm cache and remove existing dependencies
             echo "Cleaning environment..."
-            export NODE_OPTIONS="--max-old-space-size=4096"
             npm cache clean --force
-            rm -rf node_modules package-lock.json .next tmp
+            rm -rf node_modules package-lock.json .next || true
 
-            # Install dependencies with retry mechanism
             echo "Installing dependencies..."
-            for i in {1..3}; do
-              echo "Attempt $i of 3"
-              if npm install --no-audit --no-fund --prefer-offline; then
-                break
-              fi
-              if [ $i -eq 3 ]; then
-                echo "Failed to install dependencies after 3 attempts"
-                exit 1
-              fi
-              echo "Retrying..."
-              sleep 5
-            done
+            npm install --no-audit --no-fund --prefer-offline || {
+              echo "First install attempt failed, retrying with force..."
+              npm install --force
+            }
 
-            # Build application
             echo "Building application..."
-            if npm run build; then
-              echo "Build successful"
-              rm -rf .next-backup
+            npm run build || { 
+              echo "Build failed. Restoring backup...";
+              if [ -d ".next-backup" ]; then
+                rm -rf .next
+                mv .next-backup .next
+              fi
+              exit 1
+            }
+
+            echo "Build successful. Cleaning up backup..."
+            rm -rf .next-backup
+
+            # Manage application with PM2
+            if command -v pm2 &> /dev/null; then
+              if pm2 list | grep -q "dashboard"; then
+                echo "Restarting PM2 process..."
+                pm2 restart dashboard
+              else
+                echo "Starting new PM2 process..."
+                pm2 start npm --name "dashboard" -- start
+              fi
             else
-              echo "Build failed"
-              cleanup
+              echo "Error: PM2 not found. Install globally: npm install -g pm2"
               exit 1
             fi
 
-            # PM2 process management
-            if ! command -v pm2 &> /dev/null; then
-              echo "Installing PM2..."
-              npm install -g pm2
-            fi
-
-            if pm2 list | grep -q "dashboard"; then
-              echo "Restarting PM2 process..."
-              pm2 restart dashboard
-            else
-              echo "Starting new PM2 process..."
-              pm2 start npm --name "dashboard" -- start
-            fi
-
-            echo "Deployment completed successfully"
+            echo "Deployment completed successfully."
