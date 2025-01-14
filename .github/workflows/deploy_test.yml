@@ -1,4 +1,5 @@
 name: Deploy to Contabo VPS
+
 on:
   push:
     branches: ["Collins"]
@@ -8,14 +9,21 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
+
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "20.x"
-          check-latest: true
           cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
 
       - name: Setup SSH
         run: |
@@ -38,88 +46,68 @@ jobs:
           script: |
             echo "Starting deployment..."
 
-            # Set up working directory with proper permissions
-            WORK_DIR="/home/${{ secrets.SERVER_USER }}/public_html"
-            if [ ! -d "$WORK_DIR" ]; then
-                mkdir -p "$WORK_DIR"
-            fi
-            cd "$WORK_DIR"
-
-            # Set up temporary directory with proper permissions
-            TEMP_DIR="/home/${{ secrets.SERVER_USER }}/temp_build"
-            rm -rf "$TEMP_DIR"
-            mkdir -p "$TEMP_DIR"
-            
-            # Configure npm to use the temporary directory
-            export npm_config_cache="$TEMP_DIR/.npm"
-            export TMPDIR="$TEMP_DIR"
-
-            # Clean up old installation
-            rm -rf node_modules .next package-lock.json
-
-            # Clone/update repository
-            if [ ! -d ".git" ]; then
+            if [ ! -d "/home/${{ secrets.SERVER_USER }}/public_html" ]; then
+                echo "Project directory missing. Cloning repository..."
+                mkdir -p /home/${{ secrets.SERVER_USER }}/public_html
+                cd /home/${{ secrets.SERVER_USER }}/public_html
                 git clone https://x-access-token:${{ secrets.SECRET_PAT }}@github.com/gridape/v1.git .
             else
+                cd /home/${{ secrets.SERVER_USER }}/public_html
+                echo "Project directory exists. Pulling latest changes..."
+                if [ ! -d ".git" ]; then
+                echo "No .git repository found. Initializing repository..."
+                git init
+                git remote add origin https://x-access-token:${{ secrets.SECRET_PAT }}@github.com/gridape/v1.git
+                fi
                 git fetch origin main
                 git reset --hard origin/main
             fi
 
-            # Set up Node.js environment
-            export NVM_DIR="$HOME/.nvm"
-            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-            
-            # Install Node.js 20
-            nvm install 20
-            nvm use 20
-            
-            # Update npm
-            npm install -g npm@latest
-            
-            # Verify versions
-            echo "Node.js version: $(node -v)"
-            echo "NPM version: $(npm -v)"
+            echo "Current directory: $(pwd)"
 
-            # Set proper ownership and permissions
-            chown -R $USER:$USER .
-            chmod -R 755 .
+            # Backup existing .next directory
+            if [ -d ".next" ]; then
+                echo "Backing up .next directory..."
+                mv .next .next-backup
+            else
+                echo "No .next directory found."
+            fi
 
-            # Install dependencies with increased memory and timeout
-            export NODE_OPTIONS="--max-old-space-size=4096"
-            npm config set timeout 600000
-            
+            echo "Cleaning npm cache and node_modules..."
+            npm cache clean --force
+            rm -rf node_modules package-lock.json .next
+
             echo "Installing dependencies..."
-            for i in {1..3}; do
-              echo "Attempt $i of 3"
-              if npm install --prefer-offline --no-audit --no-fund; then
-                break
-              fi
-              echo "Retrying in 5 seconds..."
-              sleep 5
-              # Clean up between attempts
-              rm -rf node_modules package-lock.json
-            done
+            npm install --no-audit --no-fund --prefer-offline || {
+              echo "First install attempt failed, retrying with force..."
+              npm install --force
+            }
 
-            # Build the application
             echo "Building application..."
-            NODE_ENV=production npx next build || {
-              echo "Build failed"
+            npm run build || { 
+              echo "Build failed. Restoring backup...";
+              if [ -d ".next-backup" ]; then
+                rm -rf .next
+                mv .next-backup .next
+              fi
               exit 1
             }
 
-            # PM2 process management
-            if ! command -v pm2 &> /dev/null; then
-              npm install -g pm2@latest
-            fi
+            echo "Build successful. Cleaning up backup..."
+            rm -rf .next-backup
 
-            if pm2 list | grep -q "dashboard"; then
-              pm2 restart dashboard --update-env
+            # Manage application with PM2
+            if command -v pm2 &> /dev/null; then
+              if pm2 list | grep -q "dashboard"; then
+                echo "Restarting PM2 process..."
+                pm2 restart dashboard
+              else
+                echo "Starting new PM2 process..."
+                pm2 start npm --name "dashboard" -- start
+              fi
             else
-              NODE_ENV=production pm2 start npm --name "dashboard" -- start
+              echo "Error: PM2 not found. Install globally: npm install -g pm2"
+              exit 1
             fi
-
-            # Clean up
-            rm -rf "$TEMP_DIR"
-            npm cache clean --force
 
             echo "Deployment completed successfully."
