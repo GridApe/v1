@@ -16,7 +16,7 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "18.x"
+          node-version: "20.x"
           check-latest: true
           cache: "npm"
 
@@ -65,10 +65,14 @@ jobs:
             export NVM_DIR="$HOME/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
             
-            # Install latest Node.js 18
-            echo "Installing latest Node.js 18..."
-            nvm install 18
-            nvm use 18
+            # Install latest Node.js 20 and npm
+            echo "Installing latest Node.js 20..."
+            nvm install 20
+            nvm use 20
+            
+            # Update to latest npm
+            echo "Updating to latest npm..."
+            npm install -g npm@latest
             
             # Verify versions
             echo "Node.js version: $(node -v)"
@@ -81,9 +85,9 @@ jobs:
 
             # Install dependencies
             echo "Installing dependencies..."
-            npm install --legacy-peer-deps --no-audit --no-fund || {
-              echo "First install attempt failed, retrying with force..."
-              npm install --force --legacy-peer-deps --no-audit --no-fund
+            npm install --no-audit --no-fund || {
+              echo "First install attempt failed, retrying with legacy peer deps..."
+              npm install --legacy-peer-deps --no-audit --no-fund
             }
 
             # Build application
@@ -96,7 +100,7 @@ jobs:
             # PM2 process management
             if ! command -v pm2 &> /dev/null; then
               echo "Installing PM2..."
-              npm install -g pm2
+              npm install -g pm2@latest
             fi
 
             if pm2 list | grep -q "dashboard"; then
