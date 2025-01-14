@@ -45,8 +45,8 @@ jobs:
           debug: true
           script: |
             echo "Starting deployment..."
-            
-            sudo chown -R ${{ secrets.SERVER_USER }}:$USER /home/${{ secrets.SERVER_USER }}/public_html
+
+            chown -R ${{ secrets.SERVER_USER }}:${{ secrets.SERVER_USER }} /home/${{ secrets.SERVER_USER }}/public_html
             chmod -R 755 /home/${{ secrets.SERVER_USER }}/public_html
             
             if [ ! -d "/home/${{ secrets.SERVER_USER }}/public_html" ]; then
