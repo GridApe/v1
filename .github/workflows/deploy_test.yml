@@ -73,17 +73,20 @@ jobs:
                 echo "No .next directory found."
             fi
 
+            echo "Cleaning npm cache and node_modules..."
+            npm cache clean --force
+            rm -rf node_modules package-lock.json .next
+
             echo "Installing dependencies..."
-            npm ci || { echo "Dependency installation failed."; exit 1; }
+            npm install --no-audit --no-fund --prefer-offline || {
+              echo "First install attempt failed, retrying with force..."
+              npm install --force
+            }
 
             echo "Building application..."
-            npm run build || { 
-              echo "Build failed. Restoring backup...";
-              if [ -d ".next-backup" ]; then
-                rm -rf .next
-                mv .next-backup .next
-              fi
-              exit 1
+            NODE_ENV=production npm run build || { 
+              echo "Build failed.";
+              exit 1;
             }
 
             echo "Build successful. Cleaning up backup..."
