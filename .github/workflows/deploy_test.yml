@@ -67,9 +67,7 @@ jobs:
             df -h /home/${{ secrets.SERVER_USER }}
             
 
-            # Remove any existing Git lock file
-            rm -f /home/${{ secrets.SERVER_USER }}/public_html/.git/index.lock
-
+            
             # Navigate to project directory
             cd /home/${{ secrets.SERVER_USER }}/public_html
 
