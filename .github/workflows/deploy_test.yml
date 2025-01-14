@@ -45,7 +45,10 @@ jobs:
           debug: true
           script: |
             echo "Starting deployment..."
-
+            
+            sudo chown -R ${{ secrets.SERVER_USER }}:$USER /home/${{ secrets.SERVER_USER }}/public_html
+            chmod -R 755 /home/${{ secrets.SERVER_USER }}/public_html
+            
             if [ ! -d "/home/${{ secrets.SERVER_USER }}/public_html" ]; then
                 echo "Project directory missing. Cloning repository..."
                 mkdir -p /home/${{ secrets.SERVER_USER }}/public_html
