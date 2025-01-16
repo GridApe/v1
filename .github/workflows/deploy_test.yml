@@ -10,27 +10,30 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    # Step 1: Checkout code
     - name: 🚚 Get latest code
       uses: actions/checkout@v4
 
+    # Step 2: Set up Node.js
     - name: Use Node.js 20
       uses: actions/setup-node@v2
       with:
         node-version: '20'
 
+    # Step 3: Install dependencies
     - name: Install dependencies
       run: npm ci
 
+    # Step 4: Build project
     - name: Build project
       run: npm run build
-    - name: List output directory 
-      run: ls -R out
-      
+
+    # Step 5: Deploy to cPanel
     - name: Deploy to cPanel
       uses: wlixcc/SFTP-Deploy-Action@v1.2.4
       with:
         server: 46.202.195.31
         username: defipulsex-app
         password: TLOVogDt3mUThvQYVo5B
-        local_path: './out/*'
+        local_path: './.next/*'
         remote_path: '/home/defipulsex-app/htdocs/www.app.defipulsex.com'
