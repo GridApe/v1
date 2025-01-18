@@ -16,6 +16,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { TemplateTypes } from '@/types/interface';
+import { useCampaignStore } from '@/store/useCampaignStore';
 
 export default function TemplatesPage() {
   const router = useRouter();
@@ -26,6 +27,14 @@ export default function TemplatesPage() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const iframeRefs = useRef<{ [key: string]: HTMLIFrameElement | null }>({});
+
+  const {
+    selectedTemplateId,
+    setSelectedTemplateId,
+    setSelectedTemplateState,
+    action,
+    setAction,
+  } = useCampaignStore();
 
   useEffect(() => {
     async function fetchTemplates(): Promise<void> {
@@ -66,6 +75,17 @@ export default function TemplatesPage() {
   );
 
   const handleTemplateSelect = (templateId: string) => {
+    setSelectedTemplateId(templateId);
+    setSelectedTemplateState('selected');
+    setAction(null);
+    router.push('/dashboard/campaign/create');
+  };
+
+  const handlePreview = (template: TemplateTypes) => {
+    setPreviewTemplate(template);
+  };
+
+  const handleEditTemplate = (templateId: string) => {
     router.push(`/dashboard/templates/edit/${templateId}`);
   };
 
@@ -128,14 +148,23 @@ export default function TemplatesPage() {
         >
           {filteredTemplates.map((template) => (
             <Card key={template.id} className="group relative hover:shadow-xl transition-all duration-300">
-              <div className="absolute rounded-xl inset-0 bg-black/0 group-hover:bg-black/60 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center z-10">
-                <Button 
-                  onClick={() => handleTemplateSelect(template.id)}
-                  className="scale-0 group-hover:scale-100 transition-transform duration-300 px-10"
-                >
-                  Select
-                </Button>
-              </div>
+              {action === 'select_template' || action === 'change_template' ? (
+                <div className="absolute rounded-xl inset-0 bg-black/0 group-hover:bg-black/60 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center z-10">
+                  <Button 
+                    onClick={() => handleTemplateSelect(template.id)}
+                    className="scale-0 group-hover:scale-100 transition-transform duration-300 px-10 mb-2"
+                  >
+                    Select
+                  </Button>
+                  <Button
+                    onClick={() => handlePreview(template)}
+                    className="scale-0 group-hover:scale-100 transition-transform duration-300 px-10"
+                    variant="secondary"
+                  >
+                    Preview
+                  </Button>
+                </div>
+              ) : null}
               <CardHeader>
                 <h2 className="text-lg font-semibold truncate">{template.name}</h2>
               </CardHeader>
@@ -152,20 +181,22 @@ export default function TemplatesPage() {
                   />
                 </div>
               </CardContent>
-              <CardFooter className="flex justify-between">
-                <Button variant="outline" size="sm" className="flex items-center space-x-2">
-                  <Edit size={14} />
-                  <span>Edit</span>
-                </Button>
-                <Button
-                  size="sm"
-                  className="flex items-center space-x-2"
-                  onClick={() => setPreviewTemplate(template)}
-                >
-                  <Eye size={14} />
-                  <span>Preview</span>
-                </Button>
-              </CardFooter>
+              {action !== 'select_template' && action !== 'change_template' && (
+                <CardFooter className="flex justify-between">
+                  <Button variant="outline" size="sm" className="flex items-center space-x-2" onClick={() => handleEditTemplate(template.id)}>
+                    <Edit size={14} />
+                    <span>Edit</span>
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="flex items-center space-x-2"
+                    onClick={() => handlePreview(template)}
+                  >
+                    <Eye size={14} />
+                    <span>Preview</span>
+                  </Button>
+                </CardFooter>
+              )}
             </Card>
           ))}
         </motion.div>
@@ -195,3 +226,4 @@ export default function TemplatesPage() {
     </div>
   );
 }
+

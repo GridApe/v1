@@ -1,7 +1,7 @@
 import { handleApiRequest } from '@/lib/api-utils';
 import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET(
+export async function PUT(
   request: NextRequest,
   { params }: { params: { templateid: string } }
 ): Promise<NextResponse> {

@@ -1,28 +1,13 @@
 import { useState, useEffect, ChangeEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { TemplateTypes } from '@/types/interface';
-
-
-export interface Contact {
-  id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  phone: string;
-  address: string | null;
-  created_at: string;
-  updated_at: string;
-  deleted_at: string | null;
-  user_id: string;
-}
+import { ContactTypes, TemplateTypes } from '@/types/interface';
+import { useCampaignStore } from '@/store/useCampaignStore';
 
 export interface SenderEmail {
   email: string;
   is_default: boolean;
   name: string | null;
 }
-
-
 
 interface EmailComposerState {
   subject: string;
@@ -33,11 +18,9 @@ interface EmailComposerState {
 export const useEmailComposer = () => {
   const router = useRouter();
   const [showPreview, setShowPreview] = useState<boolean>(true);
-  const [subject, setSubject] = useState<string>('Sample Subject');
-  const [recipients, setRecipients] = useState<string[]>([]);
   const [newRecipient, setNewRecipient] = useState<string>('');
-  const [contacts, setContacts] = useState<Contact[]>([]);
-  const [filteredContacts, setFilteredContacts] = useState<Contact[]>([]);
+  const [contacts, setContacts] = useState<ContactTypes[]>([]);
+  const [filteredContacts, setFilteredContacts] = useState<ContactTypes[]>([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
   const [templates, setTemplates] = useState<TemplateTypes[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateTypes | null>(null);
@@ -49,7 +32,6 @@ export const useEmailComposer = () => {
     fetchContacts();
     fetchTemplates();
     fetchSenderEmails();
-    restoreState();
   }, []);
 
   const fetchContacts = async () => {
@@ -59,6 +41,8 @@ export const useEmailComposer = () => {
       if (result.status === 'success' && result.data && Array.isArray(result.data.contacts)) {
         setContacts(result.data.contacts);
       }
+      console.log('Contacts:', result.data.contacts);
+      
     } catch (error) {
       console.error('Error fetching contacts:', error);
     }
@@ -67,10 +51,12 @@ export const useEmailComposer = () => {
   const fetchTemplates = async () => {
     try {
       const response = await fetch('/api/user/templates/all');
-      const responseData = await response.json();
-      setTemplates(responseData.data.templates || []);
-    } catch (err) {
-      console.error('Error fetching templates:', err);
+      const result = await response.json();
+      if (result.status === 'success') {
+        setTemplates(result.data.templates || []);
+      }
+    } catch (error) {
+      console.error('Error fetching templates:', error);
     }
   };
 
@@ -90,47 +76,38 @@ export const useEmailComposer = () => {
     }
   };
 
-  const saveState = () => {
-    const state: EmailComposerState = {
-      subject,
-      recipients,
-      selectedSenderEmail,
-    };
-    localStorage.setItem('emailComposerState', JSON.stringify(state));
-  };
-
-  const restoreState = () => {
-    const savedState = localStorage.getItem('emailComposerState');
-    if (savedState) {
-      const state: EmailComposerState = JSON.parse(savedState);
-      setSubject(state.subject);
-      setRecipients(state.recipients);
-      setSelectedSenderEmail(state.selectedSenderEmail);
-    }
-  };
-
   useEffect(() => {
     setFilteredContacts(
       contacts.filter(
         (contact) =>
-          (contact.email.toLowerCase().includes(newRecipient.toLowerCase()) ||
-            `${contact.first_name} ${contact.last_name}`
-              .toLowerCase()
-              .includes(newRecipient.toLowerCase())) &&
-          !recipients.includes(contact.email)
+          contact.email.toLowerCase().includes(newRecipient.toLowerCase()) ||
+          `${contact.first_name} ${contact.last_name}`
+            .toLowerCase()
+            .includes(newRecipient.toLowerCase())
       )
     );
-  }, [newRecipient, contacts, recipients]);
+  }, [newRecipient, contacts]);
 
-  const handleAddRecipient = (email: string) => {
-    if (!recipients.includes(email)) {
-      setRecipients([...recipients, email]);
+  const toggleAllContacts = (checked: boolean) => {
+    const { recipients, setRecipients } = useCampaignStore.getState();
+    
+    if (checked) {
+      // If there's a search filter, only toggle filtered contacts
+      const contactsToAdd = newRecipient
+        ? filteredContacts.map(contact => contact.email)
+        : contacts.map(contact => contact.email);
+      
+      // Combine existing recipients with new ones, removing duplicates
+      const newRecipients = Array.from(new Set([...recipients, ...contactsToAdd]));
+      setRecipients(newRecipients);
+    } else {
+      // If there's a search filter, only remove filtered contacts
+      const emailsToRemove = newRecipient
+        ? new Set(filteredContacts.map(contact => contact.email))
+        : new Set(contacts.map(contact => contact.email));
+      
+      setRecipients(recipients.filter((email: any) => !emailsToRemove.has(email)));
     }
-    setNewRecipient('');
-  };
-
-  const removeRecipient = (email: string) => {
-    setRecipients(recipients.filter((r) => r !== email));
   };
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -138,40 +115,8 @@ export const useEmailComposer = () => {
     setIsDropdownOpen(true);
   };
 
-  const toggleAllContacts = (checked: boolean) => {
-    if (checked) {
-      const newRecipients = recipients.slice();
-      filteredContacts.forEach(contact => {
-        if (!newRecipients.includes(contact.email)) {
-          newRecipients.push(contact.email);
-        }
-      });
-      setRecipients(newRecipients);
-    } else {
-      setRecipients(recipients.filter((r) => !filteredContacts.some((c) => c.email === r)));
-    }
-  };
-
-  const handleTemplateSelect = (templateId: string) => {
-    const template = templates.find(t => t.id === templateId);
-    if (template) {
-      setSelectedTemplate(template);
-    }
-  };
-
-  const handleTemplateAction = () => {
-    saveState();
-    if (selectedTemplate) {
-      router.push(`/dashboard/templates/edit/${selectedTemplate.id}`);
-    } else {
-      router.push('/dashboard/templates/saved');
-    }
-  };
-
   return {
     showPreview,
-    subject,
-    recipients,
     newRecipient,
     contacts,
     filteredContacts,
@@ -182,15 +127,11 @@ export const useEmailComposer = () => {
     senderEmails,
     selectedSenderEmail,
     setShowPreview,
-    setSubject,
-    handleAddRecipient,
-    removeRecipient,
+    setNewRecipient,
     handleInputChange,
     toggleAllContacts,
-    handleTemplateSelect,
     setIsDropdownOpen,
     setIsTemplateDropdownOpen,
     setSelectedSenderEmail,
-    handleTemplateAction,
   };
 };

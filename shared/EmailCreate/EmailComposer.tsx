@@ -1,7 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Eye, EyeOff, Users } from 'lucide-react';
+import { Eye, EyeOff, Users, Calendar, Delete } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,39 +15,73 @@ import {
 } from '@/components/ui/select';
 import { NavigationBar } from './NavigationBar';
 import { EmailPreview } from './EmailPreview';
-import { RecipientList } from './RecipientList';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useEmailComposer } from './useEmailComposer';
 import { ChangeEvent } from 'react';
-
+import { useCampaignStore } from '@/store/useCampaignStore';
+import { useRouter } from 'next/navigation';
+import DatePicker from 'react-datepicker';
+import "react-datepicker/dist/react-datepicker.css";
+import { Switch } from '@/components/ui/switch';
+import { RecipientList } from './RecipientList';
 
 const EmailComposer: React.FC = () => {
+  const router = useRouter();
   const {
     showPreview,
-    subject,
-    recipients,
     newRecipient,
     filteredContacts,
     isDropdownOpen,
     templates,
-    selectedTemplate,
-    isTemplateDropdownOpen,
     senderEmails,
     selectedSenderEmail,
     setShowPreview,
-    setSubject,
-    handleAddRecipient,
-    removeRecipient,
+    setNewRecipient,
     handleInputChange,
     toggleAllContacts,
-    handleTemplateSelect,
     setIsDropdownOpen,
-    setIsTemplateDropdownOpen,
     setSelectedSenderEmail,
-    handleTemplateAction,
   } = useEmailComposer();
+
+  const {
+    subject,
+    recipients,
+    selectedTemplateId,
+    selectedTemplateState,
+    isScheduled,
+    scheduledDateTime,
+    setSubject,
+    setRecipients,
+    setSelectedTemplateId,
+    setSelectedTemplateState,
+    setAction,
+    setIsScheduled,
+    setScheduledDateTime,
+  } = useCampaignStore();
+
+  const handleAddRecipient = (email: string) => {
+    if (email && !recipients.includes(email)) {
+      setRecipients([...recipients, email]);
+      setNewRecipient('');
+    }
+  };
+
+  const removeRecipient = (email: string) => {
+    setRecipients(recipients.filter((r) => r !== email));
+  };
+
+  const handleTemplateAction = (action: 'select_template' | 'edit_template' | 'change_template') => {
+    setAction(action);
+    localStorage.setItem('comingFrom', 'create_campaign');
+
+    if (action === 'select_template' || action === 'change_template') {
+      router.push('/dashboard/templates/saved');
+    } else if (action === 'edit_template' && selectedTemplateId) {
+      router.push(`/dashboard/templates/edit/${selectedTemplateId}`);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 rounded-2xl">
@@ -101,7 +136,7 @@ const EmailComposer: React.FC = () => {
                               <AvatarImage src="https://www.transparentpng.com/thumb/user/gray-user-profile-icon-png-fP8Q1P.png" alt="User Avatar" />
                               <AvatarFallback>U</AvatarFallback>
                             </Avatar>
-                            {email.email || email.name}
+                            {email.email}
                           </div>
                         </SelectItem>
                       ))}
@@ -132,9 +167,10 @@ const EmailComposer: React.FC = () => {
                               <div className="flex items-center space-x-2">
                                 <Checkbox
                                   id="all"
-                                  checked={filteredContacts.every((contact) =>
-                                    recipients.includes(contact.email)
-                                  )}
+                                  checked={filteredContacts.length > 0 &&
+                                    filteredContacts.every((contact) =>
+                                      recipients.includes(contact.email)
+                                    )}
                                   onCheckedChange={toggleAllContacts}
                                 />
                                 <label
@@ -176,17 +212,37 @@ const EmailComposer: React.FC = () => {
                       </div>
                       <Button
                         variant="outline"
-                        onClick={() => handleAddRecipient(newRecipient)}
-                        className="whitespace-nowrap"
+                        onClick={() => {
+                          if (newRecipient) {
+                            handleAddRecipient(newRecipient);
+                          } else if (recipients.length > 0) {
+                            setRecipients([]);
+                          }
+                        }}
+                        className="whitespace-nowrap add-btn"
                       >
-                        <Users className="h-4 w-4 mr-2" />
-                        Add
+                        {newRecipient ? (
+                          <>
+                            Add
+                            {!filteredContacts.some(contact => contact.email === newRecipient) && (
+                              <span className="text-red-500 ml-1">Not found</span>
+                            )}
+                          </>
+                        ) : recipients.length > 0 ? (
+                          <>
+                            Clear All
+                            <Users className="h-4 w-4 ml-2" />
+                          </>
+                        ) : (
+                          <>
+                            Add
+                            <Users className="h-4 w-4 ml-2" />
+                          </>
+                        )}
                       </Button>
                     </div>
                   </div>
-                  {recipients.length > 0 && (
-                    <RecipientList recipients={recipients} onRemove={removeRecipient} />
-                  )}
+                  {recipients.length > 0 && <RecipientList recipients={recipients} onRemove={removeRecipient} />}
                 </div>
 
                 {/* Subject field */}
@@ -208,37 +264,64 @@ const EmailComposer: React.FC = () => {
                     Content:
                   </Label>
                   <div className="flex-1 flex items-center justify-end gap-4">
-                    {/* <div className="flex-1">
-                      <Popover open={isTemplateDropdownOpen} onOpenChange={setIsTemplateDropdownOpen}>
-                        <PopoverTrigger asChild>
-                          <Button variant="outline" className="w-full justify-start">
-                            {selectedTemplate ? selectedTemplate.name : "Select a template"}
+                    {selectedTemplateState === 'selected' ? (
+                      <>
+                        <Button
+                          variant="secondary"
+                          onClick={() => handleTemplateAction('edit_template')}
+                        >
+                          Edit Content
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => handleTemplateAction('change_template')}
+                        >
+                          Change Template
+                        </Button>
+                      </>
+                    ) : (
+                      <Button
+                        variant="secondary"
+                        onClick={() => handleTemplateAction('select_template')}
+                      >
+                        Select Template
+                      </Button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Schedule field */}
+                <div className="flex items-center gap-4 flex-wrap">
+                  <Label htmlFor="schedule" className="w-20">
+                    Schedule:
+                  </Label>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        id="send-now"
+                        checked={!isScheduled}
+                        onCheckedChange={(checked) => setIsScheduled(!checked)}
+                      />
+                      <Label htmlFor="send-now">Send Now</Label>
+                    </div>
+                    {isScheduled && (
+                      <DatePicker
+                        selected={scheduledDateTime}
+                        onChange={(date: Date | null) => setScheduledDateTime(date)}
+                        showTimeSelect
+                        timeFormat="HH:mm"
+                        timeIntervals={15}
+                        timeCaption="Time"
+                        dateFormat="MMMM d, yyyy h:mm aa"
+                        minDate={new Date()}
+                        customInput={
+                          <Button variant="outline">
+                            <Calendar className="h-4 w-4 mr-2" />
+                            {scheduledDateTime ? scheduledDateTime.toLocaleString() : 'Pick a date and time'}
                           </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-[300px] p-0" align="start">
-                          <ul className="max-h-[200px] overflow-auto">
-                            {templates.map((template) => (
-                              <li
-                                key={template.id}
-                                className="flex items-center space-x-2 p-2 hover:bg-gray-100 cursor-pointer"
-                                onClick={() => {
-                                  handleTemplateSelect(template.id);
-                                  setIsTemplateDropdownOpen(false);
-                                }}
-                              >
-                                <span className="flex-1 text-sm">{template.name}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </PopoverContent>
-                      </Popover>
-                    </div> */}
-                    <Button
-                      variant="secondary"
-                      onClick={handleTemplateAction}
-                    >
-                      {selectedTemplate ? "Edit Content" : "Choose Template"}
-                    </Button>
+                        }
+                      />
+                    )}
                   </div>
                 </div>
               </div>
@@ -263,7 +346,7 @@ const EmailComposer: React.FC = () => {
                       userAvatar="https://www.transparentpng.com/thumb/user/gray-user-profile-icon-png-fP8Q1P.png"
                       recipients={recipients}
                       subject={subject}
-                      emailContent={selectedTemplate}
+                      emailContent={templates.find(t => t.id === selectedTemplateId) || null}
                     />
                   </div>
                 </div>
