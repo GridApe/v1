@@ -33,7 +33,7 @@ jobs:
       uses: wlixcc/SFTP-Deploy-Action@v1.2.4
       with:
         server: 46.202.195.31
-        username: defipulsex-app
-        password: TLOVogDt3mUThvQYVo5B
+        username: gridape-app
+        password: hvcoo1s7aYG9GhMIhGCp
         local_path: './.next/*'
-        remote_path: '/home/defipulsex-app/htdocs/www.app.defipulsex.com'
+        remote_path: '/home/gridape-app/htdocs/www.app.gridape.com'
