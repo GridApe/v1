@@ -6,6 +6,7 @@ import { format, parseISO } from 'date-fns';
 import { Plus, Search, Edit, Trash2, MoreHorizontal, Send, Clock, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import Link from 'next/link';
 import {
   Table,
   TableBody,
@@ -35,10 +36,10 @@ interface Campaign {
   id: string;
   title: string;
   status: string;
-  scheduled_at: string;
+  scheduled_at: string | null;
   opened_count: number;
   clicked_count: number;
-  created_at: string;
+  created_at: string | null;
   user_email_template_id: string;
 }
 
@@ -61,7 +62,11 @@ export default function CampaignsPage() {
         throw new Error('Failed to fetch campaigns');
       }
       const result = await response.json();
-      setCampaigns(result.data.campaigns);
+      if (result.status === 'success' && Array.isArray(result.data.campaigns)) {
+        setCampaigns(result.data.campaigns);
+      } else {
+        throw new Error('Invalid campaign data received');
+      }
     } catch (error) {
       toast({
         title: 'Error',
@@ -87,9 +92,8 @@ export default function CampaignsPage() {
       
       setCampaigns(campaigns.filter(campaign => campaign.id !== campaignToDelete));
       toast({
-        title: 'Campaign Deleted',
-        description: 'The campaign has been successfully deleted.',
-        variant: 'default',
+        title: 'Success',
+        description: 'Campaign deleted successfully.',
       });
     } catch (error) {
       toast({
@@ -103,12 +107,18 @@ export default function CampaignsPage() {
     }
   };
 
-  const filteredCampaigns = campaigns.filter(campaign =>
-    campaign.title.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const formatDate = (dateString: string | null, format_string: string) => {
+    if (!dateString) return 'Not scheduled';
+    try {
+      return format(parseISO(dateString), format_string);
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Invalid date';
+    }
+  };
 
-  const getStatusVariant = (status: string) => {
-    switch (status) {
+  const getStatusVariant = (status: string): "default" | "secondary" | "destructive" | "outline" | "success" | "warning" => {
+    switch (status.toLowerCase()) {
       case 'sent':
         return 'success';
       case 'pending':
@@ -119,11 +129,18 @@ export default function CampaignsPage() {
         return 'default';
     }
   };
-  
+
+  const filteredCampaigns = campaigns.filter(campaign =>
+    campaign.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { duration: 0.5 } },
+  };
+
+  const calculateRate = (count: number): string => {
+    return count > 0 ? ((count / 100) * 100).toFixed(2) : '0.00';
   };
 
   return (
@@ -135,14 +152,16 @@ export default function CampaignsPage() {
     >
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-[#0D0F56]">Email Campaigns</h1>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" /> Create Campaign
-        </Button>
+        <Link href="/dashboard/campaign/create">
+          <Button>
+            <Plus className="mr-2 h-4 w-4" /> Create Campaign
+          </Button>
+        </Link>
       </div>
 
       <div className="flex justify-between items-center mb-4">
         <div className="relative w-64">
-          <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input
             type="text"
             placeholder="Search campaigns..."
@@ -155,7 +174,8 @@ export default function CampaignsPage() {
 
       {loading ? (
         <div className="text-center py-10">
-          <div className="animate-pulse">Loading campaigns...</div>
+          <div className="animate-spin w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading campaigns...</p>
         </div>
       ) : filteredCampaigns.length > 0 ? (
         <div className="rounded-lg border bg-white shadow-sm">
@@ -172,65 +192,56 @@ export default function CampaignsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredCampaigns.map((campaign) => {
-                const openRate = campaign.opened_count > 0 
-                  ? ((campaign.opened_count / 100) * 100).toFixed(2) 
-                  : '0.00';
-                const clickRate = campaign.clicked_count > 0 
-                  ? ((campaign.clicked_count / 100) * 100).toFixed(2) 
-                  : '0.00';
-
-                return (
-                  <TableRow key={campaign.id} className="hover:bg-gray-50">
-                    <TableCell className="font-medium flex items-center">
-                      <FileText className="mr-2 h-4 w-4 text-gray-500" />
-                      {campaign.title}
-                    </TableCell>
-                    <TableCell>
+              {filteredCampaigns.map((campaign) => (
+                <TableRow key={campaign.id} className="hover:bg-gray-50">
+                  <TableCell className="font-medium flex items-center">
+                    <FileText className="mr-2 h-4 w-4 text-gray-500" />
+                    {campaign.title}
+                  </TableCell>
+                  <TableCell>
                     <Badge variant={getStatusVariant(campaign.status)}>
-                    {campaign.status.charAt(0).toUpperCase() + campaign.status.slice(1)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center">
-                        <Clock className="mr-2 h-4 w-4 text-gray-500" />
-                        {format(parseISO(campaign.scheduled_at), 'MMM d, yyyy HH:mm')}
-                      </div>
-                    </TableCell>
-                    <TableCell>{openRate}%</TableCell>
-                    <TableCell>{clickRate}%</TableCell>
-                    <TableCell>
-                      {format(parseISO(campaign.created_at), 'MMM d, yyyy')}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                          <DropdownMenuItem>
-                            <Edit className="mr-2 h-4 w-4" /> Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Send className="mr-2 h-4 w-4" /> Send Now
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="text-red-600"
-                            onClick={() => {
-                              setCampaignToDelete(campaign.id);
-                              setIsDeleteModalOpen(true);
-                            }}
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" /> Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
+                      {campaign.status.charAt(0).toUpperCase() + campaign.status.slice(1)}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center">
+                      <Clock className="mr-2 h-4 w-4 text-gray-500" />
+                      {formatDate(campaign.scheduled_at, 'MMM d, yyyy HH:mm')}
+                    </div>
+                  </TableCell>
+                  <TableCell>{calculateRate(campaign.opened_count)}%</TableCell>
+                  <TableCell>{calculateRate(campaign.clicked_count)}%</TableCell>
+                  <TableCell>
+                    {formatDate(campaign.created_at, 'MMM d, yyyy')}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem>
+                          <Edit className="mr-2 h-4 w-4" /> Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <Send className="mr-2 h-4 w-4" /> Send Now
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="text-red-600"
+                          onClick={() => {
+                            setCampaignToDelete(campaign.id);
+                            setIsDeleteModalOpen(true);
+                          }}
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" /> Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </div>
@@ -238,13 +249,14 @@ export default function CampaignsPage() {
         <div className="text-center py-10 bg-white rounded-lg shadow-sm">
           <FileText className="mx-auto h-12 w-12 text-gray-400 mb-4" />
           <p className="text-gray-500 text-lg">No campaigns found. Create your first campaign!</p>
-          <Button className="mt-4" variant="outline">
-            <Plus className="mr-2 h-4 w-4" /> Create Campaign
-          </Button>
+          <Link href="/dashboard/campaign/create">
+            <Button className="mt-4" variant="outline">
+              <Plus className="mr-2 h-4 w-4" /> Create Campaign
+            </Button>
+          </Link>
         </div>
       )}
 
-      {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
         <DialogContent>
           <DialogHeader>
