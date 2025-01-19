@@ -21,12 +21,12 @@ jobs:
         node-version: '20'
 
     # Step 3: Install dependencies
-    - name: Install dependencies
-      run: npm ci
+    # - name: Install dependencies
+    #   run: npm ci
 
-    # Step 4: Build project
-    - name: Build project
-      run: npm run build
+    # # Step 4: Build project
+    # - name: Build project
+    #   run: npm run build
 
     # Step 5: Deploy to cPanel
     - name: Deploy to cPanel
@@ -35,5 +35,5 @@ jobs:
         server: 46.202.195.31
         username: gridape-app
         password: hvcoo1s7aYG9GhMIhGCp
-        local_path: './.next/*'
+        local_path: './*'
         remote_path: '/home/gridape-app/htdocs/www.app.gridape.com'
