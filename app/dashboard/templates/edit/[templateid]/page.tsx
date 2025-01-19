@@ -23,18 +23,10 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Toast } from '@/components/ui/toast';
-import {
-  Loader2,
-  Save,
-  Eye,
-  Upload,
-  Download,
-  Undo,
-  Redo,
-  Variable,
-} from 'lucide-react';
+import { Loader2, Save, Eye, Upload, Download, Undo, Redo, Variable } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import { useCampaignStore } from '@/store/useCampaignStore';
 
 interface TemplateData {
   id: string;
@@ -72,6 +64,8 @@ export default function EmailTemplateEditor({
   const [variables, setVariables] = useState<{ name: string; description: string }[]>([]);
   const router = useRouter();
   const { toast } = useToast();
+
+  const { setSelectedTemplateState, action, setAction } = useCampaignStore();
 
   // Fetch template data
   const fetchTemplate = async (templateId: string) => {
@@ -168,6 +162,9 @@ export default function EmailTemplateEditor({
       }
   
       const data = await response.json();
+      setSelectedTemplateState('selected');
+      setAction(null);
+      router.push('/dashboard/campaign/create');
       return { success: true, message: 'Template saved successfully!' };
     } catch (error: any) {
       console.error('Error saving template:', error);
