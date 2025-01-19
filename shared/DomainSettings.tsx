@@ -48,7 +48,7 @@ export default function DomainSettings() {
       if (!response.ok) throw new Error('Failed to fetch domains');
 
       const responseData = await response.json();
-      setDomains(responseData.data.domains);
+      setDomains(responseData.data.domains);      
     } catch (error) {
       toast({
         title: 'Error',
@@ -170,8 +170,8 @@ export default function DomainSettings() {
                   </TableRow>
                 ) : (
                   domains.map((domain) => (
-                    <TableRow key={domain.id}>
-                      <TableCell className="font-medium">{domain.domain}</TableCell>
+                    <TableRow key={domain.id}>                      
+                    <TableCell className="font-medium">{domain.domain}</TableCell>
                       <TableCell>
                         <Link
                           href={`https://${domain.domain}`}
