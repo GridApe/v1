@@ -31,20 +31,36 @@ export function AddDomainModal({
   onOpenChange: (open: boolean) => void;
   onDomainAdded?: () => void;
 }) {
-  const [domain, setDomain] = useState('');
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
   const [dnsRecords, setDnsRecords] = useState<DNSRecord[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showDNSModal, setShowDNSModal] = useState(false);
   const { toast } = useToast();
 
+  const isValidEmail = (email: string) => {
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return emailRegex.test(email);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isValidEmail(email)) {
+      toast({
+        title: 'Invalid Email',
+        description: 'Please enter a valid email address.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
+      const domain = email.split('@')[1];
       const response = await fetch('/api/user/settings/add-domain', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ domain }),
+        body: JSON.stringify({ name, email }),
       });
 
       if (!response.ok) throw new Error('Domain verification failed');
@@ -71,7 +87,7 @@ export function AddDomainModal({
       console.error('Domain verification error:', error);
       toast({
         title: 'Verification Failed',
-        description: 'Unable to add domain. Check domain name and try again.',
+        description: 'Unable to add domain. Check email and try again.',
         variant: 'destructive',
       });
     } finally {
@@ -97,27 +113,42 @@ export function AddDomainModal({
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <Label htmlFor="domain" className="mb-2 block">
-                Domain Name
+              <Label htmlFor="name" className="mb-2 block">
+                Your Name
               </Label>
               <Input
-                id="domain"
-                value={domain}
-                onChange={(e) => setDomain(e.target.value.trim().toLowerCase())}
-                placeholder="example.com"
-                pattern="^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}$"
+                id="name"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="John Doe"
+                required
+                className="w-full"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="email" className="mb-2 block">
+                Email Address
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value.trim().toLowerCase())}
+                placeholder="you@example.com"
                 required
                 className="w-full"
               />
               <p className="text-xs text-muted-foreground mt-2">
-                Enter the full domain you want to verify
+                Enter your email address for verification.
               </p>
             </div>
 
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button type="submit" disabled={isLoading || !domain} className="w-full">
+                  <Button type="submit" disabled={isLoading || !name || !email} className="w-full">
                     {isLoading ? (
                       <>
                         <ShieldCheck className="mr-2 h-4 w-4 animate-pulse" />
@@ -146,3 +177,4 @@ export function AddDomainModal({
     </>
   );
 }
+
