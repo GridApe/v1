@@ -92,7 +92,7 @@
 
 
 
-name: build docker
+name: docker login
 
 on:
    push:
@@ -107,4 +107,4 @@ jobs:
         uses: docker/login-action@v3
         with:
          username: ${{ secrets.DOCKER_USERNAME }}
-         password: ${{ secrets.DOCKER_PASSWORD }}
+         password: ${{ var.DOCKER_PASSWORD }}
