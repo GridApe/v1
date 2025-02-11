@@ -19,6 +19,6 @@ jobs:
          
       - name: Build Image
         run: |
-            docker build -t Silfrica-Backend:v1 .
-            docker tag Silfrica-Backend:v1 cliuzy1/Silfrica-backend:v1
-            docker push cliuzy1/Silfrica-backend:v1
+         docker build -t GridApe:v1.
+            docker tag GridApe:v1 cliuzy1/GridApe:v1
+            docker push cliuzy1/GridApe:v1
