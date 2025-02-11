@@ -67,8 +67,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-      - name: Debug Secrets
-        run: echo "Username is set" && test -n "${{ secrets.DOCKER_USERNAME }}" && echo "Password is set" && test -n "${{ secrets.DOCKER_PASSWORD }}"
+      # - name: Debug Secrets
+      #   run: echo "Username is set" && test -n "${{ secrets.DOCKER_USERNAME }}" && echo "Password is set" && test -n "${{ secrets.DOCKER_PASSWORD }}"
 
       -
         name: Login to Docker Hub
