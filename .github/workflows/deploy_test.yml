@@ -32,8 +32,8 @@ jobs:
     - name: Deploy to cPanel
       uses: wlixcc/SFTP-Deploy-Action@v1.2.4
       with:
-        server: 46.202.195.31
+        server: 147.93.86.12
         username: gridape-app
-        password: hvcoo1s7aYG9GhMIhGCp
+        password: ${{ secrets.PASSWORD }}
         local_path: './*'
         remote_path: '/home/gridape-app/htdocs/www.app.gridape.com'
