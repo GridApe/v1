@@ -91,3 +91,4 @@ jobs:
         with:
           push: true
           tags: cliuzy1/gridape:v1
+           docker push cliuzy1/gridape:tagname
