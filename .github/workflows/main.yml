@@ -1,27 +1,57 @@
-name: build and publish to docker
+name: Build and Publish to Docker Hub
 
 on:
   push:
+    branches:
+      - main  # or your default branch
+    tags:
+      - 'v*'  # Push events to matching v*, i.e. v1.0, v20.15.10
 
 jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
-      -
+      - 
+        name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - 
+        name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ vars.DOCKERHUB_USERNAME }}/app
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha
+      
+      - 
         name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      -
+      
+      - 
         name: Set up QEMU
         uses: docker/setup-qemu-action@v3
-      -
+      
+      - 
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      -
+      
+      - 
         name: Build and push
         uses: docker/build-push-action@v6
         with:
+          context: .
           push: true
-          tags: user/app:latest
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
