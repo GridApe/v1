@@ -31,7 +31,7 @@ export interface ContactTypes {
   email: string;
   phone: string;
   user_id: string;
-  group: string;
+  groups: string[];
   contactDate: string;
   address: string;
 }
@@ -107,5 +107,5 @@ export interface DomainTypes {
   spf_record: string;
   dkim_record: string;
   dmarc_record: string;
-  status?: string; 
+  status?: string;
 }
