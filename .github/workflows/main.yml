@@ -27,12 +27,14 @@ jobs:
      
 
       - name: Build Image
-
-        with:
-         push: true
-         tags: cliuzy1/gridape:v1
-         run: |
+        run: |
             docker build -t gridape:v1 .
             docker tag gridape :v1 cliuzy1/gridape:v1
             docker push cliuzy1/gridape:v1   
-        
+       
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+         push: true
+         tags: cliuzy1/gridape:v1
+
