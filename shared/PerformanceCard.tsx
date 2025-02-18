@@ -35,7 +35,7 @@ const PerformanceCard: React.FC<PerformanceCardProps> = ({ value, change, label,
 
           <p className="text-sm font-medium text-gray-600">{label}</p>
 
-          <div className="flex items-center justify-between w-full mt-2 bg-white">
+          <div className="flex items-center justify-between w-full mt-2 ">
             <p className="text-3xl font-bold text-gray-800">
               {typeof value === 'number' ? value.toLocaleString() : value}
             </p>
@@ -49,7 +49,7 @@ const PerformanceCard: React.FC<PerformanceCardProps> = ({ value, change, label,
         </div>
 
         <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="More options">
-          <MoreVertical className="h-4 w-4 text-gray-500" />
+          {/* <MoreVertical className="h-4 w-4 text-gray-500" /> */}
         </Button>
       </div>
     </motion.div>

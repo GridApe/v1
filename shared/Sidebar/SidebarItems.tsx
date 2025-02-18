@@ -11,7 +11,7 @@ import {
   SendIcon,
   UsersIcon,
   House,
-  FileStack
+  FileStack,
 } from 'lucide-react';
 import React from 'react';
 import { motion } from 'framer-motion';
@@ -51,8 +51,8 @@ export const SidebarItems: React.FC = () => {
     },
     { name: 'Landing page', icon: FileTextIcon, locked: true, path: '/dashboard/landing' },
     { name: 'Integration', icon: PuzzleIcon, locked: true, path: '/dashboard/integration' },
-    { name: 'Audience', icon: UsersIcon,  path: '/dashboard/audience/all' },
-    { name: 'My files', icon: FileStack, path: '/dashboard/templates/my-files' },
+    { name: 'Audience', icon: UsersIcon, path: '/dashboard/audience/all' },
+    { name: 'My files', icon: FileStack, locked: true, path: '/dashboard/templates/my-files' },
     { name: 'Settings', icon: CogIcon, path: '/dashboard/settings' },
   ];
 
