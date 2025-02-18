@@ -65,13 +65,13 @@ export async function handleApiRequest(
     const response = await fetch(`${BASE_URL}${endpoint}`, {
       method,
       headers,
-      body,
+      ...(method !== 'DELETE' && { body }), // Exclude body if method is DELETE
       credentials: 'include',
     });
 
     const data = await response.json();
 
-    if (!response.ok) { 
+    if (!response.ok) {
       console.error('Error response from API:', data);
       throw new Error(data.message || 'An error occurred');
     }
