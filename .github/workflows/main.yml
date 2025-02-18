@@ -43,7 +43,11 @@ jobs:
          tags: |
             cliuzy1/gridape:v1
             cliuzy1/gridape:latest
-
+            
+  deploy:  # Second job: Deploy (runs AFTER build)
+    needs: docker  # Ensure "deploy" runs ONLY AFTER "docker" completes
+    runs-on: ubuntu-latest
+    steps:
       - name: Deploy to Server
         uses: appleboy/ssh-action@master
         with:
