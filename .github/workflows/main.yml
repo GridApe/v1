@@ -55,17 +55,16 @@ jobs:
           username: ${{ secrets.SERVER_SSH_USERNAME }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            # Pull the latest image
             docker pull cliuzy1/gridape:v1
-            
-            # Stop and remove the existing container
             docker stop gridape || true
             docker rm gridape || true
-            
-            # Run the new container with proper image reference
             docker run -d \
               --name gridape \
-              -p 3000:80 \
+              -p 3000:3000 \
+              -e PORT=3000 \
+              -e HOSTNAME="0.0.0.0" \
+              -e NEXT_PUBLIC_API_URL="http://147.93.86.12:3000" \
+              --restart unless-stopped \
               cliuzy1/gridape:v1
 
             # Verify deployment
