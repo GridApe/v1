@@ -1,7 +1,10 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import Cookies from 'js-cookie';
+import { X } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -49,52 +52,129 @@ import {
 import Rocket from '@/shared/Rocket';
 import { ContactTypes } from '@/types/interface';
 import { toast } from '@/hooks/use-toast';
+import { setgroups } from 'process';
 
 const API_BASE_URL = 'https://api.gridape.com/api/v1/user';
 
 export default function AudiencePage() {
+  const [groupSuggestions, setGroupSuggestions] = useState<string[]>([]);
+
   const [activeTab, setActiveTab] = useState('all-contacts');
   const [isAddContactOpen, setIsAddContactOpen] = useState(false);
+  const [editopen, seteditopen] = useState(false);
+  const [contactToEdit, setContactToEdit] = useState<
+    (Omit<ContactTypes, 'groups'> & { groups: { name: string }[] }) | null
+  >(null);
+
+  const [selectedgroups, setselectedgroups] = useState<string[]>([]);
+  const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
+
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deleteSingleModalOpen, setDeletesingleOpen] = useState(false);
+  const [contactToDelete, setContactTodelete] = useState<ContactTypes | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
-  const [contacts, setContacts] = useState<ContactTypes[]>([]);
+  const [contacts, setContacts] = useState<
+    (Omit<ContactTypes, 'groups'> & { groups: { name: string }[] })[]
+  >([]);
+
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const token = Cookies.get('token');
+
+  const [group, setGroup] = useState('');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  const filteredGroups = groupSuggestions.filter((g) =>
+    g.toLowerCase().includes(group.toLowerCase())
+  );
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setGroup(value);
+    setIsDropdownOpen(value.length > 0 && filteredGroups.length > 0);
+  };
+
+  const handleSelectGroup = (selectedGroup: string) => {
+    // setselectedgroups((prevGroups) => [...prevGroups, selectedGroup]);
+    setGroup(selectedGroup);
+    handleEnter(selectedGroup);
+    setIsDropdownOpen(false);
+  };
+
+  const handleSelectGroupEdit = (selectedGroup: string) => {
+    setContactToEdit((prev) => {
+      if (!prev) return prev; // Ensure prev is not null
+
+      // Check if the group already exists
+      const groupExists = prev.groups.some((g) => g.name === selectedGroup);
+
+      if (groupExists) return prev; // Avoid duplicates
+
+      return {
+        ...prev,
+        groups: [...prev.groups, { name: selectedGroup }], // Add new group
+      };
+    });
+
+    handleEnterEdit(selectedGroup);
+    setIsDropdownOpen(false);
+  };
 
   const [loading, setLoading] = useState(true);
-  const [newContact, setNewContact] = useState<Omit<ContactTypes, 'id' | 'contactDate' | 'user_id'>>({
+  const [newContact, setNewContact] = useState<
+    Omit<ContactTypes, 'id' | 'contactDate' | 'user_id'> & {
+      groups: Omit<ContactTypes['groups'][number], 'name'>[];
+    }
+  >({
     first_name: '',
     last_name: '',
     email: '',
     phone: '',
-    group: '',
+    groups: [], // ✅ groups exist but without `name`
     address: '',
   });
 
   useEffect(() => {
     fetchContacts();
-  }, []);
+
+    if (editopen && !contactToEdit) {
+      seteditopen(false);
+    }
+
+    if (deleteSingleModalOpen && !contactToDelete) {
+      setDeletesingleOpen(false);
+    }
+  }, [editopen, contactToEdit, contactToDelete, deleteSingleModalOpen]);
 
   const fetchContacts = async () => {
     setLoading(true);
     setFetchError(null);
     try {
-      const response = await fetch("/api/user/audience/all");
+      const response = await fetch('/api/user/audience/all');
       if (!response.ok) {
         throw new Error('Failed to fetch contacts');
       }
       const result = await response.json();
-      
+
       // Updated to match the new response structure
       const contactsData = result.data?.contacts || [];
       setContacts(contactsData);
-      
+
       if (contactsData.length === 0) {
         toast({
           title: 'No Contacts',
           description: 'You currently have no contacts.',
           variant: 'default',
         });
+      }
+      if (result?.data.contacts) {
+        // Extract unique group names
+        const allGroups: string[] = result.data.contacts.flatMap((contact: any) =>
+          contact.groups.map((g: { name: string }) => g.name)
+        );
+        const uniqueGroups = Array.from(new Set(allGroups)); // Remove duplicates
+
+        setGroupSuggestions(uniqueGroups);
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
@@ -111,7 +191,7 @@ export default function AudiencePage() {
   const handleAddContact = async () => {
     if (newContact.first_name && newContact.last_name && newContact.email) {
       try {
-        const response = await fetch("/api/user/audience/add", {
+        const response = await fetch('/api/user/audience/add', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -133,7 +213,7 @@ export default function AudiencePage() {
           last_name: '',
           email: '',
           phone: '',
-          group: '',
+          groups: [],
           address: '',
         });
       } catch (error) {
@@ -154,14 +234,20 @@ export default function AudiencePage() {
 
   const handleDeleteContacts = async () => {
     try {
-      await Promise.all(selectedContacts.map(async (id) => {
-        const response = await fetch(`${API_BASE_URL}/contacts/${id}`, {
-          method: 'DELETE',
-        });
-        if (!response.ok) {
-          throw new Error(`Failed to delete contact with id ${id}`);
-        }
-      }));
+      await Promise.all(
+        selectedContacts.map(async (id) => {
+          const response = await fetch(`/api/user/audience/delete/${id}`, {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          if (!response.ok) {
+            throw new Error(`Failed to delete contact with id ${id}`);
+          }
+        })
+      );
       setSelectedContacts([]);
       setIsDeleteModalOpen(false);
       toast({
@@ -208,6 +294,43 @@ export default function AudiencePage() {
     }
   };
 
+  // open modal for single contact delete
+  const openDeleteModal = (contact: ContactTypes) => {
+    setDeletesingleOpen(true);
+    setContactTodelete(contact);
+  };
+
+  // deletes single contact
+  const handleSingleContactDelete = async () => {
+    try {
+      const response = await fetch(`/api/user/audience/delete/${contactToDelete?.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error(`Failed to delete contact with id ${contactToDelete?.id}`);
+      }
+
+      setContactTodelete(null);
+      setDeletesingleOpen(false);
+      toast({
+        title: 'Contacts Deleted',
+        description: 'Contact have been successfully removed.',
+        variant: 'default',
+      });
+      fetchContacts();
+    } catch (error) {
+      toast({
+        title: 'Delete Failed',
+        description: 'Unable to delete contacts. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const handleExport = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/contacts/export`);
@@ -239,19 +362,140 @@ export default function AudiencePage() {
     visible: { opacity: 1, transition: { duration: 0.5 } },
   };
 
-  const filteredContacts = contacts?.filter(
-    (contact) =>
-      `${contact.first_name} ${contact.last_name}`
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      contact.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      contact.phone.includes(searchTerm)
-  ) || [];
+  const filteredContacts =
+    contacts?.filter(
+      (contact) =>
+        `${contact.first_name} ${contact.last_name}`
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        contact.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        contact.phone.includes(searchTerm)
+    ) || [];
 
   const handleSelectContact = (contactId: string) => {
     setSelectedContacts((prev) =>
       prev.includes(contactId) ? prev.filter((id) => id !== contactId) : [...prev, contactId]
     );
+  };
+
+  const handleOpenEdit = (contact: ContactTypes) => {
+    setContactToEdit({
+      ...contact,
+      groups: contact.groups.map((name) => ({ name })), // Convert string[] to { name: string }[]
+    });
+
+    seteditopen(true);
+  };
+
+  const handleUpdateContact = async () => {
+    if (
+      contactToEdit &&
+      contactToEdit.first_name &&
+      contactToEdit.last_name &&
+      contactToEdit.email &&
+      contactToEdit.groups
+    ) {
+      const transformContact = (contact: any) => ({
+        last_name: contact.last_name,
+        first_name: contact.first_name,
+        email: contact.email,
+        phone: contact.phone,
+        address: contact.address || null,
+        groups: contact.groups.map((group: { name: string }) => group.name),
+        id: contact.id,
+      });
+
+      const data = transformContact(contactToEdit);
+      try {
+        const response = await fetch(`/api/user/audience/update/${data.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            // Authorization: `Bearer ${token}`, // Add Bearer token
+          },
+          body: JSON.stringify(data),
+        });
+        if (!response.ok) {
+          throw new Error('Failed to update contact');
+        }
+        seteditopen(false);
+        toast({
+          title: 'Contact Updated!',
+          description: 'Your new contact has been successfully updated!.',
+          variant: 'default',
+        });
+        fetchContacts();
+        setContactToEdit(null);
+      } catch (error) {
+        console.log(error);
+        toast({
+          title: 'Error',
+          description: 'Failed to update contact. Please try again.',
+          variant: 'destructive',
+        });
+      }
+    } else {
+      toast({
+        title: 'Incomplete Information',
+        description: 'Please fill all required fields.',
+        variant: 'default',
+      });
+    }
+  };
+  // handles the enter button for adding groups
+  const handleEnter = (selectedgroup: string) => {
+    if (selectedgroup.trim() && !selectedgroups.includes(selectedgroup.trim())) {
+      // const updatedGroups = [...selectedgroups, selectedgroup.trim()];
+      setselectedgroups((prevGroups) => [...prevGroups, selectedgroup.trim()]);
+
+      // Update newContact.group correctly
+      setNewContact((prev) => ({
+        ...prev,
+        groups: [...(prev.groups || []), selectedgroup.trim()],
+      }));
+    }
+    setIsDeleteModalOpen(false);
+    // setgroups("");
+    setFilteredSuggestions([]);
+    setGroup('');
+  };
+
+  const handleEnterEdit = (group: string) => {
+    if (!group.trim()) return; // Prevent empty groups
+
+    setContactToEdit((prev) => {
+      if (!prev) return prev; // Ensure prev is not null
+
+      // Ensure groups array exists and check if the group already exists
+      const existingGroups = prev.groups || [];
+      const isGroupExists = existingGroups.some((g) => g.name === group.trim());
+
+      if (isGroupExists) return prev; // Prevent duplicates
+
+      return {
+        ...prev,
+        groups: [...existingGroups, { name: group.trim() }], // Push only the group object
+      };
+    });
+
+    setFilteredSuggestions([]);
+    setGroup('');
+    setIsDropdownOpen(false);
+  };
+
+  const handleRemoveGroup = (item: string) => {
+    setselectedgroups(selectedgroups.filter((selected) => selected !== item));
+  };
+
+  const handleRemoveGroupEdit = (item: string) => {
+    setContactToEdit((prev) => {
+      if (!prev) return prev; // Ensure prev is not null
+
+      return {
+        ...prev,
+        groups: prev.groups.filter((group) => group.name !== item), // Filter out the selected group
+      };
+    });
   };
 
   return (
@@ -360,7 +604,21 @@ export default function AudiencePage() {
                     <TableCell>{`${contact.first_name} ${contact.last_name}`}</TableCell>
                     <TableCell>{contact.email}</TableCell>
                     <TableCell>{contact.phone}</TableCell>
-                    <TableCell>{contact.group || 'Unassigned'}</TableCell>
+                    <TableCell>
+                      <TableCell>
+                        {contact.groups.length === 0
+                          ? 'Unassigned'
+                          : contact.groups.length === 1
+                            ? typeof contact.groups[0] === 'object'
+                              ? contact.groups[0]?.name || 'Unassigned'
+                              : contact.groups[0]
+                            : `${typeof contact.groups.at(0) === 'object' ? (contact.groups.at(0)?.name ?? 'Unknown') : contact.groups.at(0)} ... ${
+                                typeof contact.groups.at(-1) === 'object'
+                                  ? (contact.groups.at(-1)?.name ?? 'Unknown')
+                                  : contact.groups.at(-1)
+                              }`}
+                      </TableCell>
+                    </TableCell>
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -369,10 +627,26 @@ export default function AudiencePage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
-                          <DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              handleOpenEdit({
+                                ...contact,
+                                groups: contact.groups.map((g) => g.name), // Convert to string[]
+                              })
+                            }
+                          >
                             <Edit className="mr-2 h-4 w-4" /> Edit
                           </DropdownMenuItem>
-                          <DropdownMenuItem className="text-red-600">
+
+                          <DropdownMenuItem
+                            className="text-red-600"
+                            onClick={() =>
+                              openDeleteModal({
+                                ...contact,
+                                groups: contact.groups.map((g) => g.name), // Convert to string[]
+                              })
+                            }
+                          >
                             <Trash2 className="mr-2 h-4 w-4" /> Delete
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -409,8 +683,46 @@ export default function AudiencePage() {
         </motion.div>
       )}
 
+      {/* Delete single contact's confirmation dialog */}
+      <Dialog open={deleteSingleModalOpen} onOpenChange={setDeletesingleOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Contact</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this contact? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeletesingleOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleSingleContactDelete}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Add Contact Sheet */}
-      <Sheet open={isAddContactOpen} onOpenChange={setIsAddContactOpen}>
+      <Sheet
+        open={isAddContactOpen}
+        onOpenChange={(isOpen) => {
+          setIsAddContactOpen(isOpen);
+
+          if (!isOpen) {
+            setNewContact({
+              first_name: '',
+              last_name: '',
+              email: '',
+              phone: '',
+              address: '', // Ensure address is included
+              groups: [],
+            });
+            setGroup('');
+            setselectedgroups([]);
+          }
+        }}
+      >
         <SheetContent className="sm:max-w-[500px]">
           <SheetHeader>
             <SheetTitle>Create New Contact</SheetTitle>
@@ -461,23 +773,63 @@ export default function AudiencePage() {
                 className="col-span-3"
               />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
+            <div className="grid grid-cols-4 items-center gap-4" style={{ position: 'relative' }}>
               <Label htmlFor="group" className="text-right">
-                Group
+                Groups
               </Label>
-              <Select
-                value={newContact.group}
-                onValueChange={(value) => setNewContact({ ...newContact, group: value })}
+              <input
+                id="group"
+                value={group}
+                onChange={handleInputChange}
+                placeholder="Type to search..."
+                className="col-span-2 p-2 border border-gray-300 rounded-lg p-2"
+              />
+              <button
+                onClick={() => {
+                  setIsDropdownOpen(false);
+                  handleEnter(group);
+                }}
+                className="ml-2 bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600"
               >
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Select a group" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Group A">Group A</SelectItem>
-                  <SelectItem value="Group B">Group B</SelectItem>
-                  <SelectItem value="Group C">Group C</SelectItem>
-                </SelectContent>
-              </Select>
+                Enter
+              </button>
+
+              {/* Suggestions Dropdown */}
+              {isDropdownOpen && (
+                <>
+                  <ul className="absolute left-0 top-full mt-1 w-full bg-white border border-gray-300 shadow-lg rounded-md max-h-40 overflow-y-auto">
+                    {groupSuggestions
+                      .filter((g) => g.toLowerCase().includes(group.toLowerCase()))
+                      .map((g) => (
+                        <li
+                          key={g}
+                          onClick={() => handleSelectGroup(g)}
+                          className="px-3 py-2 cursor-pointer hover:bg-gray-100"
+                        >
+                          {g}
+                        </li>
+                      ))}
+                  </ul>
+                </>
+              )}
+              {/* </div> */}
+
+              {/* Selected Items Display */}
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {selectedgroups.map((g, index) => (
+                <span
+                  key={index}
+                  className="bg-blue-100 text-blue-700 px-3 py-1  flex items-center"
+                  style={{ borderRadius: '4px' }}
+                >
+                  {g}
+                  <X
+                    className="ml-2 h-4 w-4 cursor-pointer hover:text-red-500"
+                    onClick={() => handleRemoveGroup(g)}
+                  />
+                </span>
+              ))}
             </div>
           </div>
           <SheetFooter>
@@ -489,6 +841,131 @@ export default function AudiencePage() {
         </SheetContent>
       </Sheet>
 
+      {/* Edit contact sheet */}
+      <Sheet open={editopen} onOpenChange={seteditopen}>
+        <SheetContent className="sm:max-w-[500px]">
+          <SheetHeader>
+            <SheetTitle>Edit Contact</SheetTitle>
+            <SheetDescription>Update the contact details carefully.</SheetDescription>
+          </SheetHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="first_name" className="text-right">
+                First Name
+              </Label>
+              <Input
+                id="first_name"
+                value={contactToEdit?.first_name}
+                onChange={(e) =>
+                  setContactToEdit({ ...contactToEdit!, first_name: e.target.value })
+                }
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="last_name" className="text-right">
+                Last Name
+              </Label>
+              <Input
+                id="last_name"
+                value={contactToEdit?.last_name}
+                onChange={(e) => setContactToEdit({ ...contactToEdit!, last_name: e.target.value })}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="email" className="text-right">
+                Email
+              </Label>
+              <Input
+                id="email"
+                value={contactToEdit?.email}
+                onChange={(e) => setContactToEdit({ ...contactToEdit!, email: e.target.value })}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="phone" className="text-right">
+                Phone
+              </Label>
+              <Input
+                id="phone"
+                value={contactToEdit?.phone}
+                onChange={(e) => setContactToEdit({ ...contactToEdit!, phone: e.target.value })}
+                className="col-span-3"
+              />
+            </div>
+
+            <div className="grid grid-cols-4 items-center gap-4" style={{ position: 'relative' }}>
+              {/* <div className="relative flex items-center "> */}
+              <Label htmlFor="group" className="text-right">
+                Groups
+              </Label>
+              <input
+                id="group"
+                value={group}
+                onChange={handleInputChange}
+                placeholder="Type to search..."
+                className="col-span-2 p-2 border border-gray-300 rounded-lg p-2"
+              />
+              <button
+                onClick={() => {
+                  setIsDropdownOpen(false);
+                  handleEnterEdit(group);
+                }}
+                className="ml-2 bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600"
+              >
+                Enter
+              </button>
+
+              {/* Suggestions Dropdown */}
+              {isDropdownOpen && (
+                <>
+                  <ul className="absolute left-0 top-full mt-1 w-full bg-white border border-gray-300 shadow-lg rounded-md max-h-40 overflow-y-auto">
+                    {groupSuggestions
+                      .filter((g) => g.toLowerCase().includes(group.toLowerCase()))
+                      .map((g) => (
+                        <li
+                          key={g}
+                          onClick={() => handleSelectGroupEdit(g)}
+                          className="px-3 py-2 cursor-pointer hover:bg-gray-100"
+                        >
+                          {g}
+                        </li>
+                      ))}
+                  </ul>
+                </>
+              )}
+              {/* </div> */}
+
+              {/* Selected Items Display */}
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {contactToEdit?.groups?.map((g, index) => (
+                <span
+                  key={index}
+                  className="bg-blue-100 text-blue-700 px-3 py-1  flex items-center"
+                  style={{ borderRadius: '4px' }}
+                >
+                  {g?.name}
+                  <X
+                    className="ml-2 h-4 w-4 cursor-pointer hover:text-red-500"
+                    onClick={() => handleRemoveGroupEdit(g.name)}
+                  />
+                </span>
+              ))}
+            </div>
+          </div>
+          <SheetFooter>
+            <SheetClose asChild>
+              <Button variant="outline" onClick={() => seteditopen(false)}>
+                Cancel
+              </Button>
+            </SheetClose>
+            <Button onClick={handleUpdateContact}>Update Contact</Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
       {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
         <DialogContent>
@@ -512,4 +989,3 @@ export default function AudiencePage() {
     </motion.div>
   );
 }
-
