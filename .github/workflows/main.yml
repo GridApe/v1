@@ -54,4 +54,4 @@ jobs:
             docker pull cliuzy1/gridape:v1
             docker stop gridape || true
             docker rm gridape || true
-            docker run -d --name gridape -p 80:80 cliuzy1/gridape:v1
+            docker run -d --name gridape -p 3000:80 ***/gridape:v1
