@@ -52,7 +52,7 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
             # Pull the latest image
-            docker pull ***/gridape:v1
+            docker pull cliuzy1/gridape:v1
             
             # Stop and remove the existing container
             docker stop gridape || true
@@ -62,4 +62,7 @@ jobs:
             docker run -d \
               --name gridape \
               -p 3000:80 \
-              ***/gridape:v1
+              cliuzy1/gridape:v1
+
+            # Verify deployment
+            docker ps | grep gridape
