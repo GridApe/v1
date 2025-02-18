@@ -1,34 +1,28 @@
-'use client';
+"use client"
 
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Eye, EyeOff, Users, Calendar, Delete } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { NavigationBar } from './NavigationBar';
-import { EmailPreview } from './EmailPreview';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { useEmailComposer } from './useEmailComposer';
-import { ChangeEvent } from 'react';
-import { useCampaignStore } from '@/store/useCampaignStore';
-import { useRouter } from 'next/navigation';
-import DatePicker from 'react-datepicker';
-import "react-datepicker/dist/react-datepicker.css";
-import { Switch } from '@/components/ui/switch';
-import { RecipientList } from './RecipientList';
+import { useState } from "react"
+import { motion } from "framer-motion"
+import { Eye, EyeOff, Users, Calendar, Delete } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { NavigationBar } from "./NavigationBar"
+import { EmailPreview } from "./EmailPreview"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { useEmailComposer } from "./useEmailComposer"
+import type { ChangeEvent } from "react"
+import { useCampaignStore } from "@/store/useCampaignStore"
+import { useRouter } from "next/navigation"
+import DatePicker from "react-datepicker"
+import "react-datepicker/dist/react-datepicker.css"
+import { Switch } from "@/components/ui/switch"
+import { RecipientList } from "./RecipientList"
 
 const EmailComposer: React.FC = () => {
-  const router = useRouter();
+  const router = useRouter()
   const {
     showPreview,
     newRecipient,
@@ -36,14 +30,14 @@ const EmailComposer: React.FC = () => {
     isDropdownOpen,
     templates,
     senderEmails,
-    selectedSenderEmail,
+    selectedSenderEmailId,
     setShowPreview,
     setNewRecipient,
     handleInputChange,
     toggleAllContacts,
     setIsDropdownOpen,
-    setSelectedSenderEmail,
-  } = useEmailComposer();
+    setSelectedSenderEmailId,
+  } = useEmailComposer()
 
   const {
     subject,
@@ -59,49 +53,44 @@ const EmailComposer: React.FC = () => {
     setAction,
     setIsScheduled,
     setScheduledDateTime,
-  } = useCampaignStore();
+  } = useCampaignStore()
 
   const handleAddRecipient = (email: string) => {
     if (email && !recipients.includes(email)) {
-      setRecipients([...recipients, email]);
-      setNewRecipient('');
+      setRecipients([...recipients, email])
+      setNewRecipient("")
     }
-  };
+  }
 
   const removeRecipient = (email: string) => {
-    setRecipients(recipients.filter((r) => r !== email));
-  };
+    setRecipients(recipients.filter((r) => r !== email))
+  }
 
-  const handleTemplateAction = (action: 'select_template' | 'edit_template' | 'change_template') => {
-    setAction(action);
-    localStorage.setItem('comingFrom', 'create_campaign');
+  const handleTemplateAction = (action: "select_template" | "edit_template" | "change_template") => {
+    setAction(action)
+    localStorage.setItem("comingFrom", "create_campaign")
 
-    if (action === 'select_template' || action === 'change_template') {
-      router.push('/dashboard/templates/saved');
-    } else if (action === 'edit_template' && selectedTemplateId) {
-      router.push(`/dashboard/templates/edit/${selectedTemplateId}`);
+    if (action === "select_template" || action === "change_template") {
+      router.push("/dashboard/templates/saved")
+    } else if (action === "edit_template" && selectedTemplateId) {
+      router.push(`/dashboard/templates/edit/${selectedTemplateId}`)
     }
-  };
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 rounded-2xl">
-      <NavigationBar showPreview={showPreview} setShowPreview={setShowPreview} />
+      <NavigationBar
+        showPreview={showPreview}
+        setShowPreview={setShowPreview}
+        selectedSenderEmailId={selectedSenderEmailId}
+      />
 
       <main className="container mx-auto px-4 py-6">
         <div className="grid gap-6 lg:grid-cols-[1fr,400px] xl:grid-cols-[1fr,500px]">
-          <motion.div
-            className="space-y-6"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
+          <motion.div className="space-y-6" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <div className="flex items-center justify-between">
               <h1 className="text-2xl font-bold text-[#1E0E4E]">New Email</h1>
-              <Button
-                variant="outline"
-                size="sm"
-                className="lg:hidden"
-                onClick={() => setShowPreview(!showPreview)}
-              >
+              <Button variant="outline" size="sm" className="lg:hidden" onClick={() => setShowPreview(!showPreview)}>
                 {showPreview ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </Button>
             </div>
@@ -113,27 +102,30 @@ const EmailComposer: React.FC = () => {
                   <Label htmlFor="from" className="w-20">
                     From:
                   </Label>
-                  <Select
-                    value={selectedSenderEmail}
-                    onValueChange={(value) => setSelectedSenderEmail(value)}
-                  >
+                  <Select value={selectedSenderEmailId} onValueChange={(value) => setSelectedSenderEmailId(value)}>
                     <SelectTrigger className="w-full sm:w-[300px]">
                       <SelectValue>
                         <div className="flex items-center gap-2">
                           <Avatar className="h-6 w-6">
-                            <AvatarImage src="https://www.transparentpng.com/thumb/user/gray-user-profile-icon-png-fP8Q1P.png" alt="User Avatar" />
+                            <AvatarImage
+                              src="https://www.transparentpng.com/thumb/user/gray-user-profile-icon-png-fP8Q1P.png"
+                              alt="User Avatar"
+                            />
                             <AvatarFallback>U</AvatarFallback>
                           </Avatar>
-                          {senderEmails.find(email => email.email === selectedSenderEmail)?.email || selectedSenderEmail}
+                          {senderEmails.find((email) => email.id === selectedSenderEmailId)?.email || "Select sender"}
                         </div>
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {senderEmails.map((email) => (
-                        <SelectItem key={email.email} value={email.email}>
+                        <SelectItem key={email.id} value={email.id}>
                           <div className="flex items-center gap-2">
                             <Avatar className="h-6 w-6">
-                              <AvatarImage src="https://www.transparentpng.com/thumb/user/gray-user-profile-icon-png-fP8Q1P.png" alt="User Avatar" />
+                              <AvatarImage
+                                src="https://www.transparentpng.com/thumb/user/gray-user-profile-icon-png-fP8Q1P.png"
+                                alt="User Avatar"
+                              />
                               <AvatarFallback>U</AvatarFallback>
                             </Avatar>
                             {email.email}
@@ -167,10 +159,10 @@ const EmailComposer: React.FC = () => {
                               <div className="flex items-center space-x-2">
                                 <Checkbox
                                   id="all"
-                                  checked={filteredContacts.length > 0 &&
-                                    filteredContacts.every((contact) =>
-                                      recipients.includes(contact.email)
-                                    )}
+                                  checked={
+                                    filteredContacts.length > 0 &&
+                                    filteredContacts.every((contact) => recipients.includes(contact.email))
+                                  }
                                   onCheckedChange={toggleAllContacts}
                                 />
                                 <label
@@ -183,25 +175,19 @@ const EmailComposer: React.FC = () => {
                             </div>
                             <ul className="max-h-[200px] overflow-auto">
                               {filteredContacts.map((contact) => (
-                                <li
-                                  key={contact.id}
-                                  className="flex items-center space-x-2 p-2 hover:bg-gray-100"
-                                >
+                                <li key={contact.id} className="flex items-center space-x-2 p-2 hover:bg-gray-100">
                                   <Checkbox
                                     id={`contact-${contact.id}`}
                                     checked={recipients.includes(contact.email)}
                                     onCheckedChange={(checked) => {
                                       if (checked) {
-                                        handleAddRecipient(contact.email);
+                                        handleAddRecipient(contact.email)
                                       } else {
-                                        removeRecipient(contact.email);
+                                        removeRecipient(contact.email)
                                       }
                                     }}
                                   />
-                                  <label
-                                    htmlFor={`contact-${contact.id}`}
-                                    className="flex-1 text-sm"
-                                  >
+                                  <label htmlFor={`contact-${contact.id}`} className="flex-1 text-sm">
                                     {`${contact.first_name} ${contact.last_name}`} ({contact.email})
                                   </label>
                                 </li>
@@ -214,9 +200,9 @@ const EmailComposer: React.FC = () => {
                         variant="outline"
                         onClick={() => {
                           if (newRecipient) {
-                            handleAddRecipient(newRecipient);
+                            handleAddRecipient(newRecipient)
                           } else if (recipients.length > 0) {
-                            setRecipients([]);
+                            setRecipients([])
                           }
                         }}
                         className="whitespace-nowrap add-btn"
@@ -224,7 +210,7 @@ const EmailComposer: React.FC = () => {
                         {newRecipient ? (
                           <>
                             Add
-                            {!filteredContacts.some(contact => contact.email === newRecipient) && (
+                            {!filteredContacts.some((contact) => contact.email === newRecipient) && (
                               <span className="text-red-500 ml-1">Not found</span>
                             )}
                           </>
@@ -264,26 +250,17 @@ const EmailComposer: React.FC = () => {
                     Content:
                   </Label>
                   <div className="flex-1 flex items-center justify-end gap-4">
-                    {selectedTemplateState === 'selected' ? (
+                    {selectedTemplateState === "selected" ? (
                       <>
-                        <Button
-                          variant="secondary"
-                          onClick={() => handleTemplateAction('edit_template')}
-                        >
+                        <Button variant="secondary" onClick={() => handleTemplateAction("edit_template")}>
                           Edit Content
                         </Button>
-                        <Button
-                          variant="outline"
-                          onClick={() => handleTemplateAction('change_template')}
-                        >
+                        <Button variant="outline" onClick={() => handleTemplateAction("change_template")}>
                           Change Template
                         </Button>
                       </>
                     ) : (
-                      <Button
-                        variant="secondary"
-                        onClick={() => handleTemplateAction('select_template')}
-                      >
+                      <Button variant="secondary" onClick={() => handleTemplateAction("select_template")}>
                         Select Template
                       </Button>
                     )}
@@ -317,7 +294,7 @@ const EmailComposer: React.FC = () => {
                         customInput={
                           <Button variant="outline">
                             <Calendar className="h-4 w-4 mr-2" />
-                            {scheduledDateTime ? scheduledDateTime.toLocaleString() : 'Pick a date and time'}
+                            {scheduledDateTime ? scheduledDateTime.toLocaleString() : "Pick a date and time"}
                           </Button>
                         }
                       />
@@ -329,11 +306,7 @@ const EmailComposer: React.FC = () => {
           </motion.div>
 
           {showPreview && (
-            <motion.div
-              className="lg:block"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-            >
+            <motion.div className="lg:block" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
               <div className="sticky top-32">
                 <div className="bg-white rounded-lg shadow-sm overflow-hidden">
                   <div className="p-4 border-b">
@@ -341,12 +314,12 @@ const EmailComposer: React.FC = () => {
                   </div>
                   <div className="p-4">
                     <EmailPreview
-                      userName={senderEmails.find(email => email.email === selectedSenderEmail)?.name || selectedSenderEmail}
-                      userEmail={selectedSenderEmail}
+                      userName={senderEmails.find((email) => email.id === selectedSenderEmailId)?.name || "Sender"}
+                      userEmail={senderEmails.find((email) => email.id === selectedSenderEmailId)?.email || ""}
                       userAvatar="https://www.transparentpng.com/thumb/user/gray-user-profile-icon-png-fP8Q1P.png"
                       recipients={recipients}
                       subject={subject}
-                      emailContent={templates.find(t => t.id === selectedTemplateId) || null}
+                      emailContent={templates.find((t) => t.id === selectedTemplateId) || null}
                     />
                   </div>
                 </div>
@@ -356,8 +329,8 @@ const EmailComposer: React.FC = () => {
         </div>
       </main>
     </div>
-  );
-};
+  )
+}
 
-export default EmailComposer;
+export default EmailComposer
 
