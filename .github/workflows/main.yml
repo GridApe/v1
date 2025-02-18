@@ -51,7 +51,15 @@ jobs:
           username: ${{ secrets.SERVER_SSH_USERNAME }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            docker pull cliuzy1/gridape:v1
+            # Pull the latest image
+            docker pull ***/gridape:v1
+            
+            # Stop and remove the existing container
             docker stop gridape || true
             docker rm gridape || true
-            docker run -d --name gridape -p 3000:80 ***/gridape:v1
+            
+            # Run the new container with proper image reference
+            docker run -d \
+              --name gridape \
+              -p 3000:80 \
+              ***/gridape:v1
