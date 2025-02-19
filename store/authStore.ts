@@ -101,10 +101,10 @@ export const useAuthStore = create<AuthState>((set) => ({
       const response: Response = await fetch('/api/auth/logout', {
         method: 'POST',
       });
-
+  
       if (!response.ok) throw new Error('Logout failed');
-
-      set({ user: null });
+        Cookies.remove('token');
+        set({ user: null });
     } catch (error) {
       console.error('Logout error:', error);
       throw error;
