@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Cookies from 'js-cookie';
+import axios from 'axios';
 import { X } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
@@ -191,23 +192,22 @@ export default function AudiencePage() {
   const handleAddContact = async () => {
     if (newContact.first_name && newContact.last_name && newContact.email) {
       try {
-        const response = await fetch('/api/user/audience/add', {
-          method: 'POST',
+        const response = await axios.post('/api/user/audience/add', newContact, {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(newContact),
         });
-        if (!response.ok) {
-          throw new Error('Failed to add contact');
-        }
+
+        // Close modal or reset state after successful request
         setIsAddContactOpen(false);
         toast({
           title: 'Contact Added',
           description: 'Your new contact has been successfully added.',
           variant: 'default',
         });
-        fetchContacts();
+
+        fetchContacts(); // Refresh the contact list
+
         setNewContact({
           first_name: '',
           last_name: '',
@@ -216,10 +216,30 @@ export default function AudiencePage() {
           groups: [],
           address: '',
         });
-      } catch (error) {
+      } catch (error: any) {
+        console.error('Error adding contact:', error.response);
+
+        let errorMessage = 'Failed to add contact. Please try again.';
+
+        // Extract detailed error message from API response
+        if (error.response?.data) {
+          const apiError = error.response.data;
+
+          if (apiError?.message) {
+            errorMessage = apiError.message;
+          }
+
+          if (apiError?.errors) {
+            const errorDetails = Object.entries(apiError.errors)
+              .map(([field, messages]) => `${(messages as any[]).join(', ')}`)
+              .join(' ');
+            errorMessage += ` ${errorDetails}`;
+          }
+        }
+
         toast({
           title: 'Error',
-          description: 'Failed to add contact. Please try again.',
+          description: errorMessage,
           variant: 'destructive',
         });
       }
@@ -407,30 +427,46 @@ export default function AudiencePage() {
 
       const data = transformContact(contactToEdit);
       try {
-        const response = await fetch(`/api/user/audience/update/${data.id}`, {
-          method: 'PUT',
+        const response = await axios.put(`/api/user/audience/update/${data.id}`, data, {
           headers: {
             'Content-Type': 'application/json',
-            // Authorization: `Bearer ${token}`, // Add Bearer token
           },
-          body: JSON.stringify(data),
         });
-        if (!response.ok) {
-          throw new Error('Failed to update contact');
-        }
+
+        // Success handling
         seteditopen(false);
         toast({
           title: 'Contact Updated!',
-          description: 'Your new contact has been successfully updated!.',
+          description: 'Your contact has been successfully updated!',
           variant: 'default',
         });
         fetchContacts();
         setContactToEdit(null);
-      } catch (error) {
-        console.log(error);
+      } catch (error: any) {
+        console.error('Update Contact Error:', error);
+
+        let errorMessage = 'Failed to update contact. Please try again.';
+
+        if (error.response) {
+          // The request was made and the server responded with a status code not in the range of 2xx
+          if (error.response.data && error.response.data.errors) {
+            errorMessage = Object.entries(error.response.data.errors)
+              .map(([field, messages]) => `${(messages as any[]).join(', ')}`)
+              .join(' ');
+          } else if (error.response.data.message) {
+            errorMessage = error.response.data.message;
+          }
+        } else if (error.request) {
+          // The request was made but no response was received
+          errorMessage = 'No response from server. Please check your connection.';
+        } else {
+          // Something happened in setting up the request that triggered an Error
+          errorMessage = error.message;
+        }
+
         toast({
           title: 'Error',
-          description: 'Failed to update contact. Please try again.',
+          description: errorMessage,
           variant: 'destructive',
         });
       }
@@ -442,6 +478,7 @@ export default function AudiencePage() {
       });
     }
   };
+
   // handles the enter button for adding groups
   const handleEnter = (selectedgroup: string) => {
     if (selectedgroup.trim() && !selectedgroups.includes(selectedgroup.trim())) {
@@ -781,17 +818,17 @@ export default function AudiencePage() {
                 id="group"
                 value={group}
                 onChange={handleInputChange}
-                placeholder="Type to search..."
-                className="col-span-2 p-2 border border-gray-300 rounded-lg p-2"
+                placeholder="Enter group name..."
+                className="col-span-2 p-2 border border-gray-300 rounded-lg"
               />
               <button
                 onClick={() => {
                   setIsDropdownOpen(false);
                   handleEnter(group);
                 }}
-                className="ml-2 bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600"
+                className="ml-2 bg-gray-200 text-gray-700 p-2 rounded-full hover:bg-gray-300 transition w-fit"
               >
-                Enter
+                <Plus className="w-3 h-3" />
               </button>
 
               {/* Suggestions Dropdown */}
@@ -898,6 +935,7 @@ export default function AudiencePage() {
 
             <div className="grid grid-cols-4 items-center gap-4" style={{ position: 'relative' }}>
               {/* <div className="relative flex items-center "> */}
+
               <Label htmlFor="group" className="text-right">
                 Groups
               </Label>
@@ -905,17 +943,17 @@ export default function AudiencePage() {
                 id="group"
                 value={group}
                 onChange={handleInputChange}
-                placeholder="Type to search..."
-                className="col-span-2 p-2 border border-gray-300 rounded-lg p-2"
+                placeholder="Enter group name..."
+                className="col-span-2 p-2 border border-gray-300 rounded-lg"
               />
               <button
                 onClick={() => {
                   setIsDropdownOpen(false);
                   handleEnterEdit(group);
                 }}
-                className="ml-2 bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600"
+                className="ml-2 bg-gray-200 text-gray-700 p-2 rounded-full hover:bg-gray-300 transition w-fit"
               >
-                Enter
+                <Plus className="w-3 h-3" />
               </button>
 
               {/* Suggestions Dropdown */}

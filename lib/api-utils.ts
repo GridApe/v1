@@ -40,13 +40,10 @@ export async function handleApiRequest(
 ) {
   let csrfToken;
   try {
-    // console.log('Ensuring CSRF token...');
     csrfToken = await ensureCsrfToken();
 
     const cookieStore = cookies();
     const access_token = cookieStore.get('token')?.value;
-
-    // console.log('Access token from cookies:', access_token);
 
     const headers: HeadersInit = {
       Accept: 'application/json',
@@ -55,8 +52,6 @@ export async function handleApiRequest(
       'X-XSRF-TOKEN': csrfToken || '',
       Authorization: `Bearer ${access_token}`,
     };
-
-    // console.log('Headers prepared for API request:', headers);
 
     const body = method !== 'GET' ? await request.text() : undefined;
 
@@ -73,16 +68,37 @@ export async function handleApiRequest(
 
     if (!response.ok) {
       console.error('Error response from API:', data);
-      throw new Error(data.message || 'An error occurred');
+
+      throw new Error(
+        typeof data === 'object' ? JSON.stringify(data) : data || 'An error occurred'
+      );
     }
 
     console.log('API response data:', data);
     return NextResponse.json(data);
-  } catch (error) {
+  } catch (error: any) {
     console.error('API Error:', error);
+
+    let errorMessage = 'An unexpected error occurred';
+    let errorDetails = null;
+
+    if (error instanceof Error) {
+      try {
+        const parsedError = JSON.parse(error.message);
+        if (typeof parsedError === 'object') {
+          errorMessage = parsedError.message || 'Validation failed.';
+          errorDetails = parsedError.errors || null;
+        }
+      } catch {
+        errorMessage = error.message;
+      }
+    }
+
     return NextResponse.json(
       {
-        error: error instanceof Error ? error.message : 'An unexpected error occurred',
+        status: false,
+        message: errorMessage,
+        errors: errorDetails,
         csrfToken: csrfToken,
       },
       { status: 500 }
