@@ -6,6 +6,8 @@ import { useSearch } from '@/hooks/useSearch';
 import { NotificationList } from './NotificationList';
 import { UserNav } from './UserNav';
 import { useNotificationStore } from '@/store/notificationStore';
+import { useAuthStore } from '@/store/authStore';
+import { useRouter } from 'next/navigation';
 
 interface SearchBarProps {
   searchFunction: (query: string) => Promise<any[]>;
@@ -38,10 +40,17 @@ export default function SearchBar({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
   };
+  const logout = useAuthStore((state) => state.logout);
+  const router = useRouter();
 
-  function handleLogout(): void {
-    console.log('Logout clicked');
-  }
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.push('/auth/login');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
 
   return (
     <form onSubmit={handleSubmit} className={`flex items-center gap-4 lg:gap-6 ${className}`}>
