@@ -12,6 +12,7 @@ import {
   UsersIcon,
   House,
   FileStack,
+  DollarSign,
 } from 'lucide-react';
 import React from 'react';
 import { motion } from 'framer-motion';
@@ -54,6 +55,7 @@ export const SidebarItems: React.FC = () => {
     { name: 'Audience', icon: UsersIcon, path: '/dashboard/audience/all' },
     { name: 'My files', icon: FileStack, locked: true, path: '/dashboard/templates/my-files' },
     { name: 'Settings', icon: CogIcon, path: '/dashboard/settings' },
+    { name: 'Pricing', icon: DollarSign, path: '/dashboard/pricing' },
   ];
 
   return (

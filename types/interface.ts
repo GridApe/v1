@@ -109,3 +109,11 @@ export interface DomainTypes {
   dmarc_record: string;
   status?: string;
 }
+
+export interface PricingPlan {
+  id: string;
+  name: string;
+  price: string;
+  features: any;
+  description: string[];
+}
