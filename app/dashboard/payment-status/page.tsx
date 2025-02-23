@@ -25,11 +25,6 @@ export default function PaymentStatusPage() {
       setStatus(paymentStatus === 'successful' ? 'success' : 'failed');
       setTxRef(ref);
       setTransactionId(txId);
-
-      //   axios.post(`/api/payment/verify`, { tx_ref: ref, transaction_id: txId })
-      //     .then((res) => console.log("Verification Response:", res.data))
-      //     .catch((err) => console.error("Verification Error:", err))
-      //     .finally(() => setIsLoading(false));
       setIsLoading(false);
     }
   }, [searchParams]);

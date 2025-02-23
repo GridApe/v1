@@ -23,18 +23,8 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Toast } from '@/components/ui/toast';
-import {
-  Loader2,
-  Save,
-  Eye,
-  Upload,
-  Download,
-  Undo,
-  Redo,
-  Variable,
-} from 'lucide-react';
+import { Loader2, Save, Eye, Upload, Download, Undo, Redo, Variable } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useRouter } from 'next/navigation';
 
 export default function EmailTemplateEditor() {
   const emailEditorRef = useRef<EditorRef | null>(null);
@@ -44,11 +34,6 @@ export default function EmailTemplateEditor() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [canUndo, setCanUndo] = useState<boolean>(false);
   const [canRedo, setCanRedo] = useState<boolean>(false);
-  const [showVariableDialog, setShowVariableDialog] = useState<boolean>(false);
-  const [variableName, setVariableName] = useState<string>('');
-  const [variableDescription, setVariableDescription] = useState<string>('');
-  const [variables, setVariables] = useState<{ name: string; description: string }[]>([]);
-  const router = useRouter();
   const { toast } = useToast();
 
   const saveTemplate = async ({
@@ -66,7 +51,7 @@ export default function EmailTemplateEditor() {
         content,
         html,
       };
-  
+
       const response = await fetch('/api/user/templates/save', {
         method: 'POST',
         headers: {
@@ -74,12 +59,12 @@ export default function EmailTemplateEditor() {
         },
         body: JSON.stringify(payload),
       });
-  
+
       if (!response.ok) {
         const errorData = await response.json();
         return { success: false, message: errorData.message || 'Failed to save template' };
       }
-  
+
       const data = await response.json();
       return { success: true, message: 'Template saved successfully!' };
     } catch (error: any) {
@@ -87,7 +72,6 @@ export default function EmailTemplateEditor() {
       return { success: false, message: error.message || 'Something went wrong' };
     }
   };
-
 
   const onReady: EmailEditorProps['onReady'] = useCallback(
     (unlayer: any) => {
@@ -97,48 +81,32 @@ export default function EmailTemplateEditor() {
         setCanRedo(unlayer.isRedoable());
       });
 
-      // Register custom variable tool
-      unlayer.registerTool({
-        name: 'variable',
-        label: 'Variable',
-        icon: 'fa-tag',
-        supportedDisplayModes: ['web', 'email'],
-        options: {
-          default: {
-            title: null,
-          },
-          text: {
-            title: 'Text',
-            position: 1,
-            options: {
-              variable: {
-                label: 'Variable',
-                defaultValue: '',
-                widget: 'dropdown',
-                data: {
-                  options: variables.map((v) => ({
-                    value: `{{${v.name}}}`,
-                    label: v.name,
-                  })),
-                },
-              },
-            },
-          },
-        },
-        values: {},
-        renderer: {
-          Viewer: (props: any) => {
-            return <span>{props.values.variable}</span>;
-          },
-          Export: (props: any) => {
-            return <span>{props.values.variable}</span>;
-          },
-        },
+      unlayer.setDesignTags({
+        business_name: 'SpaceX',
+        current_user_name: 'John Doe',
       });
+      unlayer.setMergeTags({
+        first_name: {
+          name: 'First Name',
+          value: '{{first_name}}',
+        },
+        last_name: {
+          name: 'Last Name',
+          value: '{{last_name}}',
+        },
+        emails: {
+          name: 'Email',
+          value: '{{email}}',
+        },
+        phone: {
+          name: 'Phone',
+          value: '{{phone}}',
+        },
+      })
+      
     },
-    [variables]
+    []
   );
-  
 
   const saveDesign = useCallback(() => {
     emailEditorRef.current?.editor?.saveDesign((design: any) => {
@@ -193,7 +161,7 @@ export default function EmailTemplateEditor() {
     if (previewMode) {
       emailEditorRef.current?.editor?.hidePreview();
     } else {
-      emailEditorRef.current?.editor?.showPreview({device: "desktop"});
+      emailEditorRef.current?.editor?.showPreview({ device: 'desktop' });
     }
     setPreviewMode((prev) => !prev);
   }, [previewMode]);
@@ -241,18 +209,6 @@ export default function EmailTemplateEditor() {
     [toast]
   );
 
-  const addVariable = useCallback(() => {
-    if (variableName) {
-      setVariables((prev) => [...prev, { name: variableName, description: variableDescription }]);
-      setVariableName('');
-      setVariableDescription('');
-      setShowVariableDialog(false);
-      toast({
-        title: 'Variable Added',
-        description: `Variable {{${variableName}}} has been added to the template.`,
-      });
-    }
-  }, [variableName, variableDescription, toast]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -306,8 +262,30 @@ export default function EmailTemplateEditor() {
               appearance: {
                 theme: 'dark',
               },
+              displayMode: 'email',
+              designMode: 'edit',
+              mergeTags: {
+                first_name: {
+                  name: 'First Name',
+                  value: '{{first_name}}',
+                },
+                last_name: {
+                  name: 'Last Name',
+                  value: '{{last_name}}',
+                },
+                email: {
+                  name: 'Email',
+                  value: '{{email}}',
+                },
+                phone: {
+                  name: 'Phone',
+                  value: '{{phone}}',
+                },
+              },
+              
               features: {
                 stockImages: true,
+                sendTestEmail: true
               },
               tools: {
                 button: {
@@ -403,70 +381,8 @@ export default function EmailTemplateEditor() {
             <Button onClick={exportHtml}>
               <Download className="mr-2 h-4 w-4" /> Export HTML
             </Button>
-            <Dialog open={showVariableDialog} onOpenChange={setShowVariableDialog}>
-              <DialogTrigger asChild>
-                <Button variant="outline">
-                  <Variable className="mr-2 h-4 w-4" /> Add Variable
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add Variable</DialogTitle>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="variableName" className="text-right">
-                      Name
-                    </Label>
-                    <Input
-                      id="variableName"
-                      value={variableName}
-                      onChange={(e) => setVariableName(e.target.value)}
-                      className="col-span-3"
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="variableDescription" className="text-right">
-                      Description
-                    </Label>
-                    <Input
-                      id="variableDescription"
-                      value={variableDescription}
-                      onChange={(e) => setVariableDescription(e.target.value)}
-                      className="col-span-3"
-                    />
-                  </div>
-                </div>
-                <Button onClick={addVariable}>Add Variable</Button>
-              </DialogContent>
-            </Dialog>
           </div>
         </CardFooter>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>Variable Usage</CardTitle>
-          <CardDescription>How to use variables in your template</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p>To use variables in your template, follow these steps:</p>
-          <ol className="list-decimal list-inside space-y-2 mt-2">
-            <li>Click the "Add Variable" button to define a new variable.</li>
-            <li>In the editor, use the Variable tool to insert variables into your content.</li>
-            <li>Variables will appear in the format {'{{variableName}}'} in your template.</li>
-            <li>When sending emails, replace these variables with actual values.</li>
-          </ol>
-          <div className="mt-4">
-            <h4 className="font-semibold">Available Variables:</h4>
-            <ul className="list-disc list-inside mt-2">
-              {variables.map((variable, index) => (
-                <li key={index}>
-                  <code>{`{{${variable.name}}}`}</code> - {variable.description}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </CardContent>
       </Card>
       <Toast />
     </motion.div>
