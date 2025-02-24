@@ -36,6 +36,54 @@ export default function EmailTemplateEditor() {
   const [canRedo, setCanRedo] = useState<boolean>(false);
   const { toast } = useToast();
 
+  // Function to add non-removable footer
+  const addNonRemovableFooter = (unlayer: any) => {
+    const footerHtml = `
+      <div style="
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background-color: #ffffff;
+        text-align: center;
+        padding: 10px;
+        filter: invert(1);
+        pointer-events: none;
+        user-select: none;
+      ">dd
+        <img src="/logo.svg" alt="Sent using" style="height: 30px; width: auto;"/>
+      </div>
+    `;
+
+    // Add custom CSS to prevent removal
+    unlayer.addEventListener('design:updated', () => {
+      const frame = document.querySelector('iframe[name="editor-frame"]');
+      if (frame) {
+        const frameDoc = (frame as HTMLIFrameElement).contentDocument;
+        if (frameDoc) {
+          let style = frameDoc.createElement('style');
+          style.textContent = `
+            .footer-wrapper {
+              position: fixed !important;
+              bottom: 0 !important;
+              left: 0 !important;
+              width: 100% !important;
+              pointer-events: none !important;
+              user-select: none !important;
+              z-index: 9999 !important;
+            }
+          `;
+          frameDoc.head.appendChild(style);
+        }
+      }
+    });
+
+    // Inject footer into every exported design
+    unlayer.addEventListener('design:exported', (data: any) => {
+      data.html = data.html.replace('</body>', `${footerHtml}</body>`);
+    });
+  };
+
   const saveTemplate = async ({
     name,
     content,
@@ -81,6 +129,9 @@ export default function EmailTemplateEditor() {
         setCanRedo(unlayer.isRedoable());
       });
 
+      // Add the non-removable footer
+      addNonRemovableFooter(unlayer);
+
       unlayer.setDesignTags({
         business_name: 'SpaceX',
         current_user_name: 'John Doe',
@@ -102,8 +153,7 @@ export default function EmailTemplateEditor() {
           name: 'Phone',
           value: '{{phone}}',
         },
-      })
-      
+      });
     },
     []
   );
