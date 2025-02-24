@@ -190,17 +190,41 @@ const CompanySettingsDialog: React.FC<CompanySettingsDialogProps> = ({
         <DialogFooter>
           <Button onClick={() => {
             if (window.unlayer) {
-              window.unlayer.loadDesign({
+              const defaultTemplate = {
                 body: {
-                  values: {
-                    business_name: companySettings.businessName,
-                    business_logo: companySettings.logoUrl,
-                    business_address: companySettings.businessAddress,
-                    social_media: companySettings.socialMedia,
-                    current_year: new Date().getFullYear().toString()
-                  }
+                  rows: [
+                    {
+                      cells: [1],
+                      columns: [
+                        {
+                          contents: [
+                            {
+                              type: "text",
+                              values: {
+                                containerPadding: "10px",
+                                text: `<div style='text-align: center;'>
+                        <img src='${companySettings.logoUrl || ''}' alt='${companySettings.businessName}' style='max-width: 200px;'>
+                        <p>${companySettings.businessName}</p>
+                        <p>${companySettings.businessAddress}</p>
+                        <div style='margin: 15px 0;'>
+                          <a href='${companySettings.socialMedia.facebook || '#'}'>Facebook</a> | 
+                          <a href='${companySettings.socialMedia.twitter || '#'}'>Twitter</a> | 
+                          <a href='${companySettings.socialMedia.linkedin || '#'}'>LinkedIn</a>
+                        </div>
+                        <p>© ${new Date().getFullYear()} ${companySettings.businessName}. All rights reserved.</p>
+                      </div>`
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
                 }
-              });
+              };
+
+              window.unlayer.loadDesign(defaultTemplate);
+
               toast({
                 title: 'Branding Updated',
                 description: 'Company branding has been updated in the editor.',
@@ -310,10 +334,12 @@ export default function EmailTemplateEditor() {
   const onReady: EmailEditorProps['onReady'] = useCallback(
     (unlayer: any) => {
       setIsLoading(false);
-      unlayer.addEventListener('design:updated', () => {
-        setCanUndo(unlayer.isUndoable());
-        setCanRedo(unlayer.isRedoable());
-      });
+      if (unlayer.addEventListener) {
+        unlayer.addEventListener('design:updated', () => {
+          setCanUndo(unlayer.isUndoable());
+          setCanRedo(unlayer.isRedoable());
+        });
+      }
 
       unlayer.setMergeTags({
         first_name: {
@@ -560,6 +586,9 @@ export default function EmailTemplateEditor() {
             options={{
               appearance: {
                 theme: 'light',
+                loader: {
+                  url: 'https://app.gridape.com/logo.svg',
+                },
               },
               displayMode: 'email',
               designMode: 'edit',
