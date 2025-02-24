@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import EmailEditor, { EditorRef, EmailEditorProps } from 'react-email-editor';
+import EmailEditor, { EditorRef, EmailEditorProps, Editor } from 'react-email-editor';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -23,10 +23,202 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Toast } from '@/components/ui/toast';
-import { Loader2, Save, Eye, Upload, Download, Undo, Redo, Variable } from 'lucide-react';
+import { Loader2, Save, Eye, Upload, Download, Undo, Redo, Variable, Building } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useDashboardContext } from '@/app/context/DashboardContext';
+import { useRouter } from 'next/navigation';
+import { ArrowLeft } from 'lucide-react';
+import {
+  DialogFooter,
+  DialogDescription,
+} from '@/components/ui/dialog';
+
+declare global {
+  interface Window {
+    unlayer: any;
+  }
+}
+
+interface CompanySettingsDialogProps {
+  companySettings: CompanySettings;
+  setCompanySettings: React.Dispatch<React.SetStateAction<CompanySettings>>;
+  handleLogoUpload: (file: File) => void;
+  emailEditorRef: React.RefObject<EditorRef>;
+  toast: any;
+}
+
+interface CompanySettings {
+  businessName: string;
+  logoUrl: string;
+  businessAddress: string;
+  socialMedia: {
+    facebook: string;
+    twitter: string;
+    linkedin: string;
+  };
+}
+
+const CompanySettingsDialog: React.FC<CompanySettingsDialogProps> = ({
+  companySettings,
+  setCompanySettings,
+  handleLogoUpload,
+  emailEditorRef,
+  toast
+}) => {
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="outline">
+          <Building className="mr-2 h-4 w-4" /> Company Branding
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]" onInteractOutside={(e) => e.preventDefault()}>
+        <DialogHeader>
+          <DialogTitle>Company Branding</DialogTitle>
+          <DialogDescription>
+            Configure your company details for email templates
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="businessName" className="text-right">
+              Business Name
+            </Label>
+            <Input
+              id="businessName"
+              value={companySettings.businessName}
+              onChange={(e) => setCompanySettings((prev: CompanySettings) => ({
+                ...prev,
+                businessName: e.target.value
+              }))}
+              className="col-span-3"
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="logoUrl" className="text-right">
+              Logo
+            </Label>
+            <div className="col-span-3 flex gap-2">
+              <Input
+                id="logoUrl"
+                value={companySettings.logoUrl}
+                onChange={(e) => setCompanySettings((prev: CompanySettings) => ({
+                  ...prev,
+                  logoUrl: e.target.value
+                }))}
+                placeholder="Enter logo URL or upload"
+                className="flex-1"
+              />
+              <input
+                type="file"
+                id="logo-upload"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    handleLogoUpload(file);
+                  }
+                }}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => document.getElementById('logo-upload')?.click()}
+              >
+                <Upload className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="address" className="text-right">
+              Address
+            </Label>
+            <Input
+              id="address"
+              value={companySettings.businessAddress}
+              onChange={(e) => setCompanySettings((prev: CompanySettings) => ({
+                ...prev,
+                businessAddress: e.target.value
+              }))}
+              className="col-span-3"
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="facebook" className="text-right">
+              Facebook
+            </Label>
+            <Input
+              id="facebook"
+              value={companySettings.socialMedia.facebook}
+              onChange={(e) => setCompanySettings((prev: CompanySettings) => ({
+                ...prev,
+                socialMedia: { ...prev.socialMedia, facebook: e.target.value }
+              }))}
+              className="col-span-3"
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="twitter" className="text-right">
+              Twitter
+            </Label>
+            <Input
+              id="twitter"
+              value={companySettings.socialMedia.twitter}
+              onChange={(e) => setCompanySettings((prev: CompanySettings) => ({
+                ...prev,
+                socialMedia: { ...prev.socialMedia, twitter: e.target.value }
+              }))}
+              className="col-span-3"
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="linkedin" className="text-right">
+              LinkedIn
+            </Label>
+            <Input
+              id="linkedin"
+              value={companySettings.socialMedia.linkedin}
+              onChange={(e) => setCompanySettings((prev: CompanySettings) => ({
+                ...prev,
+                socialMedia: { ...prev.socialMedia, linkedin: e.target.value }
+              }))}
+              className="col-span-3"
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button onClick={() => {
+            if (window.unlayer) {
+              window.unlayer.loadDesign({
+                body: {
+                  values: {
+                    business_name: companySettings.businessName,
+                    business_logo: companySettings.logoUrl,
+                    business_address: companySettings.businessAddress,
+                    social_media: companySettings.socialMedia,
+                    current_year: new Date().getFullYear().toString()
+                  }
+                }
+              });
+              toast({
+                title: 'Branding Updated',
+                description: 'Company branding has been updated in the editor.',
+              });
+            }
+          }}>
+            Apply Branding
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 export default function EmailTemplateEditor() {
+
+  const { setSidebarOpen } = useDashboardContext();
+
   const emailEditorRef = useRef<EditorRef | null>(null);
   const [templateName, setTemplateName] = useState<string>('');
   const [previewMode, setPreviewMode] = useState<boolean>(false);
@@ -35,6 +227,48 @@ export default function EmailTemplateEditor() {
   const [canUndo, setCanUndo] = useState<boolean>(false);
   const [canRedo, setCanRedo] = useState<boolean>(false);
   const { toast } = useToast();
+
+  const router = useRouter();
+
+  const handleExit = () => {
+    setSidebarOpen(true);
+    router.back();
+  };
+
+  useEffect(() => {
+    setSidebarOpen(false);
+    return () => setSidebarOpen(true);
+  }, [setSidebarOpen]);
+
+  const handleLogoUpload = useCallback(
+    async (file: File) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const dataUrl = e.target?.result as string;
+        setCompanySettings(prev => ({
+          ...prev,
+          logoUrl: dataUrl
+        }));
+        toast({
+          title: 'Logo Uploaded',
+          description: 'Your company logo has been uploaded.',
+        });
+      };
+      reader.readAsDataURL(file);
+    },
+    [toast]
+  );
+
+  const [companySettings, setCompanySettings] = useState<CompanySettings>({
+    businessName: '',
+    logoUrl: '',
+    businessAddress: '',
+    socialMedia: {
+      facebook: '',
+      twitter: '',
+      linkedin: ''
+    }
+  });
 
   const saveTemplate = async ({
     name,
@@ -81,10 +315,6 @@ export default function EmailTemplateEditor() {
         setCanRedo(unlayer.isRedoable());
       });
 
-      unlayer.setDesignTags({
-        business_name: 'SpaceX',
-        current_user_name: 'John Doe',
-      });
       unlayer.setMergeTags({
         first_name: {
           name: 'First Name',
@@ -103,9 +333,67 @@ export default function EmailTemplateEditor() {
           value: '{{phone}}',
         },
       })
-      
+
+      unlayer.setDesignTagsConfig({
+        tags: [
+          {
+            name: 'Business Name',
+            value: '[[ business_name ]]'
+          },
+          {
+            name: 'Business Logo',
+            value: '[[{ business_logo }]]'
+          },
+          {
+            name: 'Business Address',
+            value: '[[ business_address ]]'
+          },
+          {
+            name: 'Current Year',
+            value: '[[ current_year ]]'
+          },
+          {
+            name: 'Facebook',
+            value: '[[{ social_media.facebook }]]'
+          },
+          {
+            name: 'Twitter',
+            value: '[[{ social_media.twitter }]]'
+          },
+          {
+            name: 'LinkedIn',
+            value: '[[{ social_media.linkedin }]]'
+          }
+        ]
+      });
+
+      const defaultTemplate = {
+        body: {
+          rows: [
+            {
+              cells: [1],
+              columns: [
+                {
+                  contents: [
+                    {
+                      type: "text",
+                      values: {
+                        containerPadding: "10px",
+                        text: "<div style='text-align: center;'><img src='[[{ business_logo }]]' alt='[[ business_name ]]' style='max-width: 200px;'><p>[[ business_name ]]</p><p>[[ business_address ]]</p><div style='margin: 15px 0;'><a href='[[{ social_media.facebook }]]'>Facebook</a> | <a href='[[{ social_media.twitter }]]'>Twitter</a> | <a href='[[{ social_media.linkedin }]]'>LinkedIn</a></div><p>© [[ current_year ]] [[ business_name ]]. All rights reserved.</p></div>"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      };
+
+      unlayer.loadDesign(defaultTemplate);
+
     },
-    []
+    [companySettings]
   );
 
   const saveDesign = useCallback(() => {
@@ -227,6 +515,8 @@ export default function EmailTemplateEditor() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [undoAction, redoAction]);
 
+
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -234,7 +524,16 @@ export default function EmailTemplateEditor() {
       exit={{ opacity: 0, y: -20 }}
       className="space-y-6 p-4 md:p-6 lg:p-8"
     >
-      <h1 className="text-2xl md:text-3xl font-bold">Email Template Editor</h1>
+      <div className="flex items-center">
+        <Button
+          variant="ghost"
+          onClick={handleExit}
+          className="gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Exit Editor
+        </Button>
+      </div>
       <Card className="w-full">
         <CardHeader>
           <CardTitle>Template Editor</CardTitle>
@@ -256,11 +555,11 @@ export default function EmailTemplateEditor() {
           <EmailEditor
             ref={emailEditorRef}
             onReady={onReady}
-            minHeight={500}
+            // minHeight={500}
             style={{ width: '100%' }}
             options={{
               appearance: {
-                theme: 'dark',
+                theme: 'light',
               },
               displayMode: 'email',
               designMode: 'edit',
@@ -282,7 +581,7 @@ export default function EmailTemplateEditor() {
                   value: '{{phone}}',
                 },
               },
-              
+
               features: {
                 stockImages: true,
                 sendTestEmail: true
@@ -348,6 +647,13 @@ export default function EmailTemplateEditor() {
                 </div>
               </DialogContent>
             </Dialog>
+            <CompanySettingsDialog
+              companySettings={companySettings}
+              setCompanySettings={setCompanySettings}
+              handleLogoUpload={handleLogoUpload}
+              emailEditorRef={emailEditorRef}
+              toast={toast}
+            />
             <Button onClick={togglePreview}>
               <Eye className="mr-2 h-4 w-4" /> {previewMode ? 'Edit' : 'Preview'}
             </Button>

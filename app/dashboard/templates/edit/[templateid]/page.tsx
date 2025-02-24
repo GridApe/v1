@@ -436,7 +436,7 @@ export default function EmailTemplateEditor({
             style={{ width: '100%' }}
             options={{
               appearance: {
-                theme: 'dark',
+                theme: 'light',
               },
               features: {
                 stockImages: true,
@@ -575,31 +575,7 @@ export default function EmailTemplateEditor({
           </div>
         </CardFooter>
       </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>Variable Usage</CardTitle>
-          <CardDescription>How to use variables in your template</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p>To use variables in your template, follow these steps:</p>
-          <ol className="list-decimal list-inside space-y-2 mt-2">
-            <li>Click the "Add Variable" button to define a new variable.</li>
-            <li>In the editor, use the Variable tool to insert variables into your content.</li>
-            <li>Variables will appear in the format {'{{variableName}}'} in your template.</li>
-            <li>When sending emails, replace these variables with actual values.</li>
-          </ol>
-          <div className="mt-4">
-            <h4 className="font-semibold">Available Variables:</h4>
-            <ul className="list-disc list-inside mt-2">
-              {variables.map((variable, index) => (
-                <li key={index}>
-                  <code>{`{{${variable.name}}}`}</code> - {variable.description}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </CardContent>
-      </Card>
+      
       <Toast />
     </motion.div>
   );

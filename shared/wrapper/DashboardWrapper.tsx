@@ -7,20 +7,30 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Sidebar from '../Sidebar';
 import { usePathname } from 'next/navigation';
 
+import { DashboardProvider, useDashboardContext } from '@/app/context/DashboardContext';
+
 export default function DashboardWrapper({ children }: { children: React.ReactNode }) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { sidebarOpen, setSidebarOpen } = useDashboardContext();
   const [isMobile, setIsMobile] = useState(false);
   const pathname = usePathname();
 
   useEffect(() => {
+    if (pathname.includes('/dashboard/templates/')) {
+      setSidebarOpen(false);
+    }
+  }, [pathname, setSidebarOpen]);
+
+  useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
-      setSidebarOpen(window.innerWidth >= 768);
+      if (!pathname.includes('/dashboard/templates/')) { 
+        setSidebarOpen(window.innerWidth >= 768);
+      }
     };
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+  }, [setSidebarOpen, pathname]);
 
   // useEffect(() => {
   //   const timer = setTimeout(() => {
@@ -41,7 +51,7 @@ export default function DashboardWrapper({ children }: { children: React.ReactNo
   return (
     <div className="flex h-screen overflow-hidden">
       <AnimatePresence>
-        {(sidebarOpen || !isMobile) && (
+        {(sidebarOpen || (!isMobile && !pathname.includes('/dashboard/templates/'))) && (
           <motion.div
             initial={{ x: -300 }}
             animate={{ x: 0 }}
