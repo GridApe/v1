@@ -69,9 +69,9 @@ export function AddDomainModal({
       const { spf_record, dkim_record, dmarc_record } = responseData.data.domain;
 
       setDnsRecords([
-        { type: 'TXT (SPF)', hostname: domain, value: spf_record },
-        { type: 'TXT (DKIM)', hostname: `default._domainkey.${domain}`, value: dkim_record },
-        { type: 'TXT (DMARC)', hostname: `_dmarc.${domain}`, value: dmarc_record },
+        { type: spf_record.type, hostname: spf_record.host, value: spf_record.value },
+        { type: dkim_record.type, hostname: dkim_record.host, value: dkim_record.value },
+        { type: dmarc_record.type, hostname: dmarc_record.host, value: dmarc_record.value },
       ]);
 
       toast({

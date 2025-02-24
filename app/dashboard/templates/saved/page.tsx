@@ -207,7 +207,7 @@ export default function TemplatesPage() {
                   <Button variant="outline" size="sm" className="flex items-center space-x-2"
                     onClick={() => {
                       if (template.id === 'blank') {
-                        handleCreateNewTemplate;
+                        handleCreateNewTemplate();
                       } else {
                         handleEditTemplate(template.id);
                       }
