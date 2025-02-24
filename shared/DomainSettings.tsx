@@ -22,13 +22,13 @@ import { DNSRecordTypes, DomainTypes } from '@/types/interface';
 import { DNSRecordModal } from './DNSRecordModal';
 
 interface Domain {
-  spf_record: string;
-  dkim_record: string;
-  dmarc_record: string;
+  spf_record: { host: string, value: string, type: string };
+  dkim_record: { host: string, value: string, type: string };
+  dmarc_record: { host: string, value: string, type: string };
   id: string;
   brandName: string;
   domain: string;
-  status: 'verified' | 'pending' | 'failed';
+  is_verified: boolean;
   verifiedAt: string | null;
 }
 
@@ -48,7 +48,8 @@ export default function DomainSettings() {
       if (!response.ok) throw new Error('Failed to fetch domains');
 
       const responseData = await response.json();
-      setDomains(responseData.data.domains);      
+      console.log(responseData.data.domains);
+      setDomains(responseData.data.domains);
     } catch (error) {
       toast({
         title: 'Error',
@@ -120,7 +121,7 @@ export default function DomainSettings() {
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Verified Domains</span>
                 <span className="font-bold">
-                  {domains.filter((d) => d.status === 'verified').length}
+                  {domains.filter((d) => d.is_verified).length}
                 </span>
               </div>
             </div>
@@ -170,8 +171,8 @@ export default function DomainSettings() {
                   </TableRow>
                 ) : (
                   domains.map((domain) => (
-                    <TableRow key={domain.id}>                      
-                    <TableCell className="font-medium">{domain.domain}</TableCell>
+                    <TableRow key={domain.id}>
+                      <TableCell className="font-medium">{domain.domain}</TableCell>
                       <TableCell>
                         <Link
                           href={`https://${domain.domain}`}
@@ -184,16 +185,16 @@ export default function DomainSettings() {
                       </TableCell>
                       <TableCell>
                         <Badge
-                          variant={domain.status === 'verified' ? 'default' : 'destructive'}
+                          variant={domain.is_verified ? 'default' : 'destructive'}
                           className={
-                            domain.status === 'verified'
+                            domain.is_verified
                               ? 'bg-green-500'
-                              : domain.status === 'pending'
-                                ? 'bg-yellow-500'
-                                : 'bg-red-500'
+                              : 'bg-yellow-500'
                           }
                         >
-                          {domain.status?.charAt(0).toUpperCase() + domain.status?.slice(1)}
+                          {domain.is_verified
+                            ? 'Verified'
+                            : 'Pending'}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -203,19 +204,19 @@ export default function DomainSettings() {
                           onClick={() => {
                             setDnsRecords([
                               {
-                                type: 'TXT (SPF)',
-                                hostname: domain.domain,
-                                value: domain.spf_record
+                                type: domain.spf_record.type,
+                                hostname: domain.spf_record.host,
+                                value: domain.spf_record.value,
                               },
                               {
-                                type: 'TXT (DKIM)',
-                                hostname: `default._domainkey.${domain.domain}`,
-                                value: domain.dkim_record
+                                type: domain.dkim_record.type,
+                                hostname: domain.dkim_record.host,
+                                value: domain.dkim_record.value,
                               },
                               {
-                                type: 'TXT (DMARC)',
-                                hostname: `_dmarc.${domain.domain}`,
-                                value: domain.dmarc_record
+                                type: domain.dmarc_record.type,
+                                hostname: domain.dmarc_record.host,
+                                value: domain.dmarc_record.value,
                               }
                             ]);
                             setSelectedDomain(domain);

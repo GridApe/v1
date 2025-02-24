@@ -20,7 +20,19 @@ import { useCampaignStore } from '@/store/useCampaignStore';
 
 export default function TemplatesPage() {
   const router = useRouter();
-  const [templates, setTemplates] = useState<TemplateTypes[]>([]);
+  const [templates, setTemplates] = useState<TemplateTypes[]>([
+    {
+      id: 'blank',
+      name: 'Blank Template',
+      html: '<html><body style="margin: 0; padding: 0; font-family: Arial, sans-serif;"></body></html>',
+      category: 'custom',
+      content: JSON.stringify({
+        body: {
+          rows: []  // Empty rows for a blank template
+        }
+      })
+    }
+  ]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [previewTemplate, setPreviewTemplate] = useState<TemplateTypes | null>(null);
@@ -45,7 +57,10 @@ export default function TemplatesPage() {
           throw new Error('Failed to fetch templates');
         }
         const responseData = await response.json();
-        setTemplates(responseData.data.templates || []);
+        setTemplates(prev => [
+          prev[0], // Keep the blank template
+          ...(responseData.data.templates || [])
+        ]);
       } catch (err) {
         setError((err as Error).message);
         console.error('Error fetching templates:', err);
@@ -89,11 +104,17 @@ export default function TemplatesPage() {
     router.push(`/dashboard/templates/edit/${templateId}`);
   };
 
+  const handleCreateNewTemplate = () => {
+    router.push('/dashboard/templates/create');
+  };
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-center gap-4">
         <h1 className="text-3xl font-bold tracking-tight">Templates Library</h1>
-        <Button className="w-full md:w-auto flex items-center space-x-2">
+        <Button className="w-full md:w-auto flex items-center space-x-2"
+          onClick={handleCreateNewTemplate}
+        >
           <Plus size={16} />
           <span>Create New Template</span>
         </Button>
@@ -150,7 +171,7 @@ export default function TemplatesPage() {
             <Card key={template.id} className="group relative hover:shadow-xl transition-all duration-300">
               {action === 'select_template' || action === 'change_template' ? (
                 <div className="absolute rounded-xl inset-0 bg-black/0 group-hover:bg-black/60 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center z-10">
-                  <Button 
+                  <Button
                     onClick={() => handleTemplateSelect(template.id)}
                     className="scale-0 group-hover:scale-100 transition-transform duration-300 px-10 mb-2"
                   >
@@ -183,7 +204,15 @@ export default function TemplatesPage() {
               </CardContent>
               {action !== 'select_template' && action !== 'change_template' && (
                 <CardFooter className="flex justify-between">
-                  <Button variant="outline" size="sm" className="flex items-center space-x-2" onClick={() => handleEditTemplate(template.id)}>
+                  <Button variant="outline" size="sm" className="flex items-center space-x-2"
+                    onClick={() => {
+                      if (template.id === 'blank') {
+                        handleCreateNewTemplate();
+                      } else {
+                        handleEditTemplate(template.id);
+                      }
+                    }}
+                  >
                     <Edit size={14} />
                     <span>Edit</span>
                   </Button>
