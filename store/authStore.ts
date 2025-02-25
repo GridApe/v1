@@ -38,10 +38,10 @@ export const useAuthStore = create<AuthState>((set) => ({
       });
 
       const responseData = await response.json();
-      
+
       if (response.ok) {
         // const responseData = await response.json();
-        
+
         Cookies.set('token', responseData.data.access_token);
         await useAuthStore.getState().fetchCurrentUser();
         set({ loading: false });
@@ -98,16 +98,23 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   logout: async (): Promise<void> => {
     try {
-      const response: Response = await fetch('/api/auth/logout', {
-        method: 'POST',
-      });
-  
-      if (!response.ok) throw new Error('Logout failed');
-        Cookies.remove('token');
-        set({ user: null });
+      // Try to logout on the server, but don't fail if it doesn't work
+      try {
+        await fetch('/api/auth/logout', {
+          method: 'POST',
+        });
+      } catch (e) {
+        console.error('Server logout failed, continuing with client logout');
+      }
+
+      // Always clear local state and cookies regardless of server response
+      Cookies.remove('token');
+      set({ user: null });
     } catch (error) {
       console.error('Logout error:', error);
-      throw error;
+      // Still clear cookies and user state even if there was an error
+      Cookies.remove('token');
+      set({ user: null });
     }
   },
 
@@ -148,9 +155,24 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       set({ loading: true });
 
+      const token = Cookies.get('token');
+
+      // If no token exists, clear user state and return early
+      if (!token) {
+        set({ user: null, loading: false });
+        return;
+      }
+
       const response: Response = await fetch('/api/user/profile', {
         credentials: 'include',
       });
+
+      if (response.status === 401) {
+        // If unauthorized (expired token), clear user state and token
+        Cookies.remove('token');
+        set({ user: null, loading: false });
+        return;
+      }
 
       if (!response.ok) throw new Error('Failed to fetch user');
 
@@ -158,7 +180,10 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({ user: responseData.data.user, loading: false });
     } catch (error) {
       console.error('Fetch user error:', error);
+      // On any error, ensure loading is set to false to prevent indefinite loading
       set({ loading: false });
+      Cookies.remove('token');
+      set({ user: null });
     }
   },
   updateUser: async (userData: Partial<UserTypes>): Promise<void> => {
@@ -176,6 +201,13 @@ export const useAuthStore = create<AuthState>((set) => ({
         credentials: 'include',
         body: JSON.stringify(userData),
       });
+
+      if (response.status === 401) {
+        // Handle expired token
+        Cookies.remove('token');
+        set({ user: null });
+        throw new Error('Your session has expired. Please log in again.');
+      }
 
       if (!response.ok) throw new Error('Failed to update user');
 
@@ -196,6 +228,13 @@ export const useAuthStore = create<AuthState>((set) => ({
         credentials: 'include',
         body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
       });
+
+      if (response.status === 401) {
+        // Handle expired token
+        Cookies.remove('token');
+        set({ user: null, loading: false });
+        throw new Error('Your session has expired. Please log in again.');
+      }
 
       if (!response.ok) throw new Error('Failed to update password');
 
