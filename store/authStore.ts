@@ -181,9 +181,8 @@ export const useAuthStore = create<AuthState>((set) => ({
     } catch (error) {
       console.error('Fetch user error:', error);
       // On any error, ensure loading is set to false to prevent indefinite loading
-      set({ loading: false });
       Cookies.remove('token');
-      set({ user: null });
+      set({ user: null, loading: false });
     }
   },
   updateUser: async (userData: Partial<UserTypes>): Promise<void> => {
