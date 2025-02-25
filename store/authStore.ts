@@ -182,28 +182,8 @@ export const useAuthStore = create<AuthState>((set) => ({
       console.error('Fetch user error:', error);
       // On any error, ensure loading is set to false to prevent indefinite loading
       set({ loading: false });
-
-      // Check if the token might be invalid
-      const token = Cookies.get('token');
-      if (token) {
-        // Try to validate the token or clear it if we can't validate
-        try {
-          // Simple validation check - if this fails, we'll clear the token
-          const response = await fetch('/api/auth/validate-token', {
-            credentials: 'include',
-            method: 'GET'
-          });
-
-          if (!response.ok) {
-            Cookies.remove('token');
-            set({ user: null });
-          }
-        } catch (e) {
-          // If validation fails, clear token and user
-          Cookies.remove('token');
-          set({ user: null });
-        }
-      }
+      Cookies.remove('token');
+      set({ user: null });
     }
   },
   updateUser: async (userData: Partial<UserTypes>): Promise<void> => {
