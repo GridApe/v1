@@ -14,71 +14,77 @@ export default function EmailTemplateEditor() {
   const [aiPrompt, setAiPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
-    const load = () => {
-        const loadthis = {
-            "counters": {
-                "u_row": 1,
-                "u_column": 1,
-                "u_content_text": 2,
-                "u_content_button": 1
-            },
-            "body": {
-                "id": "emailBody",
-                "rows": [
-                    {
-                        "id": "row1",
-                        "cells": [
-                            1
-                        ],
-                        "columns": [
-                            {
-                                "id": "column1",
-                                "contents": [
-                                    {
-                                        "id": "content1",
-                                        "type": "text",
-                                        "values": {
-                                            "text": "Welcome to our platform! We're excited to have you here. We offer a range of key features designed to enhance your experience. Please complete your profile to get the most out of our platform.",
-                                            "textAlign": "left"
-                                        }
-                                    },
-                                    {
-                                        "id": "content2",
-                                        "type": "button",
-                                        "values": {
-                                            "text": "Complete Your Profile",
-                                            "textAlign": "center",
-                                            "background": "#0000ff",
-                                            "color": "#ffffff",
-                                            "url": "https://www.example.com/complete-profile"
-                                        }
-                                    },
-                                    {
-                                        "id": "content3",
-                                        "type": "text",
-                                        "values": {
-                                            "text": "Let's get started and make the most of our features! If you need any assistance, don't hesitate to reach out.",
-                                            "textAlign": "left"
-                                        }
-                                    }
-                                ]
-                            }
-                        ]
+  const load = () => {
+    const loadthis = {
+      "counters": {
+        "u_row": 1,
+        "u_column": 1,
+        "u_content_text": 2,
+        "u_content_button": 1
+      },
+      "body": {
+        "id": "emailBody",
+        "rows": [
+          {
+            "id": "row1",
+            "cells": [1],
+            "columns": [
+              {
+                "id": "column1",
+                "contents": [
+                  {
+                    "id": "content1",
+                    "type": "text",
+                    "values": {
+                      "text": "Welcome to our platform! We're excited to have you here. We offer a range of key features designed to enhance your experience. Please complete your profile to get the most out of our platform.",
+                      "textAlign": "left"
                     }
+                  },
+                  {
+                    "id": "content2",
+                    "type": "button",
+                    "values": {
+                      "text": "Complete Your Profile",
+                      "textAlign": "center",
+                      "background": "#0000ff",
+                      "color": "#ffffff",
+                      "url": "https://www.example.com/complete-profile"
+                    }
+                  },
+                  {
+                    "id": "content3",
+                    "type": "text",
+                    "values": {
+                      "text": "Let's get started and make the most of our features! If you need any assistance, don't hesitate to reach out.",
+                      "textAlign": "left"
+                    }
+                  }
                 ],
-                "values": {
-                    "backgroundColor": "#ffffff",
-                    "fontFamily": {
-                        "label": "Arial",
-                        "value": "arial,helvetica,sans-serif"
-                    }
-                }
-            },
-            "schemaVersion": 12
-        };
+                "values": {}
+              }
+            ],
+            "values": {}
+          }
+        ],
+        "headers": [
+          // Empty array but same structure as rows if needed
+        ],
+        "footers": [
+          // Empty array but same structure as rows if needed
+        ],
+        "values": {
+          "backgroundColor": "#ffffff",
+          "fontFamily": {
+            "label": "Arial",
+            "value": "arial,helvetica,sans-serif"
+          }
+        }
+      },
+      "schemaVersion": 12
+    };
 
-        emailEditorRef.current?.editor?.loadDesign(loadthis);
-    }
+    emailEditorRef.current?.editor?.loadDesign(loadthis);
+  }
   const generateEmailTemplate = async () => {
     if (!aiPrompt.trim()) {
       toast({ title: 'Error', description: 'Please enter a prompt.', variant: 'destructive' });
@@ -96,7 +102,7 @@ export default function EmailTemplateEditor() {
       const data = await response.json();
       if (data.success) {
         emailEditorRef.current?.editor?.loadDesign(data.template);
-        console.log({d: data.template})
+        console.log({ d: data.template })
         toast({ title: 'AI Generated', description: 'Email content added successfully.' });
       } else {
         throw new Error(data.message || 'Failed to generate email content.');

@@ -91,8 +91,8 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent className="text-red-600">
             <p>{error}</p>
-            <Button 
-              onClick={() => window.location.reload()} 
+            <Button
+              onClick={() => window.location.reload()}
               className="mt-4 w-full bg-red-500 hover:bg-red-600"
             >
               Retry
@@ -110,7 +110,7 @@ const Dashboard = () => {
           searchFunction={mockSearchFunction}
           avatarSrc={user?.avatar}
           avatarFallback={user?.first_name}
-          // notificationCount={12}
+        // notificationCount={12}
         />
       </div>
 
@@ -124,11 +124,11 @@ const Dashboard = () => {
         ) : (
           <>
             <Button
-              onClick={() => router.push('/')}
+              onClick={() => router.push('/dashboard/templates/all')}
               className="justify-start rounded-xl bg-white p-4 md:py-10 hover:shadow-md hover:scale-105 transition-all"
             >
               <MailCheck className="text-blue-600 mr-4" size={40} />
-              <span className="text-lg font-semibold text-[#1E0E4E]">Create Email</span>
+              <span className="text-lg font-semibold text-[#1E0E4E]">Design Email</span>
             </Button>
             <Button
               onClick={() => router.push('/dashboard/campaign/create')}
@@ -175,10 +175,10 @@ const Dashboard = () => {
               />
             </>
           ) : (
-            <EmptyStateCard 
-              title="No Email Performance Data" 
-              description="Start sending emails to track performance" 
-              icon={<MailOpenIcon size={48} />} 
+            <EmptyStateCard
+              title="No Email Performance Data"
+              description="Start sending emails to track performance"
+              icon={<MailOpenIcon size={48} />}
             />
           )}
         </div>
@@ -215,10 +215,10 @@ const Dashboard = () => {
               </Table>
             </div>
           ) : (
-            <EmptyStateCard 
-              title="No Audience Data" 
-              description="Segment your audience to get insights" 
-              icon={<MousePointerClick size={48} />} 
+            <EmptyStateCard
+              title="No Audience Data"
+              description="Segment your audience to get insights"
+              icon={<MousePointerClick size={48} />}
             />
           )}
         </div>
@@ -245,10 +245,10 @@ const Dashboard = () => {
               </BarChart>
             </ChartContainer>
           ) : (
-            <EmptyStateCard 
-              title="No Campaign Data" 
-              description="Create campaigns to track performance" 
-              icon={<MousePointerClick size={48} />} 
+            <EmptyStateCard
+              title="No Campaign Data"
+              description="Create campaigns to track performance"
+              icon={<MousePointerClick size={48} />}
             />
           )}
         </div>
