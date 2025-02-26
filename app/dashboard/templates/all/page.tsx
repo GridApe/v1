@@ -15,9 +15,23 @@ import {
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { TemplateTypes } from '@/types/interface';
+import { useRouter } from 'next/navigation';
 
 export default function TemplatesPage() {
-  const [templates, setTemplates] = useState<TemplateTypes[]>([]);
+  const router = useRouter();
+  const [templates, setTemplates] = useState<TemplateTypes[]>([
+    {
+      id: 'blank',
+      name: 'Blank Template',
+      html: '<html><body style="margin: 0; padding: 0; font-family: Arial, sans-serif;"></body></html>',
+      category: 'custom',
+      content: JSON.stringify({
+        body: {
+          rows: []  // Empty rows for a blank template
+        }
+      })
+    }
+  ]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [previewTemplate, setPreviewTemplate] = useState<TemplateTypes | null>(null);
@@ -34,7 +48,10 @@ export default function TemplatesPage() {
           throw new Error('Failed to fetch templates');
         }
         const responseData = await response.json();
-        setTemplates(responseData.data.templates || []);
+        setTemplates(prev => [
+          prev[0], // Keep the blank template
+          ...(responseData.data.templates || [])
+        ]);
       } catch (err) {
         setError((err as Error).message);
         console.error('Error fetching templates:', err);
@@ -65,12 +82,14 @@ export default function TemplatesPage() {
       (categoryFilter === 'all' || template.category === categoryFilter)
   );
 
-
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-center gap-4">
         <h1 className="text-3xl font-bold tracking-tight">Templates Library</h1>
-        <Button className="w-full md:w-auto flex items-center space-x-2">
+        <Button
+          className="w-full md:w-auto flex items-center space-x-2"
+          onClick={() => { router.push('/dashboard/templates/create') }}
+        >
           <Plus size={16} />
           <span>Create New Template</span>
         </Button>
@@ -142,7 +161,18 @@ export default function TemplatesPage() {
                 </div>
               </CardContent>
               <CardFooter className="flex justify-between">
-                <Button variant="outline" size="sm" className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center space-x-2"
+                  onClick={() => {
+                    if (template.id === 'blank') {
+                      router.push('/dashboard/templates/create');
+                    } else {
+                      router.push(`/dashboard/templates/edit/${template.id}`);
+                    }
+                  }}
+                >
                   <Edit size={14} />
                   <span>Edit</span>
                 </Button>

@@ -11,23 +11,31 @@ export function withAuth<P extends object>(WrappedComponent: React.ComponentType
     const { user, loading, fetchCurrentUser } = useAuthStore();
     const router = useRouter();
     const [isInitialized, setIsInitialized] = useState(false);
+    const [hasAttemptedAuth, setHasAttemptedAuth] = useState(false);
 
     useEffect(() => {
       const initializeAuth = async () => {
-        if (!user && !loading) {
-          try {
-            await fetchCurrentUser();
-          } catch (error) {
-            console.error('Error fetching current user:', error);
-          }
+        // Only attempt to fetch user once
+        if (hasAttemptedAuth) return;
+
+        setHasAttemptedAuth(true);
+
+        try {
+          await fetchCurrentUser();
+        } catch (error) {
+          console.error('Error fetching current user:', error);
+        } finally {
+          setIsInitialized(true);
         }
-        setIsInitialized(true);
       };
 
-      initializeAuth().catch((error) => { console.error('Error initializing auth:', error); });
-    }, [user, loading, fetchCurrentUser]);
+      if (!isInitialized && !hasAttemptedAuth) {
+        initializeAuth();
+      }
+    }, [fetchCurrentUser, isInitialized, hasAttemptedAuth]);
 
     useEffect(() => {
+      // Only redirect if we've finished initializing and there's no user
       if (isInitialized && !loading && !user) {
         router.push('/auth/login');
       }
@@ -81,8 +89,6 @@ const LoadingScreen = ({ loadingText = 'Loading...', logoSrc = '/logo.svg' }) =>
     </div>
   );
 };
-
-export default LoadingScreen;
 
 function UnauthorizedScreen() {
   return (
