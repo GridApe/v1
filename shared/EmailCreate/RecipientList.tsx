@@ -1,55 +1,75 @@
+import { useState } from 'react';
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+
 interface RecipientListProps {
   recipients: string[];
   onRemove: (email: string) => void;
   maxVisible?: number;
 }
 
-import React, { useState } from 'react';
+export const RecipientList: React.FC<RecipientListProps> = ({ recipients, onRemove }) => {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-export const RecipientList: React.FC<RecipientListProps> = ({ recipients, onRemove, maxVisible = 3 }) => {
-  const [showAll, setShowAll] = React.useState(false);
-
-  // Determine which recipients to show based on state
-  const visibleRecipients = showAll
-    ? recipients
-    : recipients.slice(0, maxVisible);
-
-  const remainingCount = recipients.length - maxVisible;
-
-  // Toggle function to show/hide all recipients
-  const toggleShowAll = () => {
-    setShowAll(prev => !prev);
-  };
   return (
-    <div className="ml-24 flex flex-wrap gap-2">
-      {visibleRecipients.map((email) => (
-        <div
-          key={email}
-          className="flex items-center gap-1 bg-blue-50 text-blue-700 px-2 py-1 rounded-md text-sm"
-        >
-          <span>{email}</span>
-          <button onClick={() => onRemove(email)} className="hover:text-blue-900">
-            ×
-          </button>
-        </div>
-      ))}
+    <div className="ml-24 flex flex-wrap gap-2 items-center">
+      {recipients.length > 1 ? (
+        <>
+          {/* Display only the first recipient */}
+          <div className="flex items-center gap-1 bg-blue-50 text-blue-700 px-2 py-1 rounded-md text-sm">
+            <span>{recipients[0]}</span>
+            <button onClick={() => onRemove(recipients[0])} className="hover:text-blue-900">
+              ×
+            </button>
+          </div>
 
-      {!showAll && remainingCount > 0 && (
-        <button
-          onClick={toggleShowAll}
-          className="bg-gray-100 text-gray-700 px-2 py-1 rounded-md text-sm hover:bg-gray-200 cursor-pointer"
-        >
-          +{remainingCount} {remainingCount === 1 ? 'other' : 'others'}
-        </button>
-      )}
-
-      {showAll && recipients.length > maxVisible && (
-        <button
-          onClick={toggleShowAll}
-          className="bg-gray-100 text-gray-700 px-2 py-1 rounded-md text-sm hover:bg-gray-200 cursor-pointer"
-        >
-          Show less
-        </button>
+          {/* Show +X more button if there are more than one recipients */}
+          {recipients.length > 1 && (
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger className="text-blue-700 hover:underline text-sm">
+                +{recipients.length - 1} more
+              </DialogTrigger>
+              <DialogContent
+                className="max-w-[90vw] md:max-w-md p-4 "
+                style={{ borderRadius: '8px' }}
+              >
+                <DialogHeader>
+                  <DialogTitle>Recipients</DialogTitle>
+                </DialogHeader>
+                <div className="flex flex-col gap-2 max-h-[50vh] overflow-y-auto">
+                  {recipients.map((email) => (
+                    <div
+                      key={email}
+                      className="flex justify-between items-center bg-blue-50 text-blue-700 px-3 py-2 rounded-md"
+                    >
+                      <span className="truncate">{email}</span>
+                      <button onClick={() => onRemove(email)} className="hover:text-blue-900">
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
+        </>
+      ) : (
+        recipients.map((email) => (
+          <div
+            key={email}
+            className="flex items-center gap-1 bg-blue-50 text-blue-700 px-2 py-1 rounded-md text-sm"
+          >
+            <span>{email}</span>
+            <button onClick={() => onRemove(email)} className="hover:text-blue-900">
+              ×
+            </button>
+          </div>
+        ))
       )}
     </div>
   );
