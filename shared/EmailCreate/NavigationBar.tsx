@@ -17,7 +17,7 @@ interface NavigationBarProps {
 export const NavigationBar: React.FC<NavigationBarProps> = ({
   showPreview,
   setShowPreview,
-  selectedSenderEmailId, // Change this line
+  selectedSenderEmailId,
 }) => {
   const router = useRouter()
   const { toast } = useToast()
@@ -48,6 +48,15 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
       toast({
         title: "No Template Selected",
         description: "Please select an email template for your campaign.",
+        variant: "destructive",
+      })
+      return false
+    }
+
+    if (!selectedSenderEmailId) {
+      toast({
+        title: "No Sender Email",
+        description: "Please select a sender email for your campaign.",
         variant: "destructive",
       })
       return false
@@ -121,10 +130,10 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
         scheduled_at: isScheduled && scheduledDateTime ? scheduledDateTime.toISOString() : undefined,
         send_now: !isScheduled,
         contacts: contactIds,
-        user_sending_email_id: selectedSenderEmailId, // Change this line
+        user_sending_email_id: selectedSenderEmailId,
       }
 
-      console.log("Campaign data being sent:", campaignData) // Log the data being sent
+      console.log("Campaign data being sent:", campaignData)
 
       const response = await fetch("/api/user/campaign/create", {
         method: "POST",
@@ -136,12 +145,12 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
 
       if (!response.ok) {
         const errorData = await response.json()
-        console.error("Error response:", errorData) // Log the error response
+        console.error("Error response:", errorData)
         throw new Error(errorData.message || "Failed to create campaign")
       }
 
       const responseData = await response.json()
-      console.log("API Response:", responseData) // Log the API response
+      console.log("API Response:", responseData)
 
       toast({
         title: "Success",

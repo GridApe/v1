@@ -102,7 +102,10 @@ const EmailComposer: React.FC = () => {
                   <Label htmlFor="from" className="w-20">
                     From:
                   </Label>
-                  <Select value={selectedSenderEmailId} onValueChange={(value) => setSelectedSenderEmailId(value)}>
+                  <Select value={selectedSenderEmailId} onValueChange={(value) => {
+                    setSelectedSenderEmailId(value)
+                    useCampaignStore.getState().setSelectedSenderEmailId(value)
+                  }}>
                     <SelectTrigger className="w-full sm:w-[300px]">
                       <SelectValue>
                         <div className="flex items-center gap-2">
@@ -255,12 +258,20 @@ const EmailComposer: React.FC = () => {
                         <Button variant="secondary" onClick={() => handleTemplateAction("edit_template")}>
                           Edit Content
                         </Button>
-                        <Button variant="outline" onClick={() => handleTemplateAction("change_template")}>
+                        <Button variant="outline" onClick={() => {
+                          handleTemplateAction("change_template")
+                          useCampaignStore.getState().setSelectedTemplateId(selectedTemplateId)
+                          useCampaignStore.getState().setSelectedTemplateState('selected')
+                        }}>
                           Change Template
                         </Button>
                       </>
                     ) : (
-                      <Button variant="secondary" onClick={() => handleTemplateAction("select_template")}>
+                      <Button variant="secondary" onClick={() => {
+                        handleTemplateAction("select_template")
+                        useCampaignStore.getState().setSelectedTemplateId(selectedTemplateId)
+                        useCampaignStore.getState().setSelectedTemplateState('selected')
+                      }}>
                         Select Template
                       </Button>
                     )}
