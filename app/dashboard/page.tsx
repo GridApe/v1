@@ -239,9 +239,70 @@ const Dashboard = () => {
                   axisLine={false}
                   tickFormatter={(value: string): string => value.slice(0, 3)}
                 />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <ChartLegend content={<ChartLegendContent />} />
-                <Bar dataKey="value" fill="var(--color-value)" radius={4} />
+                <ChartTooltip
+                  content={
+                    <ChartTooltipContent
+                      formatter={(value, name) => {
+                        switch (name) {
+                          case 'totalCampaigns':
+                            return [`${value} Campaigns`, 'Total Campaigns'];
+                          case 'completedCampaigns':
+                            return [`${value} Completed`, 'Completed Campaigns'];
+                          case 'draftCampaigns':
+                            return [`${value} Drafts`, 'Draft Campaigns'];
+                          case 'totalOpens':
+                            return [`${value} Opens`, 'Total Opens'];
+                          case 'totalClicks':
+                            return [`${value} Clicks`, 'Total Clicks'];
+                          default:
+                            return [value, name];
+                        }
+                      }}
+                    />
+                  }
+                />
+                <ChartLegend
+                  formatter={(value: string) => {
+                    const labelMap: Record<string, string> = {
+                      'totalCampaigns': 'Total Campaigns',
+                      'completedCampaigns': 'Completed Campaigns',
+                      'draftCampaigns': 'Draft Campaigns',
+                      'totalOpens': 'Total Opens',
+                      'totalClicks': 'Total Clicks'
+                    };
+                    return labelMap[value] || value;
+                  }}
+                />
+                <Bar
+                  dataKey="totalCampaigns"
+                  fill="#9900EBFF"
+                  radius={4}
+                  name="totalCampaigns"
+                />
+                {/* <Bar
+                  dataKey="completedCampaigns"
+                  fill="#9900EBFF"
+                  radius={4}
+                  name="completedCampaigns"
+                /> */}
+                <Bar
+                  dataKey="draftCampaigns"
+                  fill="#EBC000FF"
+                  radius={4}
+                  name="draftCampaigns"
+                />
+                <Bar
+                  dataKey="totalOpens"
+                  fill="var(--color-value)"
+                  radius={4}
+                  name="Total Opens"
+                />
+                <Bar
+                  dataKey="totalClicks"
+                  fill="#3b82f6"
+                  radius={4}
+                  name="Total Clicks"
+                />
               </BarChart>
             </ChartContainer>
           ) : (

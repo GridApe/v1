@@ -40,9 +40,14 @@ const PerformanceCard: React.FC<PerformanceCardProps> = ({ value, change, label,
               {typeof value === 'number' ? value.toLocaleString() : value}
             </p>
             {change && (
-              <div className="flex items-center bg-green-50 border border-green-200 rounded-lg px-2 py-1">
-                <ArrowUp size={16} className="text-green-600 mr-1" />
-                <span className="text-green-600 text-sm font-medium">{change}</span>
+              <div className="inline items-center text-center">
+                <span className="text-xs font-small">
+                  {new Date().toLocaleString('default', { month: 'short' })}
+                </span>
+                <div className="flex items-center bg-green-50 border border-green-200 rounded-lg px-2 py-1">
+                  <ArrowUp size={16} className="text-green-600 mr-1" />
+                  <span className="text-green-600 text-sm font-medium">{change}</span>
+                </div>
               </div>
             )}
           </div>
