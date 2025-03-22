@@ -3,6 +3,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 
 interface UpgradePlanCardProps {
+  planName: string;
   emailSent: number;
   emailLimit: number | string;
   contacts: number;
@@ -14,6 +15,7 @@ interface UpgradePlanCardProps {
 }
 
 export const UpgradePlanCard: React.FC<UpgradePlanCardProps> = ({
+  planName,
   emailSent,
   emailLimit,
   contacts,
@@ -48,7 +50,13 @@ export const UpgradePlanCard: React.FC<UpgradePlanCardProps> = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.3 }}
     >
-      <h3 className="font-semibold mb-2 text-left">Your plan</h3>
+      <div>
+        <div className="flex justify-between items-center mb-1">
+          <h3 className="font-semibold mb-2 text-left">Your plan:</h3>
+          <h5 className='mb-2'>{planName}</h5>
+        </div>
+      </div>
+
       <div className="space-y-4">
         <div>
           <div className="flex justify-between items-center mb-1">

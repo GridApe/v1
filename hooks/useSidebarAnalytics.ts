@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 
 interface SidebarAnalytics {
+    planName: string;
     emailSent: number;
     emailLimit: number | string;
     contacts: number;

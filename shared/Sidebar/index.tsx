@@ -58,6 +58,7 @@ export default function Sidebar() {
           <>
 
             <UpgradePlanCard
+              planName={analytics.planName}
               emailSent={analytics.emailSent}
               emailLimit={analytics.emailLimit}
               contacts={analytics.contacts}
