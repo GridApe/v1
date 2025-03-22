@@ -62,10 +62,10 @@ const Dashboard = () => {
         }
         const responseData = await response.json() as DashboardResponse;
         setData(responseData.data);
-        console.log(data)
+        // console.log(data)
         setError(null);
       } catch (error) {
-        console.error(error);
+        // console.error(error);
         setError('Unable to load dashboard. Please try again later.');
       } finally {
         setLoading(false);

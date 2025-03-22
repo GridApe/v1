@@ -15,7 +15,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     return await handleApiRequest(request, `/user/subscriptions/subscribe/${planId}`, 'POST');
   } catch (error) {
-    console.error('Error processing subscription request:', error);
+    // console.error('Error processing subscription request:', error);
     return NextResponse.json(
       { status: 'error', message: 'Internal server error' },
       { status: 500 }

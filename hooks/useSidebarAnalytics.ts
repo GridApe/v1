@@ -44,7 +44,7 @@ export const useSidebarAnalytics = () => {
                     throw new Error(result.message || 'Failed to fetch analytics');
                 }
             } catch (err) {
-                console.error('Error fetching sidebar analytics:', err);
+                // console.error('Error fetching sidebar analytics:', err);
                 setError(err instanceof Error ? err.message : 'An unknown error occurred');
             } finally {
                 setLoading(false);

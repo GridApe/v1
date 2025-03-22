@@ -69,7 +69,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         throw new Error('Verification failed');
       }
     } catch (error) {
-      console.error('Verification error:', error);
+      // console.error('Verification error:', error);
       set({ loading: false });
       throw error;
     }
@@ -90,7 +90,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         throw new Error('Verification failed');
       }
     } catch (error) {
-      console.error('Verification error:', error);
+      // console.error('Verification error:', error);
       set({ loading: false });
       throw error;
     }
@@ -104,14 +104,14 @@ export const useAuthStore = create<AuthState>((set) => ({
           method: 'POST',
         });
       } catch (e) {
-        console.error('Server logout failed, continuing with client logout');
+        // console.error('Server logout failed, continuing with client logout');
       }
 
       // Always clear local state and cookies regardless of server response
       Cookies.remove('token');
       set({ user: null });
     } catch (error) {
-      console.error('Logout error:', error);
+      // console.error('Logout error:', error);
       // Still clear cookies and user state even if there was an error
       Cookies.remove('token');
       set({ user: null });
@@ -145,7 +145,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       // await useAuthStore.getState().fetchCurrentUser();
       set({ loading: false });
     } catch (error) {
-      console.error('Registration error:', error);
+      // console.error('Registration error:', error);
       set({ loading: false });
       throw error;
     }
@@ -179,7 +179,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       const responseData: { data: { user: UserTypes } } = await response.json();
       set({ user: responseData.data.user, loading: false });
     } catch (error) {
-      console.error('Fetch user error:', error);
+      // console.error('Fetch user error:', error);
       // On any error, ensure loading is set to false to prevent indefinite loading
       Cookies.remove('token');
       set({ user: null, loading: false });
@@ -213,7 +213,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       const responseData: { data: { user: UserTypes } } = await response.json();
       set({ user: { ...useAuthStore.getState().user, ...responseData.data.user } });
     } catch (error) {
-      console.error('Update user error:', error);
+      // console.error('Update user error:', error);
       throw error;
     }
   },
@@ -239,7 +239,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
       set({ loading: false });
     } catch (error) {
-      console.error('Update password error:', error);
+      // console.error('Update password error:', error);
       set({ loading: false });
       throw error;
     }

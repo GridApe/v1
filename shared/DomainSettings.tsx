@@ -48,7 +48,7 @@ export default function DomainSettings() {
       if (!response.ok) throw new Error('Failed to fetch domains');
 
       const responseData = await response.json();
-      console.log(responseData.data.domains);
+      // console.log(responseData.data.domains);
       setDomains(responseData.data.domains);
     } catch (error) {
       toast({
@@ -221,7 +221,7 @@ export default function DomainSettings() {
                             ]);
                             setSelectedDomain(domain);
                             setShowDNSModal(true);
-                            console.log(domain);
+                            // console.log(domain);
 
                           }}
                           className="w-full"

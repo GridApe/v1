@@ -96,7 +96,7 @@ export default function EmailTemplateEditor() {
       const data = await response.json();
       if (data.success) {
         emailEditorRef.current?.editor?.loadDesign(data.template);
-        console.log({d: data.template})
+        // console.log({d: data.template})
         toast({ title: 'AI Generated', description: 'Email content added successfully.' });
       } else {
         throw new Error(data.message || 'Failed to generate email content.');

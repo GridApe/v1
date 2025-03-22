@@ -54,7 +54,7 @@ export default function TemplatesPage() {
         ]);
       } catch (err) {
         setError((err as Error).message);
-        console.error('Error fetching templates:', err);
+        // console.error('Error fetching templates:', err);
       } finally {
         setLoading(false);
       }

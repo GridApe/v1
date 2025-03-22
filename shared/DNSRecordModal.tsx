@@ -36,7 +36,7 @@ export function DNSRecordModal({ open, onOpenChange, dnsRecords }: DNSRecordModa
         });
       })
       .catch((err) => {
-        console.error('Clipboard copy failed:', err);
+        // console.error('Clipboard copy failed:', err);
         toast({
           title: 'Copy Error',
           description: 'Could not copy to clipboard.',

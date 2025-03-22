@@ -73,7 +73,7 @@ class ApiService {
       this.csrfTokenFetched = true;
     } catch (error) {
       this.csrfTokenFetched = false;
-      console.error('Error fetching CSRF token:', error);
+      // console.error('Error fetching CSRF token:', error);
       throw this.handleApiError(error);
     }
   }
@@ -82,21 +82,21 @@ class ApiService {
     if (axios.isAxiosError(error)) {
       const axiosError = error as AxiosError;
       if (axiosError.response) {
-        console.error('API Error Response:', axiosError.response.data);
+        // console.error('API Error Response:', axiosError.response.data);
         return new ApiError(
           axiosError.response.status,
           axiosError.message || 'An error occurred',
           axiosError.response.data
         );
       } else if (axiosError.request) {
-        console.error('API Error Request:', axiosError.request);
+        // console.error('API Error Request:', axiosError.request);
         return new ApiError(500, 'No response received from the server');
       } else {
-        console.error('API Error:', axiosError.message);
+        // console.error('API Error:', axiosError.message);
         return new ApiError(500, axiosError.message || 'An unexpected error occurred');
       }
     } else {
-      console.error('Unexpected Error:', error);
+      // console.error('Unexpected Error:', error);
       return new ApiError(500, 'An unexpected error occurred');
     }
   }

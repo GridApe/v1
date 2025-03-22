@@ -22,7 +22,7 @@ export const useNotificationStore = create<NotificationStore>((set) => ({
       const response = await fetch('/api/user/notification');
       if (!response.ok) throw new Error('Failed to fetch notifications');
       const data = await response.json();
-      console.log('Fetch Notifications Response:', data);
+      // console.log('Fetch Notifications Response:', data);
       if (data && data.data && Array.isArray(data.data.notifications)) {
         set({ notifications: data.data.notifications, loading: false });
       } else {
@@ -33,7 +33,7 @@ export const useNotificationStore = create<NotificationStore>((set) => ({
         error: error.message || "Failed to fetch notifications",
         loading: false,
       });
-      console.error("Fetch Notifications Error:", error);
+      // console.error("Fetch Notifications Error:", error);
     }
   },
 
@@ -47,7 +47,7 @@ export const useNotificationStore = create<NotificationStore>((set) => ({
         throw new Error(`Failed to mark notification as read: ${errorText}`);
       }
       const data = await response.json();
-      console.log('Mark as Read Response:', data);
+      // console.log('Mark as Read Response:', data);
       set((state) => ({
         notifications: state.notifications.map((notification) =>
           notification.id === notificationId
@@ -56,7 +56,7 @@ export const useNotificationStore = create<NotificationStore>((set) => ({
         ),
       }));
     } catch (error: any) {
-      console.error("Mark as Read Error:", error);
+      // console.error("Mark as Read Error:", error);
       set({ error: error.message });
     }
   },
@@ -71,7 +71,7 @@ export const useNotificationStore = create<NotificationStore>((set) => ({
         throw new Error(`Failed to mark all notifications as read: ${errorText}`);
       }
       const data = await response.json();
-      console.log('Mark All as Read Response:', data);
+      // console.log('Mark All as Read Response:', data);
       set((state) => ({
         notifications: state.notifications.map((notification) => ({
           ...notification,
@@ -79,7 +79,7 @@ export const useNotificationStore = create<NotificationStore>((set) => ({
         })),
       }));
     } catch (error: any) {
-      console.error("Mark All as Read Error:", error);
+      // console.error("Mark All as Read Error:", error);
       set({ error: error.message });
     }
   },
@@ -94,14 +94,14 @@ export const useNotificationStore = create<NotificationStore>((set) => ({
         throw new Error(`Failed to delete notification: ${errorText}`);
       }
       const data = await response.json();
-      console.log('Delete Notification Response:', data);
+      // console.log('Delete Notification Response:', data);
       set((state) => ({
         notifications: state.notifications.filter(
           (notification) => notification.id !== notificationId
         ),
       }));
     } catch (error: any) {
-      console.error("Delete Notification Error:", error);
+      // console.error("Delete Notification Error:", error);
       set({ error: error.message });
     }
   },

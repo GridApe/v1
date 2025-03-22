@@ -141,7 +141,7 @@ export default function EmailDashboard() {
     try {
       await navigator.clipboard.writeText(value);
     } catch (err) {
-      console.error('Failed to copy value:', err);
+      // console.error('Failed to copy value:', err);
     }
   };
 

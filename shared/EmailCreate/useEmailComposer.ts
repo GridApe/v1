@@ -42,9 +42,9 @@ export const useEmailComposer = () => {
       if (result.status === "success" && result.data && Array.isArray(result.data.contacts)) {
         setContacts(result.data.contacts)
       }
-      console.log("Contacts:", result.data.contacts)
+      // console.log("Contacts:", result.data.contacts)
     } catch (error) {
-      console.error("Error fetching contacts:", error)
+      // console.error("Error fetching contacts:", error)
     }
   }
 
@@ -56,7 +56,7 @@ export const useEmailComposer = () => {
         setTemplates(result.data.templates || [])
       }
     } catch (error) {
-      console.error("Error fetching templates:", error)
+      // console.error("Error fetching templates:", error)
     }
   }
 
@@ -72,7 +72,7 @@ export const useEmailComposer = () => {
         }
       }
     } catch (error) {
-      console.error("Error fetching sender emails:", error)
+      // console.error("Error fetching sender emails:", error)
     }
   }
 
