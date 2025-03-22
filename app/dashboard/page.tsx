@@ -62,7 +62,7 @@ const Dashboard = () => {
         }
         const responseData = await response.json() as DashboardResponse;
         setData(responseData.data);
-        console.log(data)
+        // console.log(data)
         setError(null);
       } catch (error) {
         console.error(error);

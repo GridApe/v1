@@ -9,7 +9,7 @@ import { useSidebarAnalytics } from '@/hooks/useSidebarAnalytics';
 
 export default function Sidebar() {
   const { analytics, loading, error } = useSidebarAnalytics();
-  console.log(analytics);
+  // console.log(analytics);
   return (
     <motion.div
       className="w-64 relative text-center bg-[#2E3192] h-screen p-4 flex flex-col overflow-hidden"

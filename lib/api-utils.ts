@@ -55,7 +55,7 @@ export async function handleApiRequest(
 
     const body = method !== 'GET' ? await request.text() : undefined;
 
-    console.log(`Sending ${method} request to: ${BASE_URL}${endpoint}`);
+    // console.log(`Sending ${method} request to: ${BASE_URL}${endpoint}`);
 
     const response = await fetch(`${BASE_URL}${endpoint}`, {
       method,
@@ -74,7 +74,7 @@ export async function handleApiRequest(
       );
     }
 
-    console.log('API response data:', data);
+    // console.log('API response data:', data);
     return NextResponse.json(data);
   } catch (error: any) {
     console.error('API Error:', error);

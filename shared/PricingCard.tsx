@@ -48,10 +48,10 @@ export function PricingCard({ plan, isPopular }: PricingCardProps) {
         setDialogType('error');
         setDialogMessage('Failed to subscribe. Please try again.');
       }
-    } catch (error:any) {
+    } catch (error: any) {
       console.error('Error subscribing to plan:', error);
       setDialogType('error');
-      console.log({error: error.response.data.message})
+      // console.log({error: error.response.data.message})
       setDialogMessage(error.response.data.message);
     } finally {
       setLoading(false);

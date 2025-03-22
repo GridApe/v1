@@ -17,7 +17,7 @@ export function useSearch({ searchFunction, debounceTime = 300, minChars = 2 }: 
 
   const debouncedSearch = useCallback(async () => {
     const currentQuery = latestQuery.current;
-    console.log('Searching for:', currentQuery);
+    // console.log('Searching for:', currentQuery);
     if (currentQuery.length >= minChars) {
       setIsSearching(true);
       try {

@@ -135,7 +135,7 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
         user_sending_email_id: selectedSenderEmailId,
       }
 
-      console.log("Campaign data being sent:", campaignData)
+      // console.log("Campaign data being sent:", campaignData)
 
       const response = await fetch("/api/user/campaign/create", {
         method: "POST",
@@ -152,7 +152,7 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
       }
 
       const responseData = await response.json()
-      console.log("API Response:", responseData)
+      // console.log("API Response:", responseData)
 
       toast({
         title: "Success",

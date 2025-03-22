@@ -130,20 +130,20 @@ export default function EmailTemplateEditor({
         JSON.parse(content); // Verify we can parse it
       } catch (error) {
         console.error('Invalid JSON content:', error);
-        return { 
-          success: false, 
-          message: 'Invalid template content format' 
+        return {
+          success: false,
+          message: 'Invalid template content format'
         };
       }
-  
+
       const payload = {
         name,
         content,
         html,
       };
-  
-      console.log('Sending payload:', payload);
-  
+
+      // console.log('Sending payload:', payload);
+
       const response = await fetch(`/api/user/templates/update/${params.templateid}`, {
         method: 'PUT',
         headers: {
@@ -151,16 +151,16 @@ export default function EmailTemplateEditor({
         },
         body: JSON.stringify(payload),
       });
-  
+
       if (!response.ok) {
         const errorData = await response.json();
         console.error('API error response:', errorData);
-        return { 
-          success: false, 
-          message: errorData.message || 'Failed to save template' 
+        return {
+          success: false,
+          message: errorData.message || 'Failed to save template'
         };
       }
-  
+
       const data = await response.json();
       setSelectedTemplateState('selected');
       setAction(null);
@@ -168,9 +168,9 @@ export default function EmailTemplateEditor({
       return { success: true, message: 'Template saved successfully!' };
     } catch (error: any) {
       console.error('Error saving template:', error);
-      return { 
-        success: false, 
-        message: error.message || 'Something went wrong' 
+      return {
+        success: false,
+        message: error.message || 'Something went wrong'
       };
     }
   };
@@ -247,26 +247,26 @@ export default function EmailTemplateEditor({
       });
       return;
     }
-  
+
     emailEditorRef.current?.editor?.saveDesign((design: any) => {
       // Add debug logging
-      console.log('Raw design data:', design);
-      
+      // console.log('Raw design data:', design);
+
       try {
         const designJson = JSON.stringify(design);
-        console.log('Stringified design:', designJson);
+        // console.log('Stringified design:', designJson);
         setJsonData(designJson);
-        
+
         emailEditorRef.current?.editor?.exportHtml((data: { html: string }) => {
-          console.log('HTML data:', data);
-          
+          // console.log('HTML data:', data);
+
           saveTemplate({
             name: templateName,
             content: designJson, // Using the stringified version directly
             html: data.html,
           })
             .then((result) => {
-              console.log('Save result:', result);
+              // console.log('Save result:', result);
               if (result.success) {
                 toast({
                   title: 'Design Saved',

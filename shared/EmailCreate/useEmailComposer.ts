@@ -42,7 +42,7 @@ export const useEmailComposer = () => {
       if (result.status === "success" && result.data && Array.isArray(result.data.contacts)) {
         setContacts(result.data.contacts)
       }
-      console.log("Contacts:", result.data.contacts)
+      // console.log("Contacts:", result.data.contacts)
     } catch (error) {
       console.error("Error fetching contacts:", error)
     }
