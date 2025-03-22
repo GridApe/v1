@@ -127,7 +127,9 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
       const campaignData = {
         title: subject,
         user_email_template_id: selectedTemplateId,
-        scheduled_at: isScheduled && scheduledDateTime ? scheduledDateTime.toISOString() : undefined,
+        scheduled_at: isScheduled && scheduledDateTime
+          ? scheduledDateTime.toISOString().slice(0, 19).replace('T', ' ')
+          : undefined,
         send_now: !isScheduled,
         contacts: contactIds,
         user_sending_email_id: selectedSenderEmailId,
