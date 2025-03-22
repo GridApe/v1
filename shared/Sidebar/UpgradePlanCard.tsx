@@ -61,7 +61,7 @@ export const UpgradePlanCard: React.FC<UpgradePlanCardProps> = ({
         <div>
           <div className="flex justify-between items-center mb-1">
             <span>Email Sent</span>
-            <span>{emailSent} of {emailLimitDisplay}</span>
+            <span>{emailSent} of {emailLimitDisplay} <small>per day</small></span>
           </div>
           <Progress value={emailPercentage} className="h-2 bg-white" />
         </div>
