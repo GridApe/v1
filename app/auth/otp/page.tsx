@@ -90,7 +90,7 @@ export default function OTPPage() {
         >
           <Button
             type="submit"
-            className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg shadow-indigo-500/20 transition-all duration-200"
+            className="w-full bg-gradient-to-r from-[#4338ca] to-indigo-900 hover:from-indigo-900 hover:to-[#4338ca] text-white shadow-lg shadow-indigo-500/20 transition-all duration-200"
             disabled={loading}
           >
             {loading ? (

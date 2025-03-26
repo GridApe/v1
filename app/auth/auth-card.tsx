@@ -31,11 +31,11 @@ export function AuthCard({ title, description, children }: AuthCardProps): JSX.E
               width={64} 
               height={64} 
               alt="Logo" 
-              className="relative z-10"
+              className="relative z-10 fill-blue-600"
             />
           </motion.div>
           <div className="text-center space-y-1">
-            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-[#4338ca] to-indigo-900 bg-clip-text text-transparent">
               {title}
             </CardTitle>
             {description && (
