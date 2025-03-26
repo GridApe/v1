@@ -86,7 +86,7 @@ export default function EmailTemplateEditor({
             const designData = JSON.parse(template.content);
             emailEditorRef.current.editor.loadDesign(designData);
           } catch (error) {
-            console.error('Error parsing template content:', error);
+            // console.error('Error parsing template content:', error);
             toast({
               title: 'Error',
               description: 'Failed to load template design.',
@@ -96,7 +96,7 @@ export default function EmailTemplateEditor({
         }
       }
     } catch (error) {
-      console.error('Error fetching template:', error);
+      // console.error('Error fetching template:', error);
       toast({
         title: 'Error',
         description: 'Failed to load template. Please try again later.',
@@ -129,10 +129,10 @@ export default function EmailTemplateEditor({
       try {
         JSON.parse(content); // Verify we can parse it
       } catch (error) {
-        console.error('Invalid JSON content:', error);
-        return {
-          success: false,
-          message: 'Invalid template content format'
+        // console.error('Invalid JSON content:', error);
+        return { 
+          success: false, 
+          message: 'Invalid template content format' 
         };
       }
 
@@ -141,9 +141,9 @@ export default function EmailTemplateEditor({
         content,
         html,
       };
-
+  
       // console.log('Sending payload:', payload);
-
+  
       const response = await fetch(`/api/user/templates/update/${params.templateid}`, {
         method: 'PUT',
         headers: {
@@ -154,10 +154,10 @@ export default function EmailTemplateEditor({
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('API error response:', errorData);
-        return {
-          success: false,
-          message: errorData.message || 'Failed to save template'
+        // console.error('API error response:', errorData);
+        return { 
+          success: false, 
+          message: errorData.message || 'Failed to save template' 
         };
       }
 
@@ -167,10 +167,10 @@ export default function EmailTemplateEditor({
       router.push('/dashboard/campaign/create');
       return { success: true, message: 'Template saved successfully!' };
     } catch (error: any) {
-      console.error('Error saving template:', error);
-      return {
-        success: false,
-        message: error.message || 'Something went wrong'
+      // console.error('Error saving template:', error);
+      return { 
+        success: false, 
+        message: error.message || 'Something went wrong' 
       };
     }
   };
@@ -230,7 +230,7 @@ export default function EmailTemplateEditor({
           const designData = JSON.parse(jsonData);
           unlayer.loadDesign(designData);
         } catch (error) {
-          console.error('Error loading design:', error);
+          // console.error('Error loading design:', error);
         }
       }
     },
@@ -251,7 +251,7 @@ export default function EmailTemplateEditor({
     emailEditorRef.current?.editor?.saveDesign((design: any) => {
       // Add debug logging
       // console.log('Raw design data:', design);
-
+      
       try {
         const designJson = JSON.stringify(design);
         // console.log('Stringified design:', designJson);
@@ -259,7 +259,7 @@ export default function EmailTemplateEditor({
 
         emailEditorRef.current?.editor?.exportHtml((data: { html: string }) => {
           // console.log('HTML data:', data);
-
+          
           saveTemplate({
             name: templateName,
             content: designJson, // Using the stringified version directly
@@ -277,7 +277,7 @@ export default function EmailTemplateEditor({
               }
             })
             .catch((error) => {
-              console.error('Save error:', error);
+              // console.error('Save error:', error);
               toast({
                 title: 'Error',
                 description: error.message || 'Failed to save template. Please try again later.',
@@ -286,7 +286,7 @@ export default function EmailTemplateEditor({
             });
         });
       } catch (error) {
-        console.error('JSON stringify error:', error);
+        // console.error('JSON stringify error:', error);
         toast({
           title: 'Error',
           description: 'Failed to process template data.',

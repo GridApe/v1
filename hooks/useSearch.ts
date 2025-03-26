@@ -24,7 +24,7 @@ export function useSearch({ searchFunction, debounceTime = 300, minChars = 2 }: 
         const searchResults = await searchFunction(currentQuery);
         setResults(searchResults);
       } catch (error) {
-        console.error('Search error:', error);
+        // console.error('Search error:', error);
         setResults([]);
       } finally {
         setIsSearching(false);

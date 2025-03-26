@@ -23,7 +23,7 @@ export function withAuth<P extends object>(WrappedComponent: React.ComponentType
         try {
           await fetchCurrentUser();
         } catch (error) {
-          console.error('Error fetching current user:', error);
+          // console.error('Error fetching current user:', error);
         } finally {
           setIsInitialized(true);
         }

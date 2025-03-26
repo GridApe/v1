@@ -1,64 +1,67 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import { MoreVertical, ArrowUp } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { ArrowDownIcon, ArrowUpIcon } from 'lucide-react';
 
 interface PerformanceCardProps {
-  value: number | string;
-  change?: string;
+  value: string | number;
   label: string;
   color: string;
   icon: React.ReactNode;
+  change?: string | number;
 }
 
-const PerformanceCard: React.FC<PerformanceCardProps> = ({ value, change, label, color, icon }) => {
+export default function PerformanceCard({ value, label, color, icon, change }: PerformanceCardProps) {
+  const changeValue = typeof change === 'string' ? parseFloat(change) : change;
+  const isPositive = changeValue ? changeValue > 0 : false;
+  const changeColor = isPositive ? 'text-green-500' : 'text-red-500';
+
   return (
     <motion.div
+      className="bg-white backdrop-blur-sm rounded-xl p-6 border-[0.5px] border-black/10 shadow-sm"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="relative rounded-2xl bg-gradient-to-b from-white to-gray-50 p-5 md:p-6 shadow-lg hover:shadow-2xl transition-shadow border border-gray-100"
+      whileHover={{ scale: 1.02 }}
+      transition={{ duration: 0.2 }}
     >
-      <div className="flex justify-between items-start">
-        <div className="w-full">
-          <div
-            className="flex justify-center items-center rounded-full shadow-md mb-4"
-            style={{
-              backgroundColor: color,
-              width: 56,
-              height: 56,
-            }}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center space-x-3">
+          <div 
+            className="p-2 rounded-lg"
+            style={{ backgroundColor: `${color}20` }}
           >
-            <div className="text-white text-lg">{icon}</div>
+            {icon}
           </div>
-
-          <p className="text-sm font-medium text-gray-600">{label}</p>
-
-          <div className="flex items-center justify-between w-full mt-2 ">
-            <p className="text-3xl font-bold text-gray-800">
-              {typeof value === 'number' ? value.toLocaleString() : value}
-            </p>
-            {change && (
-              <div className="inline items-center text-center">
-                <span className="text-xs font-small">
-                  {new Date().toLocaleString('default', { month: 'short' })}
-                </span>
-                <div className="flex items-center bg-green-50 border border-green-200 rounded-lg px-2 py-1">
-                  <ArrowUp size={16} className="text-green-600 mr-1" />
-                  <span className="text-green-600 text-sm font-medium">{change}</span>
-                </div>
-              </div>
-            )}
-          </div>
+          <h3 className="text-black font-bold">{label}</h3>
         </div>
-
-        <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="More options">
-          {/* <MoreVertical className="h-4 w-4 text-gray-500" /> */}
-        </Button>
+        {change !== undefined && (
+          <motion.div 
+            className={cn("flex items-center space-x-1", changeColor)}
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            {isPositive ? (
+              <ArrowUpIcon className="w-4 h-4" />
+            ) : (
+              <ArrowDownIcon className="w-4 h-4" />
+            )}
+            <span className="text-sm font-medium">
+              {changeValue ? Math.abs(changeValue) : 0}%
+            </span>
+          </motion.div>
+        )}
       </div>
+      
+      <motion.div 
+        className="text-2xl font-bold text-black"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+      >
+        {value}
+      </motion.div>
     </motion.div>
   );
-};
-
-export default PerformanceCard;
+}

@@ -114,7 +114,7 @@ export default function CampaignsPage() {
     try {
       return format(parseISO(dateString), format_string);
     } catch (error) {
-      console.error('Error formatting date:', error);
+      // console.error('Error formatting date:', error);
       return 'Invalid date';
     }
   };

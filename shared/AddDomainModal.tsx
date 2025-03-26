@@ -84,7 +84,7 @@ export function AddDomainModal({
       onOpenChange(false);
       setShowDNSModal(true);
     } catch (error) {
-      console.error('Domain verification error:', error);
+      // console.error('Domain verification error:', error);
       toast({
         title: 'Verification Failed',
         description: 'Unable to add domain. Check email and try again.',

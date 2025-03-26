@@ -48,10 +48,8 @@ export function PricingCard({ plan, isPopular }: PricingCardProps) {
         setDialogType('error');
         setDialogMessage('Failed to subscribe. Please try again.');
       }
-    } catch (error: any) {
-      console.error('Error subscribing to plan:', error);
+    } catch (error:any) {
       setDialogType('error');
-      // console.log({error: error.response.data.message})
       setDialogMessage(error.response.data.message);
     } finally {
       setLoading(false);
@@ -63,7 +61,7 @@ export function PricingCard({ plan, isPopular }: PricingCardProps) {
   try {
     featuresObj = JSON.parse(plan.features);
   } catch (error) {
-    console.error('Error parsing features JSON:', error);
+    // console.error('Error parsing features JSON:', error);
   }
 
   return (

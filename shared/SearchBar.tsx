@@ -48,7 +48,7 @@ export default function SearchBar({
       await logout();
       router.push('/auth/login');
     } catch (error) {
-      console.error('Logout failed:', error);
+      // console.error('Logout failed:', error);
     }
   };
 

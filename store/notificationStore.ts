@@ -33,7 +33,7 @@ export const useNotificationStore = create<NotificationStore>((set) => ({
         error: error.message || "Failed to fetch notifications",
         loading: false,
       });
-      console.error("Fetch Notifications Error:", error);
+      // console.error("Fetch Notifications Error:", error);
     }
   },
 
@@ -56,7 +56,7 @@ export const useNotificationStore = create<NotificationStore>((set) => ({
         ),
       }));
     } catch (error: any) {
-      console.error("Mark as Read Error:", error);
+      // console.error("Mark as Read Error:", error);
       set({ error: error.message });
     }
   },
@@ -79,7 +79,7 @@ export const useNotificationStore = create<NotificationStore>((set) => ({
         })),
       }));
     } catch (error: any) {
-      console.error("Mark All as Read Error:", error);
+      // console.error("Mark All as Read Error:", error);
       set({ error: error.message });
     }
   },
@@ -101,7 +101,7 @@ export const useNotificationStore = create<NotificationStore>((set) => ({
         ),
       }));
     } catch (error: any) {
-      console.error("Delete Notification Error:", error);
+      // console.error("Delete Notification Error:", error);
       set({ error: error.message });
     }
   },

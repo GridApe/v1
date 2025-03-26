@@ -40,10 +40,10 @@ export default function PricingPage() {
 
           setPlans(fetchedPlans);
         } else {
-          console.error('API response error:', json);
+          // console.error('API response error:', json);
         }
       } catch (error) {
-        console.error('Error fetching pricing plans:', error);
+        // console.error('Error fetching pricing plans:', error);
       }
     };
 

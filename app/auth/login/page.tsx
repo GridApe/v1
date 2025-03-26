@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { AuthCard } from "../auth-card";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthStore } from "@/store/authStore";
+import { LoaderCircle, LockIcon, Mail } from "lucide-react";
 
 export default function LoginPage() {
   const { toast } = useToast();
@@ -39,6 +40,10 @@ export default function LoginPage() {
     e.preventDefault();
     try {
       await auth.login(formData.email, formData.password);
+      toast({
+        title: "Success",
+        description: "Welcome back! You've successfully logged in.",
+      });
     } catch (error) {
       toast({
         variant: "destructive",
@@ -49,79 +54,99 @@ export default function LoginPage() {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -30 }}
-      transition={{ duration: 0.5, ease: "easeOut" }}
+    <AuthCard 
+      title="Welcome Back" 
+      description="Sign in to your account to continue"
     >
-      <AuthCard title="Login">
-        <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Email Input */}
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Email Input */}
+        <div className="space-y-2">
+          <Label htmlFor="email" className="text-sm font-medium">Email</Label>
+          <div className="relative">
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
             <Input
               id="email"
               type="email"
-              placeholder="Enter email"
+              placeholder="name@example.com"
               value={formData.email}
               onChange={handleInputChange}
               required
-              className="focus:ring-[#4338ca] focus:border-[#4338ca]"
+              className="pl-9 focus:ring-indigo-500 focus:border-indigo-500"
             />
           </div>
+        </div>
 
-          {/* Password Input */}
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+        {/* Password Input */}
+        <div className="space-y-2">
+          <Label htmlFor="password" className="text-sm font-medium">Password</Label>
+          <div className="relative">
+            <LockIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
             <Input
               id="password"
               type="password"
-              placeholder="Enter password"
+              placeholder="Enter your password"
               value={formData.password}
               onChange={handleInputChange}
               required
-              className="focus:ring-[#4338ca] focus:border-[#4338ca]"
+              className="pl-9 focus:ring-indigo-500 focus:border-indigo-500"
             />
           </div>
+        </div>
 
-          {/* Remember Me & Forgot Password */}
-          <div className="flex items-center justify-between text-sm">
-            <div className="flex items-center space-x-2">
-              <Checkbox id="rememberMe" checked={formData.rememberMe} onCheckedChange={handleCheckboxChange} />
-              <Label htmlFor="rememberMe">Remember me</Label>
-            </div>
-            <Link href="/auth/forgot-password" className="text-[#4338ca] hover:underline">
-              Forgot password?
-            </Link>
+        {/* Remember Me & Forgot Password */}
+        <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center space-x-2">
+            <Checkbox 
+              id="rememberMe" 
+              checked={formData.rememberMe} 
+              onCheckedChange={handleCheckboxChange}
+              className="border-gray-300 focus:ring-indigo-500" 
+            />
+            <Label htmlFor="rememberMe" className="text-gray-600 dark:text-gray-400">Remember me</Label>
           </div>
-
-          {/* Submit Button */}
-          <motion.div
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            transition={{ duration: 0.2 }}
+          <Link 
+            href="/auth/forgot-password" 
+            className="text-indigo-600 hover:text-indigo-500 hover:underline transition-colors"
           >
-            <Button
-              type="submit"
-              className="w-full bg-[#4338ca] hover:bg-[#3730a3] transition-all focus:ring-4 focus:ring-[#4338ca]/50"
-              disabled={loading}
-            >
-              {loading ? "Logging in..." : "Login"}
-            </Button>
-          </motion.div>
+            Forgot password?
+          </Link>
+        </div>
 
-          {/* Register Link */}
-          <div className="text-center text-sm">
-            <p>
-              Don&apos;t have an account?{" "}
-              <Link href="/auth/register" className="text-[#4338ca] hover:underline">
-                Sign up
-              </Link>
-            </p>
-          </div>
-        </form>
-      </AuthCard>
-    </motion.div>
+        {/* Submit Button */}
+        <motion.div
+          whileHover={{ scale: 1.01 }}
+          whileTap={{ scale: 0.99 }}
+          transition={{ duration: 0.2 }}
+        >
+          <Button
+            type="submit"
+            className="w-full bg-gradient-to-r from-[#4338ca] to-indigo-900 hover:from-indigo-900 hover:to-[#4338ca] text-white shadow-lg shadow-indigo-500/20 transition-all duration-200"
+            disabled={loading}
+          >
+            {loading ? (
+              <div className="flex items-center gap-2">
+                <LoaderCircle className="h-4 w-4 animate-spin" />
+                <span>Signing in...</span>
+              </div>
+            ) : (
+              "Sign in"
+            )}
+          </Button>
+        </motion.div>
+
+        {/* Register Link */}
+        <div className="text-center text-sm">
+          <p className="text-gray-600 dark:text-gray-400">
+            Don&apos;t have an account?{" "}
+            <Link 
+              href="/auth/register" 
+              className="text-indigo-600 hover:text-indigo-500 hover:underline transition-colors font-medium"
+            >
+              Create one now
+            </Link>
+          </p>
+        </div>
+      </form>
+    </AuthCard>
   );
 }

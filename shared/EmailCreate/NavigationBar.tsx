@@ -86,7 +86,7 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
       }
       return result.data.contacts as ContactTypes[]
     } catch (error) {
-      console.error("Error fetching audience:", error)
+      // console.error("Error fetching audience:", error)
       throw error
     }
   }
@@ -135,7 +135,7 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
         user_sending_email_id: selectedSenderEmailId,
       }
 
-      // console.log("Campaign data being sent:", campaignData)
+      // console.log("Campaign data being sent:", campaignData) // Log the data being sent
 
       const response = await fetch("/api/user/campaign/create", {
         method: "POST",
@@ -147,12 +147,12 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
 
       if (!response.ok) {
         const errorData = await response.json()
-        console.error("Error response:", errorData)
+        // console.error("Error response:", errorData) // Log the error response
         throw new Error(errorData.message || "Failed to create campaign")
       }
 
       const responseData = await response.json()
-      // console.log("API Response:", responseData)
+      // console.log("API Response:", responseData) // Log the API response
 
       toast({
         title: "Success",
@@ -162,7 +162,7 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
       resetStore()
       router.push("/dashboard/campaign/create")
     } catch (error) {
-      console.error("Error creating campaign:", error)
+      // console.error("Error creating campaign:", error)
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to create campaign. Please try again.",
