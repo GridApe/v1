@@ -30,6 +30,8 @@ interface RequestOptions {
   retryDelay?: number;
   cache?: boolean;
   cacheDuration?: number;
+  body?: any;
+  headers?: Record<string, string>;
 }
 
 // Cache implementation
@@ -133,7 +135,9 @@ export async function handleApiRequest<T = any>(
     retries = MAX_RETRIES,
     retryDelay = RETRY_DELAY,
     cache = false,
-    cacheDuration = 5 * 60 * 1000 // 5 minutes
+    cacheDuration = 5 * 60 * 1000, // 5 minutes
+    body,
+    headers: customHeaders
   } = options;
 
   let csrfToken: string | undefined;
@@ -160,9 +164,11 @@ export async function handleApiRequest<T = any>(
         'X-Requested-With': 'XMLHttpRequest',
         'X-XSRF-TOKEN': csrfToken,
         Authorization: `Bearer ${access_token}`,
+        ...customHeaders
       };
 
-      const body = method !== 'GET' ? await request.text() : undefined;
+      // Use provided body or get from request
+      const requestBody = body || (method !== 'GET' ? await request.text() : undefined);
 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), timeout);
@@ -170,13 +176,32 @@ export async function handleApiRequest<T = any>(
       const response = await fetch(`${BASE_URL}${endpoint}`, {
         method,
         headers,
-        ...(method !== 'DELETE' && { body }),
+        ...(method !== 'DELETE' && { body: requestBody }),
         credentials: 'include',
         signal: controller.signal
       });
 
       clearTimeout(timeoutId);
 
+      // Check if the response is a file download
+      const contentType = response.headers.get('content-type');
+      if (contentType && (
+        contentType.includes('application/vnd.ms-excel') ||
+        contentType.includes('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') ||
+        contentType.includes('text/csv') ||
+        contentType.includes('application/octet-stream')
+      )) {
+        // For file downloads, return the response directly
+        return new NextResponse(response.body, {
+          status: response.status,
+          headers: {
+            'Content-Type': contentType,
+            'Content-Disposition': response.headers.get('content-disposition') || 'attachment',
+          },
+        });
+      }
+
+      // For JSON responses, parse and handle as before
       const data = await response.json();
 
       if (!response.ok) {

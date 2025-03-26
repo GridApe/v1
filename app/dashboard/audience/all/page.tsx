@@ -54,12 +54,14 @@ import Rocket from '@/shared/Rocket';
 import { ContactTypes } from '@/types/interface';
 import { toast } from '@/hooks/use-toast';
 import { setgroups } from 'process';
+import { Skeleton } from '@/components/ui/skeleton';
 
-const API_BASE_URL = 'https://api.gridape.com/api/v1/user';
+// const API_BASE_URL = 'https://api.gridape.com/api/v1/user';
 
-export default function AudiencePage() {
+const AudiencePage = () => {
   const [groupSuggestions, setGroupSuggestions] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   // const fileInputRef = useRef<HTMLInputElement | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
@@ -297,7 +299,7 @@ export default function AudiencePage() {
   };
 
   const handleBulkUpload = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault(); // Prevent default form submission
+    event.preventDefault();
 
     if (!fileInputRef.current || !fileInputRef.current.files?.length) {
       toast({
@@ -309,40 +311,84 @@ export default function AudiencePage() {
     }
 
     const file = fileInputRef.current.files[0];
+    
+    // Validate file type
+    const allowedTypes = ['application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'text/csv'];
+    if (!allowedTypes.includes(file.type)) {
+      toast({
+        title: 'Invalid File Type',
+        description: 'Please upload an Excel (.xlsx, .xls) or CSV file.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+    if (file.size > maxSize) {
+      toast({
+        title: 'File Too Large',
+        description: 'Please upload a file smaller than 5MB.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     const formData = new FormData();
     formData.append('file', file);
 
-    try {
-      // Debugging: Log form data properly
-      // for (const pair of formData.entries()) {
-      //   console.log(`${pair[0]}:`, pair[1]);
-      // }
+    setIsUploading(true);
+    setUploadProgress(0);
 
+    try {
       const response = await axios.post('/api/user/audience/bulkupload', formData, {
         headers: {
-          'Accept': 'application/json',
           'Content-Type': 'multipart/form-data',
+        },
+        withCredentials: true,
+        onUploadProgress: (progressEvent) => {
+          const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total!);
+          setUploadProgress(progress);
         },
       });
 
       if (response.status === 200) {
         toast({
-          title: 'Contacts Uploaded',
+          title: 'Upload Successful',
           description: 'Your contacts have been successfully uploaded.',
           variant: 'default',
         });
         fetchContacts();
-        formRef.current?.reset(); // Reset form after success
-      } else {
-        throw new Error('Upload failed');
+        formRef.current?.reset();
       }
-    } catch (error) {
-      // console.error(error);
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      
+      let errorMessage = 'Failed to upload contacts. Please try again.';
+      
+      if (error.response?.data) {
+        const apiError = error.response.data;
+        
+        if (apiError.message) {
+          errorMessage = apiError.message;
+        }
+        
+        if (apiError.errors) {
+          const errorDetails = Object.entries(apiError.errors)
+            .map(([field, messages]) => `${(messages as any[]).join(', ')}`)
+            .join(' ');
+          errorMessage += ` ${errorDetails}`;
+        }
+      }
+
       toast({
         title: 'Upload Failed',
-        description: 'Failed to upload contacts. Please try again.',
+        description: errorMessage,
         variant: 'destructive',
       });
+    } finally {
+      setIsUploading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -385,7 +431,8 @@ export default function AudiencePage() {
 
   const handleExport = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/contacts/export`);
+      const response = await fetch(`/api/user/audience/export`);
+      console.log(response);
       if (!response.ok) {
         throw new Error('Failed to export contacts');
       }
@@ -398,6 +445,7 @@ export default function AudiencePage() {
       a.click();
       window.URL.revokeObjectURL(url);
     } catch (error) {
+      console.log(error);
       toast({
         title: 'Export Failed',
         description: 'Failed to export contacts. Please try again.',
@@ -569,25 +617,47 @@ export default function AudiencePage() {
 
   return (
     <motion.div
-      className="p-6 mx-auto max-w-7xl"
-      initial="hidden"
-      animate="visible"
-      variants={containerVariants}
+      className="min-h-screen bg-gradient-to-b from-[#fafaff] to-[#f0f2f8] p-6 md:p-8"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
     >
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-[#0D0F56]">Audience Management</h1>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={handleExport}>
-            <FileUp className="mr-2 h-4 w-4" /> Export
-          </Button>
-          <form ref={formRef} onSubmit={handleBulkUpload}>
-            <div className="flex items-center gap-2">
+      {/* Decorative background elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -left-40 w-80 h-80 bg-blue-100 rounded-full blur-3xl opacity-50"></div>
+        <div className="absolute -bottom-40 -right-40 w-80 h-80 bg-blue-900 rounded-full blur-3xl opacity-50"></div>
+      </div>
+
+      <div className="relative z-10 max-w-7xl mx-auto space-y-8">
+        {/* Header Section */}
+        <motion.div 
+          className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.1 }}
+        >
+          <div>
+            <h1 className="text-3xl font-bold text-[#0D0F56]">Audience Management</h1>
+            <p className="text-gray-600 mt-1">Manage your contacts and audience segments</p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleExport}
+              className="bg-white hover:bg-gray-50"
+            >
+              <FileUp className="mr-2 h-4 w-4" /> Export
+            </Button>
+            <form ref={formRef} onSubmit={handleBulkUpload} className="flex items-center gap-2">
               <label htmlFor="file">
                 <Button
                   variant="outline"
                   size="sm"
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
+                  className="bg-white hover:bg-gray-50"
+                  disabled={isUploading}
                 >
                   <Plus className="mr-2 h-4 w-4" /> Bulk Upload
                 </Button>
@@ -599,476 +669,536 @@ export default function AudiencePage() {
                 name="file"
                 accept=".xlsx,.csv,.xls"
                 className="hidden"
+                disabled={isUploading}
               />
-              <Button type="submit" variant="default" size="sm">
-                <FileUp className="mr-2 h-4 w-4" /> Upload
-              </Button>
-            </div>
-          </form>
-          <Button size="sm" onClick={() => setIsAddContactOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" /> Add Contact
-          </Button>
-        </div>
-      </div>
-
-      {loading ? (
-        <div className="text-center py-10">Loading contacts...</div>
-      ) : contacts && contacts.length > 0 ? (
-        <>
-          <div className="flex justify-between items-center mb-4">
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList>
-                <TabsTrigger value="all-contacts">
-                  <Users className="mr-2 h-4 w-4" /> All Contacts
-                </TabsTrigger>
-                <TabsTrigger value="groups">
-                  <Filter className="mr-2 h-4 w-4" /> Groups
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-            <div className="relative w-64">
-              <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <Input
-                type="text"
-                placeholder="Search contacts..."
-                className="pl-8"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-          </div>
-
-          {selectedContacts.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-blue-50 p-3 rounded-lg flex justify-between items-center mb-4"
-            >
-              <span>{selectedContacts.length} contacts selected</span>
-              <Button variant="destructive" size="sm" onClick={() => setIsDeleteModalOpen(true)}>
-                <Trash2 className="mr-2 h-4 w-4" /> Delete Selected
-              </Button>
-            </motion.div>
-          )}
-
-          <div className="rounded-lg border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[50px]">
-                    <Checkbox
-                      checked={selectedContacts.length === filteredContacts.length}
-                      onCheckedChange={() =>
-                        setSelectedContacts(
-                          selectedContacts.length === filteredContacts.length
-                            ? []
-                            : filteredContacts.map((c) => c.id)
-                        )
-                      }
+              <Button 
+                type="submit" 
+                variant="default" 
+                size="sm"
+                disabled={isUploading || !fileInputRef.current?.files?.length}
+                className="relative"
+              >
+                {isUploading ? (
+                  <>
+                    <div className="absolute inset-0 bg-white/20 rounded-md" />
+                    <div 
+                      className="absolute inset-0 bg-blue-600 rounded-md transition-all duration-300"
+                      style={{ width: `${uploadProgress}%` }}
                     />
-                  </TableHead>
-                  <TableHead>Full Name</TableHead>
-                  <TableHead>Email Address</TableHead>
-                  <TableHead>Phone Number</TableHead>
-                  <TableHead>Group</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredContacts.map((contact) => (
-                  <TableRow key={contact.id}>
-                    <TableCell>
-                      <Checkbox
-                        checked={selectedContacts.includes(contact.id)}
-                        onCheckedChange={() => handleSelectContact(contact.id)}
-                      />
-                    </TableCell>
-                    <TableCell>{`${contact.first_name} ${contact.last_name}`}</TableCell>
-                    <TableCell>{contact.email}</TableCell>
-                    <TableCell>{contact.phone}</TableCell>
-                    <TableCell>
-                      <TableCell>
-                        {contact.groups.length === 0
-                          ? 'Unassigned'
-                          : contact.groups.length === 1
-                            ? typeof contact.groups[0] === 'object'
-                              ? contact.groups[0]?.name || 'Unassigned'
-                              : contact.groups[0]
-                            : `${typeof contact.groups.at(0) === 'object' ? (contact.groups.at(0)?.name ?? 'Unknown') : contact.groups.at(0)} ... ${
-                                typeof contact.groups.at(-1) === 'object'
-                                  ? (contact.groups.at(-1)?.name ?? 'Unknown')
-                                  : contact.groups.at(-1)
-                              }`}
-                      </TableCell>
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                          <DropdownMenuItem
-                            onClick={() =>
-                              handleOpenEdit({
-                                ...contact,
-                                groups: contact.groups.map((g) => g.name), // Convert to string[]
-                              })
-                            }
-                          >
-                            <Edit className="mr-2 h-4 w-4" /> Edit
-                          </DropdownMenuItem>
-
-                          <DropdownMenuItem
-                            className="text-red-600"
-                            onClick={() =>
-                              openDeleteModal({
-                                ...contact,
-                                groups: contact.groups.map((g) => g.name), // Convert to string[]
-                              })
-                            }
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" /> Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </>
-      ) : (
-        <motion.div
-          className="text-center space-y-6"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <div className="bg-white rounded-2xl p-8 mx-auto max-w-md shadow-lg">
-            <Rocket />
-            <h2 className="text-[#0D0F56] text-3xl font-semibold mb-4">Grow your Audience</h2>
-            <p className="text-gray-600 mb-6">
-              Here is where you will add and manage your contacts. Once your first contact is added,
-              you will be able to send your first campaign.
-            </p>
-            <Button
-              size="lg"
-              className="bg-[#2E3192] hover:bg-[#1C1E5F]"
+                    <span className="relative z-10">
+                      {uploadProgress}%
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <FileUp className="mr-2 h-4 w-4" /> Upload
+                  </>
+                )}
+              </Button>
+            </form>
+            <Button 
+              size="sm" 
               onClick={() => setIsAddContactOpen(true)}
+              className="bg-[#2E3192] hover:bg-[#1C1E5F]"
             >
-              Add First Contact
+              <Plus className="mr-2 h-4 w-4" /> Add Contact
             </Button>
           </div>
         </motion.div>
-      )}
 
-      {/* Delete single contact's confirmation dialog */}
-      <Dialog open={deleteSingleModalOpen} onOpenChange={setDeletesingleOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Contact</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete this contact? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDeletesingleOpen(false)}>
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={handleSingleContactDelete}>
-              Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Add Contact Sheet */}
-      <Sheet
-        open={isAddContactOpen}
-        onOpenChange={(isOpen) => {
-          setIsAddContactOpen(isOpen);
-
-          if (!isOpen) {
-            setNewContact({
-              first_name: '',
-              last_name: '',
-              email: '',
-              phone: '',
-              address: '', // Ensure address is included
-              groups: [],
-            });
-            setGroup('');
-            setselectedgroups([]);
-          }
-        }}
-      >
-        <SheetContent className="sm:max-w-[500px]">
-          <SheetHeader>
-            <SheetTitle>Create New Contact</SheetTitle>
-            <SheetDescription>Fill in the contact details carefully.</SheetDescription>
-          </SheetHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="first_name" className="text-right">
-                First Name
-              </Label>
-              <Input
-                id="first_name"
-                value={newContact.first_name}
-                onChange={(e) => setNewContact({ ...newContact, first_name: e.target.value })}
-                className="col-span-3"
-              />
+        {loading ? (
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <Skeleton className="h-10 w-32" />
+              <Skeleton className="h-10 w-64" />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="last_name" className="text-right">
-                Last Name
-              </Label>
-              <Input
-                id="last_name"
-                value={newContact.last_name}
-                onChange={(e) => setNewContact({ ...newContact, last_name: e.target.value })}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="email" className="text-right">
-                Email
-              </Label>
-              <Input
-                id="email"
-                value={newContact.email}
-                onChange={(e) => setNewContact({ ...newContact, email: e.target.value })}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="phone" className="text-right">
-                Phone
-              </Label>
-              <Input
-                id="phone"
-                value={newContact.phone}
-                onChange={(e) => setNewContact({ ...newContact, phone: e.target.value })}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4" style={{ position: 'relative' }}>
-              <Label htmlFor="group" className="text-right">
-                Groups
-              </Label>
-              <input
-                id="group"
-                value={group}
-                onChange={handleInputChange}
-                placeholder="Enter group name..."
-                className="col-span-2 p-2 border border-gray-300 rounded-lg"
-              />
-              <button
-                onClick={() => {
-                  setIsDropdownOpen(false);
-                  handleEnter(group);
-                }}
-                className="ml-2 bg-gray-200 text-gray-700 p-2 rounded-full hover:bg-gray-300 transition w-fit"
-              >
-                <Plus className="w-3 h-3" />
-              </button>
-
-              {/* Suggestions Dropdown */}
-              {isDropdownOpen && (
-                <>
-                  <ul className="absolute left-0 top-full mt-1 w-full bg-white border border-gray-300 shadow-lg rounded-md max-h-40 overflow-y-auto">
-                    {groupSuggestions
-                      .filter((g) => g.toLowerCase().includes(group.toLowerCase()))
-                      .map((g) => (
-                        <li
-                          key={g}
-                          onClick={() => handleSelectGroup(g)}
-                          className="px-3 py-2 cursor-pointer hover:bg-gray-100"
-                        >
-                          {g}
-                        </li>
-                      ))}
-                  </ul>
-                </>
-              )}
-              {/* </div> */}
-
-              {/* Selected Items Display */}
-            </div>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {selectedgroups.map((g, index) => (
-                <span
-                  key={index}
-                  className="bg-blue-100 text-blue-700 px-3 py-1  flex items-center"
-                  style={{ borderRadius: '4px' }}
-                >
-                  {g}
-                  <X
-                    className="ml-2 h-4 w-4 cursor-pointer hover:text-red-500"
-                    onClick={() => handleRemoveGroup(g)}
-                  />
-                </span>
-              ))}
+            <div className="rounded-lg border">
+              <div className="p-4">
+                <Skeleton className="h-8 w-full mb-4" />
+                <Skeleton className="h-8 w-full" />
+              </div>
             </div>
           </div>
-          <SheetFooter>
-            <SheetClose asChild>
-              <Button variant="outline">Cancel</Button>
-            </SheetClose>
-            <Button onClick={handleAddContact}>Add Contact</Button>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
-
-      {/* Edit contact sheet */}
-      <Sheet open={editopen} onOpenChange={seteditopen}>
-        <SheetContent className="sm:max-w-[500px]">
-          <SheetHeader>
-            <SheetTitle>Edit Contact</SheetTitle>
-            <SheetDescription>Update the contact details carefully.</SheetDescription>
-          </SheetHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="first_name" className="text-right">
-                First Name
-              </Label>
-              <Input
-                id="first_name"
-                value={contactToEdit?.first_name}
-                onChange={(e) =>
-                  setContactToEdit({ ...contactToEdit!, first_name: e.target.value })
-                }
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="last_name" className="text-right">
-                Last Name
-              </Label>
-              <Input
-                id="last_name"
-                value={contactToEdit?.last_name}
-                onChange={(e) => setContactToEdit({ ...contactToEdit!, last_name: e.target.value })}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="email" className="text-right">
-                Email
-              </Label>
-              <Input
-                id="email"
-                value={contactToEdit?.email}
-                onChange={(e) => setContactToEdit({ ...contactToEdit!, email: e.target.value })}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="phone" className="text-right">
-                Phone
-              </Label>
-              <Input
-                id="phone"
-                value={contactToEdit?.phone}
-                onChange={(e) => setContactToEdit({ ...contactToEdit!, phone: e.target.value })}
-                className="col-span-3"
-              />
+        ) : contacts && contacts.length > 0 ? (
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="space-y-6"
+          >
+            {/* Tabs and Search */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-4 rounded-xl border shadow-sm">
+              <Tabs value={activeTab} onValueChange={setActiveTab}>
+                <TabsList className="bg-gray-100">
+                  <TabsTrigger value="all-contacts" className="data-[state=active]:bg-white">
+                    <Users className="mr-2 h-4 w-4" /> All Contacts
+                  </TabsTrigger>
+                  <TabsTrigger value="groups" className="data-[state=active]:bg-white">
+                    <Filter className="mr-2 h-4 w-4" /> Groups
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+              <div className="relative w-full md:w-64">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <Input
+                  type="text"
+                  placeholder="Search contacts..."
+                  className="pl-10 bg-gray-50 border-gray-200"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
             </div>
 
-            <div className="grid grid-cols-4 items-center gap-4" style={{ position: 'relative' }}>
-              {/* <div className="relative flex items-center "> */}
-
-              <Label htmlFor="group" className="text-right">
-                Groups
-              </Label>
-              <input
-                id="group"
-                value={group}
-                onChange={handleInputChange}
-                placeholder="Enter group name..."
-                className="col-span-2 p-2 border border-gray-300 rounded-lg"
-              />
-              <button
-                onClick={() => {
-                  setIsDropdownOpen(false);
-                  handleEnterEdit(group);
-                }}
-                className="ml-2 bg-gray-200 text-gray-700 p-2 rounded-full hover:bg-gray-300 transition w-fit"
+            {/* Selected Contacts Bar */}
+            {selectedContacts.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-blue-50 p-4 rounded-xl flex justify-between items-center border border-blue-100"
               >
-                <Plus className="w-3 h-3" />
-              </button>
-
-              {/* Suggestions Dropdown */}
-              {isDropdownOpen && (
-                <>
-                  <ul className="absolute left-0 top-full mt-1 w-full bg-white border border-gray-300 shadow-lg rounded-md max-h-40 overflow-y-auto">
-                    {groupSuggestions
-                      .filter((g) => g.toLowerCase().includes(group.toLowerCase()))
-                      .map((g) => (
-                        <li
-                          key={g}
-                          onClick={() => handleSelectGroupEdit(g)}
-                          className="px-3 py-2 cursor-pointer hover:bg-gray-100"
-                        >
-                          {g}
-                        </li>
-                      ))}
-                  </ul>
-                </>
-              )}
-              {/* </div> */}
-
-              {/* Selected Items Display */}
-            </div>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {contactToEdit?.groups?.map((g, index) => (
-                <span
-                  key={index}
-                  className="bg-blue-100 text-blue-700 px-3 py-1  flex items-center"
-                  style={{ borderRadius: '4px' }}
-                >
-                  {g?.name}
-                  <X
-                    className="ml-2 h-4 w-4 cursor-pointer hover:text-red-500"
-                    onClick={() => handleRemoveGroupEdit(g.name)}
-                  />
+                <span className="text-blue-700 font-medium">
+                  {selectedContacts.length} contact{selectedContacts.length !== 1 ? 's' : ''} selected
                 </span>
-              ))}
+                <Button 
+                  variant="destructive" 
+                  size="sm" 
+                  onClick={() => setIsDeleteModalOpen(true)}
+                  className="bg-red-500 hover:bg-red-600"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" /> Delete Selected
+                </Button>
+              </motion.div>
+            )}
+
+            {/* Contacts Table */}
+            <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-gray-50">
+                    <TableHead className="w-[50px]">
+                      <Checkbox
+                        checked={selectedContacts.length === filteredContacts.length}
+                        onCheckedChange={() =>
+                          setSelectedContacts(
+                            selectedContacts.length === filteredContacts.length
+                              ? []
+                              : filteredContacts.map((c) => c.id)
+                          )
+                        }
+                      />
+                    </TableHead>
+                    <TableHead>Full Name</TableHead>
+                    <TableHead>Email Address</TableHead>
+                    <TableHead>Phone Number</TableHead>
+                    <TableHead>Group</TableHead>
+                    <TableHead className="w-[100px]">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredContacts.map((contact) => (
+                    <TableRow key={contact.id} className="hover:bg-gray-50">
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedContacts.includes(contact.id)}
+                          onCheckedChange={() => handleSelectContact(contact.id)}
+                        />
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {`${contact.first_name} ${contact.last_name}`}
+                      </TableCell>
+                      <TableCell>{contact.email}</TableCell>
+                      <TableCell>{contact.phone}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                          {contact.groups.length === 0 ? (
+                            <span className="text-gray-500 text-sm">Unassigned</span>
+                          ) : contact.groups.length === 1 ? (
+                            <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-sm">
+                              {typeof contact.groups[0] === 'object' 
+                                ? contact.groups[0]?.name 
+                                : contact.groups[0]}
+                            </span>
+                          ) : (
+                            <>
+                              <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-sm">
+                                {typeof contact.groups[0] === 'object' 
+                                  ? contact.groups[0]?.name 
+                                  : contact.groups[0]}
+                              </span>
+                              <span className="text-gray-500 text-sm">
+                                +{contact.groups.length - 1} more
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => handleOpenEdit({
+                                ...contact,
+                                groups: contact.groups.map((g) => g.name),
+                              })}
+                            >
+                              <Edit className="mr-2 h-4 w-4" /> Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="text-red-600"
+                              onClick={() => openDeleteModal({
+                                ...contact,
+                                groups: contact.groups.map((g) => g.name),
+                              })}
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" /> Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
-          </div>
-          <SheetFooter>
-            <SheetClose asChild>
-              <Button variant="outline" onClick={() => seteditopen(false)}>
+          </motion.div>
+        ) : (
+          <motion.div
+            className="text-center space-y-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="bg-white rounded-2xl p-8 mx-auto max-w-md shadow-lg border">
+              <Rocket />
+              <h2 className="text-[#0D0F56] text-3xl font-semibold mb-4">Grow your Audience</h2>
+              <p className="text-gray-600 mb-6">
+                Here is where you will add and manage your contacts. Once your first contact is added,
+                you will be able to send your first campaign.
+              </p>
+              <Button
+                size="lg"
+                className="bg-[#2E3192] hover:bg-[#1C1E5F]"
+                onClick={() => setIsAddContactOpen(true)}
+              >
+                Add First Contact
+              </Button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Delete single contact's confirmation dialog */}
+        <Dialog open={deleteSingleModalOpen} onOpenChange={setDeletesingleOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Contact</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete this contact? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setDeletesingleOpen(false)}>
                 Cancel
               </Button>
-            </SheetClose>
-            <Button onClick={handleUpdateContact}>Update Contact</Button>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Contacts</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete {selectedContacts.length} contact(s)? This action
-              cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={handleDeleteContacts}>
-              Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+              <Button variant="destructive" onClick={handleSingleContactDelete}>
+                Delete
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Add Contact Sheet */}
+        <Sheet
+          open={isAddContactOpen}
+          onOpenChange={(isOpen) => {
+            setIsAddContactOpen(isOpen);
+
+            if (!isOpen) {
+              setNewContact({
+                first_name: '',
+                last_name: '',
+                email: '',
+                phone: '',
+                address: '', // Ensure address is included
+                groups: [],
+              });
+              setGroup('');
+              setselectedgroups([]);
+            }
+          }}
+        >
+          <SheetContent className="sm:max-w-[500px]">
+            <SheetHeader>
+              <SheetTitle>Create New Contact</SheetTitle>
+              <SheetDescription>Fill in the contact details carefully.</SheetDescription>
+            </SheetHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="first_name" className="text-right">
+                  First Name
+                </Label>
+                <Input
+                  id="first_name"
+                  value={newContact.first_name}
+                  onChange={(e) => setNewContact({ ...newContact, first_name: e.target.value })}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="last_name" className="text-right">
+                  Last Name
+                </Label>
+                <Input
+                  id="last_name"
+                  value={newContact.last_name}
+                  onChange={(e) => setNewContact({ ...newContact, last_name: e.target.value })}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="email" className="text-right">
+                  Email
+                </Label>
+                <Input
+                  id="email"
+                  value={newContact.email}
+                  onChange={(e) => setNewContact({ ...newContact, email: e.target.value })}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="phone" className="text-right">
+                  Phone
+                </Label>
+                <Input
+                  id="phone"
+                  value={newContact.phone}
+                  onChange={(e) => setNewContact({ ...newContact, phone: e.target.value })}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4" style={{ position: 'relative' }}>
+                <Label htmlFor="group" className="text-right">
+                  Groups
+                </Label>
+                <input
+                  id="group"
+                  value={group}
+                  onChange={handleInputChange}
+                  placeholder="Enter group name..."
+                  className="col-span-2 p-2 border border-gray-300 rounded-lg"
+                />
+                <button
+                  onClick={() => {
+                    setIsDropdownOpen(false);
+                    handleEnter(group);
+                  }}
+                  className="ml-2 bg-gray-200 text-gray-700 p-2 rounded-full hover:bg-gray-300 transition w-fit"
+                >
+                  <Plus className="w-3 h-3" />
+                </button>
+
+                {/* Suggestions Dropdown */}
+                {isDropdownOpen && (
+                  <>
+                    <ul className="absolute left-0 top-full mt-1 w-full bg-white border border-gray-300 shadow-lg rounded-md max-h-40 overflow-y-auto">
+                      {groupSuggestions
+                        .filter((g) => g.toLowerCase().includes(group.toLowerCase()))
+                        .map((g) => (
+                          <li
+                            key={g}
+                            onClick={() => handleSelectGroup(g)}
+                            className="px-3 py-2 cursor-pointer hover:bg-gray-100"
+                          >
+                            {g}
+                          </li>
+                        ))}
+                    </ul>
+                  </>
+                )}
+                {/* </div> */}
+
+                {/* Selected Items Display */}
+              </div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {selectedgroups.map((g, index) => (
+                  <span
+                    key={index}
+                    className="bg-blue-100 text-blue-700 px-3 py-1  flex items-center"
+                    style={{ borderRadius: '4px' }}
+                  >
+                    {g}
+                    <X
+                      className="ml-2 h-4 w-4 cursor-pointer hover:text-red-500"
+                      onClick={() => handleRemoveGroup(g)}
+                    />
+                  </span>
+                ))}
+              </div>
+            </div>
+            <SheetFooter>
+              <SheetClose asChild>
+                <Button variant="outline">Cancel</Button>
+              </SheetClose>
+              <Button onClick={handleAddContact}>Add Contact</Button>
+            </SheetFooter>
+          </SheetContent>
+        </Sheet>
+
+        {/* Edit contact sheet */}
+        <Sheet open={editopen} onOpenChange={seteditopen}>
+          <SheetContent className="sm:max-w-[500px]">
+            <SheetHeader>
+              <SheetTitle>Edit Contact</SheetTitle>
+              <SheetDescription>Update the contact details carefully.</SheetDescription>
+            </SheetHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="first_name" className="text-right">
+                  First Name
+                </Label>
+                <Input
+                  id="first_name"
+                  value={contactToEdit?.first_name}
+                  onChange={(e) =>
+                    setContactToEdit({ ...contactToEdit!, first_name: e.target.value })
+                  }
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="last_name" className="text-right">
+                  Last Name
+                </Label>
+                <Input
+                  id="last_name"
+                  value={contactToEdit?.last_name}
+                  onChange={(e) => setContactToEdit({ ...contactToEdit!, last_name: e.target.value })}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="email" className="text-right">
+                  Email
+                </Label>
+                <Input
+                  id="email"
+                  value={contactToEdit?.email}
+                  onChange={(e) => setContactToEdit({ ...contactToEdit!, email: e.target.value })}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="phone" className="text-right">
+                  Phone
+                </Label>
+                <Input
+                  id="phone"
+                  value={contactToEdit?.phone}
+                  onChange={(e) => setContactToEdit({ ...contactToEdit!, phone: e.target.value })}
+                  className="col-span-3"
+                />
+              </div>
+
+              <div className="grid grid-cols-4 items-center gap-4" style={{ position: 'relative' }}>
+                {/* <div className="relative flex items-center "> */}
+
+                <Label htmlFor="group" className="text-right">
+                  Groups
+                </Label>
+                <input
+                  id="group"
+                  value={group}
+                  onChange={handleInputChange}
+                  placeholder="Enter group name..."
+                  className="col-span-2 p-2 border border-gray-300 rounded-lg"
+                />
+                <button
+                  onClick={() => {
+                    setIsDropdownOpen(false);
+                    handleEnterEdit(group);
+                  }}
+                  className="ml-2 bg-gray-200 text-gray-700 p-2 rounded-full hover:bg-gray-300 transition w-fit"
+                >
+                  <Plus className="w-3 h-3" />
+                </button>
+
+                {/* Suggestions Dropdown */}
+                {isDropdownOpen && (
+                  <>
+                    <ul className="absolute left-0 top-full mt-1 w-full bg-white border border-gray-300 shadow-lg rounded-md max-h-40 overflow-y-auto">
+                      {groupSuggestions
+                        .filter((g) => g.toLowerCase().includes(group.toLowerCase()))
+                        .map((g) => (
+                          <li
+                            key={g}
+                            onClick={() => handleSelectGroupEdit(g)}
+                            className="px-3 py-2 cursor-pointer hover:bg-gray-100"
+                          >
+                            {g}
+                          </li>
+                        ))}
+                    </ul>
+                  </>
+                )}
+                {/* </div> */}
+
+                {/* Selected Items Display */}
+              </div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {contactToEdit?.groups?.map((g, index) => (
+                  <span
+                    key={index}
+                    className="bg-blue-100 text-blue-700 px-3 py-1  flex items-center"
+                    style={{ borderRadius: '4px' }}
+                  >
+                    {g?.name}
+                    <X
+                      className="ml-2 h-4 w-4 cursor-pointer hover:text-red-500"
+                      onClick={() => handleRemoveGroupEdit(g.name)}
+                    />
+                  </span>
+                ))}
+              </div>
+            </div>
+            <SheetFooter>
+              <SheetClose asChild>
+                <Button variant="outline" onClick={() => seteditopen(false)}>
+                  Cancel
+                </Button>
+              </SheetClose>
+              <Button onClick={handleUpdateContact}>Update Contact</Button>
+            </SheetFooter>
+          </SheetContent>
+        </Sheet>
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Contacts</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete {selectedContacts.length} contact(s)? This action
+                cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsDeleteModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={handleDeleteContacts}>
+                Delete
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
     </motion.div>
   );
-}
+};
+
+export default AudiencePage;
