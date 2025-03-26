@@ -27,7 +27,7 @@ export function AuthCard({ title, description, children }: AuthCardProps): JSX.E
           >
             <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-full blur-xl" />
             <Image 
-              src="/logo.svg" 
+              src="/logo-white.svg" 
               width={64} 
               height={64} 
               alt="Logo" 
