@@ -4,7 +4,7 @@ import type { ContactTypes, TemplateTypes } from "@/types/interface"
 import { useCampaignStore } from "@/store/useCampaignStore"
 
 export interface SenderEmail {
-  id: string // Add this line
+  id: string
   email: string
   is_default: boolean
   name: string | null
@@ -13,7 +13,7 @@ export interface SenderEmail {
 interface EmailComposerState {
   subject: string
   recipients: string[]
-  selectedSenderEmailId: string // Change this line
+  selectedSenderEmailId: string
 }
 
 export const useEmailComposer = () => {
@@ -27,7 +27,7 @@ export const useEmailComposer = () => {
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateTypes | null>(null)
   const [isTemplateDropdownOpen, setIsTemplateDropdownOpen] = useState<boolean>(false)
   const [senderEmails, setSenderEmails] = useState<SenderEmail[]>([])
-  const [selectedSenderEmailId, setSelectedSenderEmailId] = useState<string>("") // Change this line
+  const [selectedSenderEmailId, setSelectedSenderEmailId] = useState<string>("")
 
   useEffect(() => {
     fetchContacts()
@@ -68,7 +68,7 @@ export const useEmailComposer = () => {
         setSenderEmails(result.data.emails)
         const defaultEmail = result.data.emails.find((email: SenderEmail) => email.is_default)
         if (defaultEmail) {
-          setSelectedSenderEmailId(defaultEmail.id) // Change this line
+          setSelectedSenderEmailId(defaultEmail.id)
         }
       }
     } catch (error) {
@@ -123,14 +123,14 @@ export const useEmailComposer = () => {
     selectedTemplate,
     isTemplateDropdownOpen,
     senderEmails,
-    selectedSenderEmailId, // Change this line
+    selectedSenderEmailId,
     setShowPreview,
     setNewRecipient,
     handleInputChange,
     toggleAllContacts,
     setIsDropdownOpen,
     setIsTemplateDropdownOpen,
-    setSelectedSenderEmailId, // Change this line
+    setSelectedSenderEmailId,
   }
 }
 

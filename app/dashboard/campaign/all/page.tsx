@@ -39,6 +39,8 @@ interface Campaign {
   scheduled_at: string | null;
   opened_count: number;
   clicked_count: number;
+  open_rate: number;
+  click_rate: number;
   created_at: string | null;
   user_email_template_id: string;
 }
@@ -85,11 +87,11 @@ export default function CampaignsPage() {
       const response = await fetch(`/api/user/campaign/${campaignToDelete}`, {
         method: 'DELETE',
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to delete campaign');
       }
-      
+
       setCampaigns(campaigns.filter(campaign => campaign.id !== campaignToDelete));
       toast({
         title: 'Success',
@@ -209,8 +211,8 @@ export default function CampaignsPage() {
                       {formatDate(campaign.scheduled_at, 'MMM d, yyyy HH:mm')}
                     </div>
                   </TableCell>
-                  <TableCell>{calculateRate(campaign.opened_count)}%</TableCell>
-                  <TableCell>{calculateRate(campaign.clicked_count)}%</TableCell>
+                  <TableCell>{calculateRate(campaign.open_rate)}%</TableCell>
+                  <TableCell>{calculateRate(campaign.click_rate)}%</TableCell>
                   <TableCell>
                     {formatDate(campaign.created_at, 'MMM d, yyyy')}
                   </TableCell>

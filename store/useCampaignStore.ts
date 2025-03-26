@@ -18,6 +18,7 @@ interface CampaignStore {
   subject: string;
   recipients: string[];
   contacts: Contact[];
+  selectedSenderEmailId: string | null;
   selectedTemplateId: string | null;
   selectedTemplateState: 'selected' | 'empty';
   action: 'select_template' | 'edit_template' | 'change_template' | null;
@@ -26,6 +27,7 @@ interface CampaignStore {
   setSubject: (subject: string) => void;
   setRecipients: (recipients: string[]) => void;
   setContacts: (contacts: Contact[]) => void;
+  setSelectedSenderEmailId: (id: string | null) => void;
   setSelectedTemplateId: (id: string | null) => void;
   setSelectedTemplateState: (state: 'selected' | 'empty') => void;
   setAction: (action: 'select_template' | 'edit_template' | 'change_template' | null) => void;
@@ -48,6 +50,8 @@ export const useCampaignStore = create<CampaignStore>()(
       setSubject: (subject) => set({ subject }),
       setRecipients: (recipients) => set({ recipients }),
       setContacts: (contacts) => set({ contacts }),
+      selectedSenderEmailId: null,
+      setSelectedSenderEmailId: (id) => set({ selectedSenderEmailId: id }),
       setSelectedTemplateId: (id) => set({ selectedTemplateId: id }),
       setSelectedTemplateState: (state) => set({ selectedTemplateState: state }),
       setAction: (action) => set({ action }),

@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 export default function Sidebar() {
   const { analytics, loading, error } = useSidebarAnalytics();
   // console.log(analytics);
+  // console.log(analytics);
   return (
     <motion.div
       className="w-64 relative h-screen flex flex-col overflow-hidden bg-gradient-to-b from-[#2E3192] to-[#1a1c5c]"

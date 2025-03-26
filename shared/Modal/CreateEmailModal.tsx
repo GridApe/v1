@@ -27,7 +27,7 @@ export function CreateEmailModal() {
             title="Manual Crafting"
             description="Create personalized emails with a hands-on approach"
             actionText="Start Writing"
-            path='/dashboard/templates/create'
+            path='/dashboard/templates/all'
           />
           <EmailOption
             icon={BrainIcon}
@@ -64,9 +64,9 @@ function EmailOption({ icon: Icon, title, description, actionText, path }: Email
       <Icon className="w-12 h-12 text-primary" />
       <h3 className="text-lg font-medium">{title}</h3>
       <p className="text-sm text-muted-foreground">{description}</p>
-      <Button 
-        variant="outline" 
-        className="w-full mt-2 group" 
+      <Button
+        variant="outline"
+        className="w-full mt-2 group"
         disabled={title === "AI-Assisted"}
         onClick={handleClick}
       >

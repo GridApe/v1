@@ -135,7 +135,7 @@ export default function EmailTemplateEditor({
           message: 'Invalid template content format' 
         };
       }
-  
+
       const payload = {
         name,
         content,
@@ -151,7 +151,7 @@ export default function EmailTemplateEditor({
         },
         body: JSON.stringify(payload),
       });
-  
+
       if (!response.ok) {
         const errorData = await response.json();
         // console.error('API error response:', errorData);
@@ -160,7 +160,7 @@ export default function EmailTemplateEditor({
           message: errorData.message || 'Failed to save template' 
         };
       }
-  
+
       const data = await response.json();
       setSelectedTemplateState('selected');
       setAction(null);
@@ -247,7 +247,7 @@ export default function EmailTemplateEditor({
       });
       return;
     }
-  
+
     emailEditorRef.current?.editor?.saveDesign((design: any) => {
       // Add debug logging
       // console.log('Raw design data:', design);
@@ -256,7 +256,7 @@ export default function EmailTemplateEditor({
         const designJson = JSON.stringify(design);
         // console.log('Stringified design:', designJson);
         setJsonData(designJson);
-        
+
         emailEditorRef.current?.editor?.exportHtml((data: { html: string }) => {
           // console.log('HTML data:', data);
           

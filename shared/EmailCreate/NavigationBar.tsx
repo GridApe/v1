@@ -17,7 +17,7 @@ interface NavigationBarProps {
 export const NavigationBar: React.FC<NavigationBarProps> = ({
   showPreview,
   setShowPreview,
-  selectedSenderEmailId, // Change this line
+  selectedSenderEmailId,
 }) => {
   const router = useRouter()
   const { toast } = useToast()
@@ -48,6 +48,15 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
       toast({
         title: "No Template Selected",
         description: "Please select an email template for your campaign.",
+        variant: "destructive",
+      })
+      return false
+    }
+
+    if (!selectedSenderEmailId) {
+      toast({
+        title: "No Sender Email",
+        description: "Please select a sender email for your campaign.",
         variant: "destructive",
       })
       return false
@@ -118,10 +127,12 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
       const campaignData = {
         title: subject,
         user_email_template_id: selectedTemplateId,
-        scheduled_at: isScheduled && scheduledDateTime ? scheduledDateTime.toISOString() : undefined,
+        scheduled_at: isScheduled && scheduledDateTime
+          ? scheduledDateTime.toISOString().slice(0, 19).replace('T', ' ')
+          : undefined,
         send_now: !isScheduled,
         contacts: contactIds,
-        user_sending_email_id: selectedSenderEmailId, // Change this line
+        user_sending_email_id: selectedSenderEmailId,
       }
 
       // console.log("Campaign data being sent:", campaignData) // Log the data being sent

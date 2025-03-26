@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 interface UpgradePlanCardProps {
+  planName: string;
   emailSent: number;
   emailLimit: number | string;
   contacts: number;
@@ -15,6 +16,7 @@ interface UpgradePlanCardProps {
 }
 
 export const UpgradePlanCard: React.FC<UpgradePlanCardProps> = ({
+  planName,
   emailSent,
   emailLimit,
   contacts,
@@ -49,12 +51,18 @@ export const UpgradePlanCard: React.FC<UpgradePlanCardProps> = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2 }}
     >
-      <h3 className="font-semibold mb-4 text-left">Your plan</h3>
+      <div>
+        <div className="flex justify-between items-center mb-1">
+          <h3 className="font-semibold mb-4 text-left">Your plan:</h3>
+          <h5 className='mb-2'>{planName}</h5>
+        </div>
+      </div>
+
       <div className="space-y-4">
         <div>
           <div className="flex justify-between items-center mb-2">
             <span className="text-sm text-white/80">Email Sent</span>
-            <span className="text-sm font-medium">{emailSent} of {emailLimitDisplay}</span>
+            <span className="text-sm font-medium">{emailSent} of {emailLimitDisplay} <small>per day</small></span>
           </div>
           <Progress 
             value={emailPercentage} 

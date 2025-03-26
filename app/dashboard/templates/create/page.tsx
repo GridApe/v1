@@ -239,6 +239,7 @@ export default function EmailTemplateEditor() {
     emailEditorRef.current?.editor?.exportHtml((data) => {
       const { html } = data;
       // console.log('HTML Output:', html);
+      // console.log('HTML Output:', html);
       const blob = new Blob([html], { type: 'text/html' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');

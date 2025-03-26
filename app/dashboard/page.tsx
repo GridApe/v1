@@ -116,8 +116,8 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent className="text-white/80">
             <p>{error}</p>
-            <Button 
-              onClick={() => window.location.reload()} 
+            <Button
+              onClick={() => window.location.reload()}
               className="mt-4 w-full bg-red-500 hover:bg-red-600"
             >
               Retry
@@ -206,14 +206,14 @@ const Dashboard = () => {
                 whileTap={{ scale: 0.98 }}
               >
                 <Button
-                  onClick={() => router.push('/')}
-                  className="w-full h-32 justify-start rounded-xl bg-white p-6 border  hover:bg-gray-50 transition-all shadow-sm"
+                  onClick={() => router.push('/dashboard/templates/all')}
+                  className="w-full h2 justify-start rounded-xl bg-white px-6 py-10 border  hover:bg-gray-50 transition-all shadow-sm"
                 >
                   <div className="flex items-center space-x-4">
                     <div className="p-3 rounded-lg bg-blue-500/20">
                       <MailCheck className="text-blue-500" size={24} />
                     </div>
-                    <span className="text-lg font-semibold text-black">Create Email</span>
+                    <span className="text-lg font-semibold text-black">Design Email</span>
                   </div>
                 </Button>
               </motion.div>
@@ -223,7 +223,7 @@ const Dashboard = () => {
               >
                 <Button
                   onClick={() => router.push('/dashboard/campaign/create')}
-                  className="w-full h-32 justify-start rounded-xl bg-white p-6 border  hover:bg-gray-50 transition-all shadow-sm"
+                  className="w-full h2 justify-start rounded-xl bg-white px-6 py-10 border  hover:bg-gray-50 transition-all shadow-sm"
                 >
                   <div className="flex items-center space-x-4">
                     <div className="p-3 rounded-lg bg-purple-500/20">
@@ -244,7 +244,7 @@ const Dashboard = () => {
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.3 }}
         >
-          <h2 className="text-2xl font-semibold">Email Performance</h2>
+          <h2 className="text-2xl font-semibold text-[#1E0E4E]">Email Performance</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {loading ? (
               <>
@@ -297,7 +297,7 @@ const Dashboard = () => {
             whileHover={{ scale: 1.01 }}
             transition={{ duration: 0.2 }}
           >
-            <h2 className="text-2xl font-semibold  mb-6">Audience Performance</h2>
+            <h2 className="text-2xl font-semibold text-[#1E0E4E] mb-6">Audience Performance</h2>
             {loading ? (
               <Skeleton className="h-96 w-full rounded-xl bg-white" />
             ) : data?.audiencePerformance?.length ? (
@@ -338,8 +338,8 @@ const Dashboard = () => {
             transition={{ duration: 0.2 }}
           >
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-semibold">Campaign Performance</h2>
-              <span className="text-sm text-gray-500">{data?.campaignStats.timeFrame}</span>
+              <h2 className="text-2xl text-[#1E0E4E] font-semibold">Campaign Performance</h2>
+              <span className="text-sm text-[#2821b0]">{data?.campaignStats.timeFrame}</span>
             </div>
             {loading ? (
               <Skeleton className="h-96 w-full rounded-xl bg-white/10" />
