@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Cookies from 'js-cookie';
 import axios from 'axios';
 import { X } from 'lucide-react';
@@ -59,6 +59,11 @@ const API_BASE_URL = 'https://api.gridape.com/api/v1/user';
 
 export default function AudiencePage() {
   const [groupSuggestions, setGroupSuggestions] = useState<string[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+
+  // const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [activeTab, setActiveTab] = useState('all-contacts');
   const [isAddContactOpen, setIsAddContactOpen] = useState(false);
@@ -88,6 +93,12 @@ export default function AudiencePage() {
   const filteredGroups = groupSuggestions.filter((g) =>
     g.toLowerCase().includes(group.toLowerCase())
   );
+
+  const triggerFileInput = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click(); // Trigger the file input
+    }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -285,32 +296,53 @@ export default function AudiencePage() {
     }
   };
 
-  const handleBulkUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      try {
-        const formData = new FormData();
-        formData.append('file', file);
-        const response = await fetch(`${API_BASE_URL}/contacts/bulk-upload`, {
-          method: 'POST',
-          body: formData,
-        });
-        if (!response.ok) {
-          throw new Error('Failed to upload contacts');
-        }
+  const handleBulkUpload = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault(); // Prevent default form submission
+
+    if (!fileInputRef.current || !fileInputRef.current.files?.length) {
+      toast({
+        title: 'Upload Failed',
+        description: 'Please select a file to upload.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const file = fileInputRef.current.files[0];
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      // Debugging: Log form data properly
+      // for (const pair of formData.entries()) {
+      //   console.log(`${pair[0]}:`, pair[1]);
+      // }
+
+      const response = await axios.post('/api/user/audience/bulkupload', formData, {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      if (response.status === 200) {
         toast({
           title: 'Contacts Uploaded',
           description: 'Your contacts have been successfully uploaded.',
           variant: 'default',
         });
         fetchContacts();
-      } catch (error) {
-        toast({
-          title: 'Upload Failed',
-          description: 'Failed to upload contacts. Please try again.',
-          variant: 'destructive',
-        });
+        formRef.current?.reset(); // Reset form after success
+      } else {
+        throw new Error('Upload failed');
       }
+    } catch (error) {
+      // console.error(error);
+      toast({
+        title: 'Upload Failed',
+        description: 'Failed to upload contacts. Please try again.',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -443,7 +475,7 @@ export default function AudiencePage() {
         fetchContacts();
         setContactToEdit(null);
       } catch (error: any) {
-        console.error('Update Contact Error:', error);
+        // console.error('Update Contact Error:', error);
 
         let errorMessage = 'Failed to update contact. Please try again.';
 
@@ -548,18 +580,31 @@ export default function AudiencePage() {
           <Button variant="outline" size="sm" onClick={handleExport}>
             <FileUp className="mr-2 h-4 w-4" /> Export
           </Button>
-          <label htmlFor="bulk-upload">
-            <Button variant="outline" size="sm">
-              <Plus className="mr-2 h-4 w-4" /> Bulk Upload
-            </Button>
-          </label>
-          <input
-            id="bulk-upload"
-            type="file"
-            accept=".xlsx"
-            className="hidden"
-            onChange={handleBulkUpload}
-          />
+          <form ref={formRef} onSubmit={handleBulkUpload}>
+            <div className="flex items-center gap-2">
+              <label htmlFor="file">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Plus className="mr-2 h-4 w-4" /> Bulk Upload
+                </Button>
+              </label>
+              <input
+                ref={fileInputRef}
+                id="file"
+                type="file"
+                name="file"
+                accept=".xlsx,.csv,.xls"
+                className="hidden"
+              />
+              <Button type="submit" variant="default" size="sm">
+                <FileUp className="mr-2 h-4 w-4" /> Upload
+              </Button>
+            </div>
+          </form>
           <Button size="sm" onClick={() => setIsAddContactOpen(true)}>
             <Plus className="mr-2 h-4 w-4" /> Add Contact
           </Button>

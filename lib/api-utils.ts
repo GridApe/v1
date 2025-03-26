@@ -2,13 +2,92 @@ import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
+// Constants
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.gridape.com/api/v1';
-const CSRF_COOKIE_URL =
-  process.env.NEXT_PUBLIC_CSRF_COOKIE_URL || `${BASE_URL.split('/api/v1')[0]}/sanctum/csrf-cookie`;
+const CSRF_COOKIE_URL = "https://api.gridape.com/sanctum/csrf-cookie";
+const REQUEST_TIMEOUT = 30000; // 30 seconds
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 1000; // 1 second
 
-async function ensureCsrfToken() {
+// Types
+interface ApiResponse<T = any> {
+  status: boolean;
+  message: string;
+  data?: T;
+  errors?: Record<string, string[]>;
+}
+
+interface ApiError {
+  message: string;
+  errors?: Record<string, string[]>;
+  status?: number;
+}
+
+interface RequestOptions {
+  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+  timeout?: number;
+  retries?: number;
+  retryDelay?: number;
+  cache?: boolean;
+  cacheDuration?: number;
+}
+
+// Cache implementation
+const cache = new Map<string, { data: any; timestamp: number }>();
+
+function getCachedData(key: string): any | null {
+  const cached = cache.get(key);
+  if (!cached) return null;
+  
+  const now = Date.now();
+  if (now - cached.timestamp > 5 * 60 * 1000) { // 5 minutes default cache
+    cache.delete(key);
+    return null;
+  }
+  
+  return cached.data;
+}
+
+function setCachedData(key: string, data: any): void {
+  cache.set(key, { data, timestamp: Date.now() });
+}
+
+// Utility functions
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function isNetworkError(error: any): boolean {
+  return error instanceof TypeError && error.message === 'Failed to fetch';
+}
+
+function parseError(error: any): ApiError {
+  if (error instanceof Error) {
+    try {
+      const parsedError = JSON.parse(error.message);
+      if (typeof parsedError === 'object') {
+        return {
+          message: parsedError.message || 'Validation failed.',
+          errors: parsedError.errors || null,
+          status: parsedError.status || 500
+        };
+      }
+    } catch {
+      return {
+        message: error.message,
+        status: 500
+      };
+    }
+  }
+  return {
+    message: 'An unexpected error occurred',
+    status: 500
+  };
+}
+
+// CSRF token handling
+async function ensureCsrfToken(): Promise<string> {
   try {
-    // console.log('Fetching CSRF token from:', CSRF_COOKIE_URL);
     const response = await fetch(CSRF_COOKIE_URL, {
       method: 'GET',
       credentials: 'include',
@@ -25,83 +104,136 @@ async function ensureCsrfToken() {
     const cookieHeader = response.headers.get('set-cookie');
     const csrfTokenMatch = cookieHeader?.match(/XSRF-TOKEN=([^;]+)/);
     const csrfToken = csrfTokenMatch ? csrfTokenMatch[1] : '';
-    // console.log('Fetched CSRF token:', csrfToken);
+    
+    if (!csrfToken) {
+      throw new Error('CSRF token not found in response');
+    }
+    
     return csrfToken;
   } catch (error) {
-    // console.error('Error fetching CSRF token:', error);
+    console.error('Error fetching CSRF token:', error);
     throw new Error('Failed to fetch CSRF token');
   }
 }
 
-export async function handleApiRequest(
+// Main API request handler
+export async function handleApiRequest<T = any>(
   request: NextRequest,
   endpoint: string,
-  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' = 'GET'
-) {
-  let csrfToken;
-  try {
-    csrfToken = await ensureCsrfToken();
+  methodOrOptions: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | RequestOptions = 'GET'
+): Promise<NextResponse<ApiResponse<T>>> {
+  // Handle both old and new usage patterns
+  const options: RequestOptions = typeof methodOrOptions === 'string' 
+    ? { method: methodOrOptions }
+    : methodOrOptions;
 
-    const cookieStore = cookies();
-    const access_token = cookieStore.get('token')?.value;
+  const {
+    method = 'GET',
+    timeout = REQUEST_TIMEOUT,
+    retries = MAX_RETRIES,
+    retryDelay = RETRY_DELAY,
+    cache = false,
+    cacheDuration = 5 * 60 * 1000 // 5 minutes
+  } = options;
 
-    const headers: HeadersInit = {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-      'X-Requested-With': 'XMLHttpRequest',
-      'X-XSRF-TOKEN': csrfToken || '',
-      Authorization: `Bearer ${access_token}`,
-    };
+  let csrfToken: string | undefined;
+  let lastError: Error | null = null;
 
-    const body = method !== 'GET' ? await request.text() : undefined;
+  // Check cache for GET requests
+  if (method === 'GET' && cache) {
+    const cacheKey = `${endpoint}-${request.url}`;
+    const cachedData = getCachedData(cacheKey);
+    if (cachedData) {
+      return NextResponse.json(cachedData);
+    }
+  }
 
-    // console.log(`Sending ${method} request to: ${BASE_URL}${endpoint}`);
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      csrfToken = await ensureCsrfToken();
+      const cookieStore = cookies();
+      const access_token = cookieStore.get('token')?.value;
 
-    const response = await fetch(`${BASE_URL}${endpoint}`, {
-      method,
-      headers,
-      ...(method !== 'DELETE' && { body }), // Exclude body if method is DELETE
-      credentials: 'include',
-    });
+      const headers: HeadersInit = {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-XSRF-TOKEN': csrfToken,
+        Authorization: `Bearer ${access_token}`,
+      };
 
-    const data = await response.json();
+      const body = method !== 'GET' ? await request.text() : undefined;
 
-    if (!response.ok) {
-      // console.error('Error response from API:', data);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-      throw new Error(
-        typeof data === 'object' ? JSON.stringify(data) : data || 'An error occurred'
+      const response = await fetch(`${BASE_URL}${endpoint}`, {
+        method,
+        headers,
+        ...(method !== 'DELETE' && { body }),
+        credentials: 'include',
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(JSON.stringify(data));
+      }
+
+      // Cache successful GET responses
+      if (method === 'GET' && cache) {
+        const cacheKey = `${endpoint}-${request.url}`;
+        setCachedData(cacheKey, data);
+      }
+
+      return NextResponse.json(data);
+    } catch (error: any) {
+      lastError = error;
+      
+      // Handle network errors and retry
+      if (isNetworkError(error) && attempt < retries) {
+        await sleep(retryDelay * (attempt + 1)); // Exponential backoff
+        continue;
+      }
+
+      // Handle timeout errors
+      if (error.name === 'AbortError') {
+        return NextResponse.json(
+          {
+            status: false,
+            message: 'Request timeout',
+            errors: { timeout: ['The request took too long to complete'] }
+          },
+          { status: 408 }
+        );
+      }
+
+      // Parse and return other errors
+      const parsedError = parseError(error);
+      return NextResponse.json(
+        {
+          status: false,
+          message: parsedError.message,
+          errors: parsedError.errors,
+          csrfToken
+        },
+        { status: parsedError.status || 500 }
       );
     }
-
-    // console.log('API response data:', data);
-    return NextResponse.json(data);
-  } catch (error: any) {
-    // console.error('API Error:', error);
-
-    let errorMessage = 'An unexpected error occurred';
-    let errorDetails = null;
-
-    if (error instanceof Error) {
-      try {
-        const parsedError = JSON.parse(error.message);
-        if (typeof parsedError === 'object') {
-          errorMessage = parsedError.message || 'Validation failed.';
-          errorDetails = parsedError.errors || null;
-        }
-      } catch {
-        errorMessage = error.message;
-      }
-    }
-
-    return NextResponse.json(
-      {
-        status: false,
-        message: errorMessage,
-        errors: errorDetails,
-        csrfToken: csrfToken,
-      },
-      { status: 500 }
-    );
   }
+
+  // If all retries failed, return the last error
+  const parsedError = parseError(lastError);
+  return NextResponse.json(
+    {
+      status: false,
+      message: parsedError.message,
+      errors: parsedError.errors,
+      csrfToken
+    },
+    { status: parsedError.status || 500 }
+  );
 }

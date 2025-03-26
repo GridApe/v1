@@ -1,6 +1,7 @@
 import { Progress } from '@/components/ui/progress';
 import React from 'react';
 import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
 
 interface UpgradePlanCardProps {
   emailSent: number;
@@ -43,35 +44,50 @@ export const UpgradePlanCard: React.FC<UpgradePlanCardProps> = ({
 
   return (
     <motion.div
-      className="border-[0.5px] border-[#dddddd] text-white p-4 rounded-lg mb-4"
-      initial={{ opacity: 0, y: 20 }}
+      className="bg-white/5 backdrop-blur-sm text-white p-4 rounded-xl mb-4 shadow-lg border border-white/10"
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.3 }}
+      transition={{ delay: 0.2 }}
     >
-      <h3 className="font-semibold mb-2 text-left">Your plan</h3>
+      <h3 className="font-semibold mb-4 text-left">Your plan</h3>
       <div className="space-y-4">
         <div>
-          <div className="flex justify-between items-center mb-1">
-            <span>Email Sent</span>
-            <span>{emailSent} of {emailLimitDisplay}</span>
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-sm text-white/80">Email Sent</span>
+            <span className="text-sm font-medium">{emailSent} of {emailLimitDisplay}</span>
           </div>
-          <Progress value={emailPercentage} className="h-2 bg-white" />
+          <Progress 
+            value={emailPercentage} 
+            className={cn(
+              "h-1.5",
+              emailPercentage > 90 ? "bg-red-500/20" : "bg-white/20"
+            )}
+          />
         </div>
         <div>
-          <div className="flex justify-between items-center mb-1">
-            <span>Contact Limit</span>
-            <span>{contacts} of {contactLimitDisplay}</span>
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-sm text-white/80">Contact Limit</span>
+            <span className="text-sm font-medium">{contacts} of {contactLimitDisplay}</span>
           </div>
-          <Progress value={contactPercentage} className="h-2 bg-white" />
+          <Progress 
+            value={contactPercentage} 
+            className={cn(
+              "h-1.5",
+              contactPercentage > 90 ? "bg-red-500/20" : "bg-white/20"
+            )}
+          />
         </div>
         <div>
-          <div className="flex justify-between items-center mb-1">
-            <span>Campaign Limit</span>
-            <span>{campaigns} of {campaignLimitDisplay}</span>
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-sm text-white/80">Campaign Limit</span>
+            <span className="text-sm font-medium">{campaigns} of {campaignLimitDisplay}</span>
           </div>
           <Progress
             value={campaignLimit === 'Unlimited' ? 50 : campaignPercentage}
-            className="h-2 bg-white"
+            className={cn(
+              "h-1.5",
+              campaignPercentage > 90 ? "bg-red-500/20" : "bg-white/20"
+            )}
           />
         </div>
       </div>

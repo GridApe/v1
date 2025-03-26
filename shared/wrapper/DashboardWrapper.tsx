@@ -61,7 +61,7 @@ export default function DashboardWrapper({ children }: { children: React.ReactNo
           }}
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
         >
-          <div className=" mx-auto min-h-svh p-6 bg-[#ffffff] w-full rounded-s-3xl">
+          <div className=" mx-auto min-h-svh p-0 bg-[#ffffff] w-full rounded-s-3xl">
             <Button
               variant="outline"
               size="icon"

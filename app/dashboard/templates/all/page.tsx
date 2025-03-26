@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Eye, Edit, Search, Filter } from 'lucide-react';
+import { Plus, Eye, Edit, Search, Filter, Grid, List, Layout, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
 import {
@@ -16,6 +16,9 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { TemplateTypes } from '@/types/interface';
 import { useRouter } from 'next/navigation';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function TemplatesPage() {
   const router = useRouter();
@@ -27,7 +30,7 @@ export default function TemplatesPage() {
       category: 'custom',
       content: JSON.stringify({
         body: {
-          rows: []  // Empty rows for a blank template
+          rows: []
         }
       })
     }
@@ -37,6 +40,7 @@ export default function TemplatesPage() {
   const [previewTemplate, setPreviewTemplate] = useState<TemplateTypes | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const iframeRefs = useRef<{ [key: string]: HTMLIFrameElement | null }>({});
 
   useEffect(() => {
@@ -49,12 +53,11 @@ export default function TemplatesPage() {
         }
         const responseData = await response.json();
         setTemplates(prev => [
-          prev[0], // Keep the blank template
+          prev[0],
           ...(responseData.data.templates || [])
         ]);
       } catch (err) {
         setError((err as Error).message);
-        // console.error('Error fetching templates:', err);
       } finally {
         setLoading(false);
       }
@@ -62,7 +65,6 @@ export default function TemplatesPage() {
     fetchTemplates();
   }, []);
 
-  // Responsive iframe logic
   useEffect(() => {
     Object.values(iframeRefs.current).forEach((iframe) => {
       if (iframe) {
@@ -75,17 +77,34 @@ export default function TemplatesPage() {
     });
   }, [templates, searchQuery, categoryFilter]);
 
-  // Filtering logic
   const filteredTemplates = templates.filter(
     (template) =>
       (searchQuery === '' || template.name.toLowerCase().includes(searchQuery.toLowerCase())) &&
       (categoryFilter === 'all' || template.category === categoryFilter)
   );
 
+  const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const item = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0 }
+  };
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-        <h1 className="text-3xl font-bold tracking-tight">Templates Library</h1>
+        <div className="space-y-1">
+          <h1 className="text-3xl font-bold tracking-tight">Templates Library</h1>
+          <p className="text-muted-foreground">Create and manage your email templates</p>
+        </div>
         <Button
           className="w-full md:w-auto flex items-center space-x-2"
           onClick={() => { router.push('/dashboard/templates/create') }}
@@ -121,77 +140,183 @@ export default function TemplatesPage() {
             <SelectItem value="category2">Category 2</SelectItem>
           </SelectContent>
         </Select>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant={viewMode === 'grid' ? 'default' : 'outline'}
+            size="icon"
+            onClick={() => setViewMode('grid')}
+          >
+            <Grid size={16} />
+          </Button>
+          <Button
+            variant={viewMode === 'list' ? 'default' : 'outline'}
+            size="icon"
+            onClick={() => setViewMode('list')}
+          >
+            <List size={16} />
+          </Button>
+        </div>
       </div>
 
       {loading ? (
-        <div className="text-center py-12">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ repeat: Infinity, duration: 1 }}
-            className="mx-auto w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full"
-          />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[...Array(6)].map((_, i) => (
+            <Skeleton key={i} className="h-[400px] w-full rounded-xl" />
+          ))}
         </div>
       ) : error ? (
-        <div className="bg-red-50 border border-red-200 p-4 rounded text-red-700">
-          Error: {error}
-        </div>
+        <Card className="bg-red-50 border-red-200">
+          <CardContent className="p-6">
+            <div className="flex items-center space-x-4">
+              <div className="p-2 rounded-full bg-red-100">
+                <AlertCircle className="text-red-500" size={24} />
+              </div>
+              <div>
+                <h3 className="font-semibold text-red-700">Error Loading Templates</h3>
+                <p className="text-red-600">{error}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       ) : filteredTemplates.length > 0 ? (
-        <motion.div
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
-        >
-          {filteredTemplates.map((template) => (
-            <Card key={template.id} className="hover:shadow-xl transition-all duration-300 group">
-              <CardHeader>
-                <h2 className="text-lg font-semibold truncate">{template.name}</h2>
-              </CardHeader>
-              <CardContent className="p-4">
-                <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
-                  <iframe
-                    ref={(el) => {
-                      if (el) iframeRefs.current[template.id] = el;
-                    }}
-                    srcDoc={template.html}
-                    title={`Template Preview - ${template.name}`}
-                    className="w-full h-full object-cover"
-                    sandbox="allow-same-origin allow-scripts allow-popups"
-                  />
-                </div>
-              </CardContent>
-              <CardFooter className="flex justify-between">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center space-x-2"
-                  onClick={() => {
-                    if (template.id === 'blank') {
-                      router.push('/dashboard/templates/create');
-                    } else {
-                      router.push(`/dashboard/templates/edit/${template.id}`);
-                    }
-                  }}
-                >
-                  <Edit size={14} />
-                  <span>Edit</span>
-                </Button>
-                <Button
-                  size="sm"
-                  className="flex items-center space-x-2"
-                  onClick={() => setPreviewTemplate(template)}
-                >
-                  <Eye size={14} />
-                  <span>Preview</span>
-                </Button>
-              </CardFooter>
-            </Card>
-          ))}
-        </motion.div>
+        <AnimatePresence mode="wait">
+          {viewMode === 'grid' ? (
+            <motion.div
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+              variants={container}
+              initial="hidden"
+              animate="show"
+            >
+              {filteredTemplates.map((template) => (
+                <motion.div key={template.id} variants={item}>
+                  <Card className="group hover:shadow-lg transition-all duration-300">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <h2 className="text-lg font-semibold truncate">{template.name}</h2>
+                      <Badge variant="outline" className="capitalize">
+                        {template.category}
+                      </Badge>
+                    </CardHeader>
+                    <CardContent className="p-4">
+                      <div className="aspect-video bg-gray-50 rounded-lg overflow-hidden border">
+                        <iframe
+                          ref={(el) => {
+                            if (el) iframeRefs.current[template.id] = el;
+                          }}
+                          srcDoc={template.html}
+                          title={`Template Preview - ${template.name}`}
+                          className="w-full h-full object-cover"
+                          sandbox="allow-same-origin allow-scripts allow-popups"
+                        />
+                      </div>
+                    </CardContent>
+                    <CardFooter className="flex justify-between">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center space-x-2"
+                        onClick={() => {
+                          if (template.id === 'blank') {
+                            router.push('/dashboard/templates/create');
+                          } else {
+                            router.push(`/dashboard/templates/edit/${template.id}`);
+                          }
+                        }}
+                      >
+                        <Edit size={14} />
+                        <span>Edit</span>
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="flex items-center space-x-2"
+                        onClick={() => setPreviewTemplate(template)}
+                      >
+                        <Eye size={14} />
+                        <span>Preview</span>
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                </motion.div>
+              ))}
+            </motion.div>
+          ) : (
+            <motion.div
+              className="space-y-4"
+              variants={container}
+              initial="hidden"
+              animate="show"
+            >
+              {filteredTemplates.map((template) => (
+                <motion.div key={template.id} variants={item}>
+                  <Card className="group hover:shadow-lg transition-all duration-300">
+                    <CardContent className="p-6">
+                      <div className="flex items-start space-x-6">
+                        <div className="w-48 aspect-video bg-gray-50 rounded-lg overflow-hidden border">
+                          <iframe
+                            ref={(el) => {
+                              if (el) iframeRefs.current[template.id] = el;
+                            }}
+                            srcDoc={template.html}
+                            title={`Template Preview - ${template.name}`}
+                            className="w-full h-full object-cover"
+                            sandbox="allow-same-origin allow-scripts allow-popups"
+                          />
+                        </div>
+                        <div className="flex-1 space-y-4">
+                          <div className="flex items-center justify-between">
+                            <h2 className="text-lg font-semibold">{template.name}</h2>
+                            <Badge variant="outline" className="capitalize">
+                              {template.category}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center space-x-4">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="flex items-center space-x-2"
+                              onClick={() => {
+                                if (template.id === 'blank') {
+                                  router.push('/dashboard/templates/create');
+                                } else {
+                                  router.push(`/dashboard/templates/edit/${template.id}`);
+                                }
+                              }}
+                            >
+                              <Edit size={14} />
+                              <span>Edit</span>
+                            </Button>
+                            <Button
+                              size="sm"
+                              className="flex items-center space-x-2"
+                              onClick={() => setPreviewTemplate(template)}
+                            >
+                              <Eye size={14} />
+                              <span>Preview</span>
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
       ) : (
-        <div className="text-center py-12 bg-gray-50 rounded-lg">
-          <p className="text-muted-foreground">No templates found matching your search.</p>
-        </div>
+        <Card className="bg-gray-50">
+          <CardContent className="p-12 text-center">
+            <div className="mx-auto w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+              <Layout className="text-gray-400" size={24} />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">No Templates Found</h3>
+            <p className="text-muted-foreground mb-4">
+              No templates match your search criteria. Try adjusting your filters or create a new template.
+            </p>
+            <Button onClick={() => router.push('/dashboard/templates/create')}>
+              Create New Template
+            </Button>
+          </CardContent>
+        </Card>
       )}
 
       <AnimatePresence>
@@ -199,7 +324,7 @@ export default function TemplatesPage() {
           <Dialog open onOpenChange={() => setPreviewTemplate(null)}>
             <DialogContent className="max-w-4xl">
               <DialogTitle>{previewTemplate.name}</DialogTitle>
-              <div className="w-full aspect-video border border-gray-300 rounded overflow-hidden">
+              <div className="w-full aspect-video border rounded-lg overflow-hidden bg-gray-50">
                 <iframe
                   srcDoc={previewTemplate.html}
                   title={`Preview - ${previewTemplate.name}`}

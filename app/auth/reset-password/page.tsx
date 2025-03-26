@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -8,46 +8,29 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { AuthCard } from '../auth-card';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
+import { LoaderCircle, LockIcon } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
 
 export default function ResetPasswordPage() {
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
-  const router = useRouter();
+  const auth = useAuth();
   const searchParams = useSearchParams();
-
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    email: '',
-    token: '',
     password: '',
-    confirmPassword: '',
+    password_confirmation: '',
   });
+  const token = searchParams.get('token') || '';
 
-  useEffect(() => {
-    const token = searchParams.get('token');
-    const email = searchParams.get('email');
-
-    if (!token || !email) {
-      toast({
-        variant: 'destructive',
-        title: 'Invalid Access',
-        description: 'Missing reset token or email. Please request a new password reset link.',
-      });
-      router.push('/auth/forgot-password');
-      return;
-    }
-
-    setFormData(prev => ({
-      ...prev,
-      token,
-      email,
-    }));
-  }, [searchParams, router, toast]);
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setFormData((prev) => ({ ...prev, [id]: value }));
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (formData.password !== formData.confirmPassword) {
+    if (formData.password !== formData.password_confirmation) {
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -57,34 +40,12 @@ export default function ResetPasswordPage() {
     }
 
     setLoading(true);
-
     try {
-      const response = await fetch('/api/auth/password/reset-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          token: formData.token,
-          password: formData.password,
-          password_confirmation: formData.confirmPassword,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to reset password');
-      }
-
+      await auth.resetPassword(token, formData.password);
       toast({
         title: 'Success',
-        description: data.message || 'Your password has been reset successfully',
+        description: 'Your password has been reset successfully.',
       });
-      router.push('/auth/login');
-
     } catch (error) {
       toast({
         variant: 'destructive',
@@ -97,56 +58,77 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.3 }}
+    <AuthCard 
+      title="Reset Password" 
+      description="Enter your new password below"
     >
-      <AuthCard title="Reset Password">
-        <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="password">New Password</Label>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* New Password Input */}
+        <div className="space-y-2">
+          <Label htmlFor="password" className="text-sm font-medium">New Password</Label>
+          <div className="relative">
+            <LockIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
             <Input
               id="password"
               type="password"
-              placeholder="Enter new password"
+              placeholder="Enter your new password"
               value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              onChange={handleInputChange}
               required
+              className="pl-9 focus:ring-indigo-500 focus:border-indigo-500"
             />
           </div>
+        </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirm Password</Label>
+        {/* Confirm Password Input */}
+        <div className="space-y-2">
+          <Label htmlFor="password_confirmation" className="text-sm font-medium">Confirm Password</Label>
+          <div className="relative">
+            <LockIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
             <Input
-              id="confirmPassword"
+              id="password_confirmation"
               type="password"
-              placeholder="Confirm new password"
-              value={formData.confirmPassword}
-              onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+              placeholder="Confirm your new password"
+              value={formData.password_confirmation}
+              onChange={handleInputChange}
               required
+              className="pl-9 focus:ring-indigo-500 focus:border-indigo-500"
             />
           </div>
+        </div>
 
+        {/* Submit Button */}
+        <motion.div
+          whileHover={{ scale: 1.01 }}
+          whileTap={{ scale: 0.99 }}
+          transition={{ duration: 0.2 }}
+        >
           <Button
             type="submit"
-            className="w-full bg-[#4338ca] hover:bg-[#3730a3]"
+            className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg shadow-indigo-500/20 transition-all duration-200"
             disabled={loading}
           >
-            {loading ? 'Please wait...' : 'Reset Password'}
+            {loading ? (
+              <div className="flex items-center gap-2">
+                <LoaderCircle className="h-4 w-4 animate-spin" />
+                <span>Resetting password...</span>
+              </div>
+            ) : (
+              'Reset Password'
+            )}
           </Button>
+        </motion.div>
 
-          <div className="text-center text-sm">
-            <p>
-              Remember your password?{' '}
-              <Link href="/auth/login" className="text-[#4338ca] hover:underline">
-                Login
-              </Link>
-            </p>
-          </div>
-        </form>
-      </AuthCard>
-    </motion.div>
+        {/* Back to Login */}
+        <div className="text-center text-sm">
+          <Link 
+            href="/auth/login" 
+            className="text-indigo-600 hover:text-indigo-500 hover:underline transition-colors"
+          >
+            Back to login
+          </Link>
+        </div>
+      </form>
+    </AuthCard>
   );
 }

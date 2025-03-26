@@ -3,7 +3,7 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '../store/authStore';
 
 export function useAuth() {
-  const { user, loading, login, logout, register, fetchCurrentUser, verifyEmail, resendOtp } =
+  const { user, loading, login, logout, register, fetchCurrentUser, verifyEmail, resendOtp, forgotPassword, resetPassword } =
     useAuthStore();
   const router = useRouter();
 
@@ -53,6 +53,16 @@ export function useAuth() {
     router.push('/dashboard'); // Redirect to the dashboard after registration
   };
 
+  const handleForgotPassword = async (email: string) => {
+    await forgotPassword(email);
+    router.push('/auth/otp');
+  };
+
+  const handleResetPassword = async (token: string, password: string) => {
+    await resetPassword(token, password);
+    router.push('/auth/login');
+  };
+
   return {
     user,
     loading,
@@ -61,5 +71,7 @@ export function useAuth() {
     register: handleRegister,
     verify,
     resend,
+    forgotPassword: handleForgotPassword,
+    resetPassword: handleResetPassword,
   };
 }

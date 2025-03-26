@@ -17,6 +17,8 @@ import {
 import React from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { cn } from '@/lib/utils';
 
 interface SidebarItem {
   name: string;
@@ -28,6 +30,7 @@ interface SidebarItem {
 }
 
 export const SidebarItems: React.FC = () => {
+  const pathname = usePathname();
   const items: SidebarItem[] = [
     { name: 'Dashboard', icon: House, path: '/dashboard/' },
     { name: 'Analytics', icon: BarChartIcon, locked: true, path: '/dashboard/' },
@@ -58,68 +61,95 @@ export const SidebarItems: React.FC = () => {
     { name: 'Pricing', icon: DollarSign, path: '/dashboard/pricing' },
   ];
 
+  const isActive = (path: string) => pathname === path;
+  const isSubItemActive = (subitems: { path: string }[]) => 
+    subitems.some(subitem => pathname === subitem.path);
+
   return (
     <nav className="space-y-1">
       {items.map((item, index) => (
         <motion.div
           key={item.name}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: index * 0.1 }}
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: index * 0.05 }}
         >
-          <Collapsible>
-            <CollapsibleTrigger className="w-full">
-              <Button
-                variant="ghost"
-                className="w-full justify-between text-white hover:bg-indigo-700 hover:text-white"
-              >
-                <div className="flex items-center">
-                  <item.icon className="w-5 h-5 mr-3" />
-
-                  {item.locked ? (
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-between text-white hover:bg-indigo-700 hover:text-white"
-                      disabled
-                    >
-                      <div className="flex items-center">
-                        <span>{item.name}</span>
-                      </div>
-                    </Button>
-                  ) : (
-                    <Link href={item.path || '#'} passHref>
-                      <Button
-                        variant="ghost"
-                        className="w-full justify-between text-white hover:bg-indigo-700 hover:text-white"
-                      >
-                        <div className="flex items-center">
-                          <span>{item.name}</span>
-                        </div>
-                      </Button>
-                    </Link>
+          {item.expandable ? (
+            <Collapsible>
+              <CollapsibleTrigger className="w-full">
+                <Button
+                  variant="ghost"
+                  className={cn(
+                    "w-full justify-between text-white/80 hover:text-white hover:bg-white/10 transition-all duration-200",
+                    isSubItemActive(item.subitems || []) && "bg-white/10 text-white"
                   )}
-                </div>
-                {item.locked && <LockClosedIcon className="w-4 h-4" />}
-                {item.expandable && <ChevronDownIcon className="w-4 h-4" />}
-              </Button>
-            </CollapsibleTrigger>
-            {item.expandable && (
+                >
+                  <div className="flex items-center">
+                    <item.icon className="w-5 h-5 mr-3" />
+                    <span>{item.name}</span>
+                  </div>
+                  <ChevronDownIcon 
+                    className={cn(
+                      "w-4 h-4 transition-transform duration-200",
+                      isSubItemActive(item.subitems || []) && "transform rotate-180"
+                    )} 
+                  />
+                </Button>
+              </CollapsibleTrigger>
               <CollapsibleContent>
-                <div className="ml-8 mt-2 space-y-1">
+                <motion.div 
+                  className="ml-8 mt-2 space-y-1"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
                   {item.subitems?.map((subitem) => (
-                    <Link key={subitem.name} href={subitem.path} passHref>
+                    <Link 
+                      key={subitem.name} 
+                      href={subitem.path} 
+                      className={cn(
+                        "block w-full rounded-md transition-all duration-200",
+                        "hover:bg-white/10 hover:text-white",
+                        isActive(subitem.path) && "bg-white/10 text-white"
+                      )}
+                    >
                       <Button
                         variant="ghost"
-                        className="w-full justify-start text-white hover:bg-indigo-700 hover:text-white"
+                        className="w-full justify-start text-white/80"
                       >
-                        {subitem.name}
+                        <span className="truncate">{subitem.name}</span>
                       </Button>
                     </Link>
                   ))}
-                </div>
+                </motion.div>
               </CollapsibleContent>
-            )}
-          </Collapsible>
+            </Collapsible>
+          ) : (
+            <Link 
+              href={item.path || '#'} 
+              className={cn(
+                "block w-full rounded-md transition-all duration-200",
+                "hover:bg-white/10 hover:text-white",
+                isActive(item.path || '') && "bg-white/10 text-white"
+              )}
+            >
+              <Button
+                variant="ghost"
+                className="w-full justify-between text-white/80"
+              >
+                <div className="flex items-center">
+                  <item.icon className="w-5 h-5 mr-3" />
+                  {item.locked ? (
+                    <span className="opacity-50">{item.name}</span>
+                  ) : (
+                    <span>{item.name}</span>
+                  )}
+                </div>
+                {item.locked && <LockClosedIcon className="w-4 h-4 opacity-50" />}
+              </Button>
+            </Link>
+          )}
         </motion.div>
       ))}
     </nav>

@@ -21,6 +21,8 @@ interface AuthState {
   fetchCurrentUser: () => Promise<void>;
   updateUser: (user: UserTypes) => void;
   updatePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+  forgotPassword: (email: string) => Promise<void>;
+  resetPassword: (token: string, password: string) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -240,6 +242,48 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({ loading: false });
     } catch (error) {
       // console.error('Update password error:', error);
+      set({ loading: false });
+      throw error;
+    }
+  },
+  forgotPassword: async (email: string): Promise<void> => {
+    try {
+      set({ loading: true });
+
+      const response: Response = await fetch('/api/auth/password/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to send reset instructions');
+      }
+
+      set({ loading: false });
+    } catch (error) {
+      set({ loading: false });
+      throw error;
+    }
+  },
+  resetPassword: async (token: string, password: string): Promise<void> => {
+    try {
+      set({ loading: true });
+
+      const response: Response = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, password }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to reset password');
+      }
+
+      set({ loading: false });
+    } catch (error) {
       set({ loading: false });
       throw error;
     }
