@@ -54,6 +54,7 @@ export const SidebarItems: React.FC = () => {
       expandable: true,
     },
     { name: 'Landing page', icon: FileTextIcon, locked: true, path: '/dashboard/landing' },
+    { name: 'Forms', icon: FileTextIcon, path: '/dashboard/form-widget' },
     { name: 'Integration', icon: PuzzleIcon, locked: true, path: '/dashboard/integration' },
     { name: 'Audience', icon: UsersIcon, path: '/dashboard/audience/all' },
     { name: 'My files', icon: FileStack, locked: true, path: '/dashboard/templates/my-files' },
