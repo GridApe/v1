@@ -16,7 +16,7 @@ import { LoaderCircle, LockIcon, Mail } from "lucide-react";
 export default function LoginPage() {
   const { toast } = useToast();
   const auth = useAuth();
-  const { user, loading } = useAuthStore();
+  const { loading } = useAuthStore();
 
   const [formData, setFormData] = useState({
     email: "",

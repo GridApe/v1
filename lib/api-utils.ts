@@ -3,8 +3,8 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 // Constants
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.gridape.com/api/v1';
-const CSRF_COOKIE_URL = "https://api.gridape.com/sanctum/csrf-cookie";
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+const CSRF_COOKIE_URL = `${process.env.NEXT_PUBLIC_CSRF_COOKIE_URL}`;
 const REQUEST_TIMEOUT = 30000; // 30 seconds
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000; // 1 second

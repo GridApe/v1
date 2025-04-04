@@ -51,6 +51,8 @@ export const useAuthStore = create<AuthState>((set) => ({
         throw new Error(responseData.error);
       }
     } catch (error) {
+      console.log(error);
+      
       set({ loading: false });
       throw error;
     }
