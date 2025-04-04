@@ -15,6 +15,7 @@ import {
   UserPlus,
   Users,
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -39,6 +40,16 @@ interface UserNavProps {
 }
 
 export function UserNav({ avatarSrc, avatarFallback = 'U', onLogout }: UserNavProps) {
+  const router = useRouter();
+
+  const handleProfileClick = () => {
+    router.push('/dashboard/settings');
+  };
+
+  const handleSettingsClick = () => {
+    router.push('/dashboard/settings');
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -51,26 +62,14 @@ export function UserNav({ avatarSrc, avatarFallback = 'U', onLogout }: UserNavPr
         <DropdownMenuLabel>My Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem>
-            <User />
+          <DropdownMenuItem onClick={handleProfileClick}>
+            <User className="mr-2 h-4 w-4" />
             <span>Profile</span>
-            {/* <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut> */}
           </DropdownMenuItem>
-          {/* <DropdownMenuItem>
-            <CreditCard />
-            <span>Billing</span>
-            <DropdownMenuShortcut>⌘B</DropdownMenuShortcut>
-          </DropdownMenuItem> */}
-          <DropdownMenuItem>
-            <Settings />
+          <DropdownMenuItem onClick={handleSettingsClick}>
+            <Settings className="mr-2 h-4 w-4" />
             <span>Settings</span>
-            {/* <DropdownMenuShortcut>⌘S</DropdownMenuShortcut> */}
           </DropdownMenuItem>
-          {/* <DropdownMenuItem>
-            <Keyboard />
-            <span>Keyboard shortcuts</span>
-            <DropdownMenuShortcut>⌘K</DropdownMenuShortcut>
-          </DropdownMenuItem> */}
         </DropdownMenuGroup>
         {/* <DropdownMenuSeparator />
         <DropdownMenuGroup>
@@ -122,9 +121,8 @@ export function UserNav({ avatarSrc, avatarFallback = 'U', onLogout }: UserNavPr
         </DropdownMenuItem>
         <DropdownMenuSeparator /> */}
         <DropdownMenuItem onClick={onLogout}>
-          <LogOut />
+          <LogOut className="mr-2 h-4 w-4" />
           <span>Log out</span>
-          {/* <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut> */}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

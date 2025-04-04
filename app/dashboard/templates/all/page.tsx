@@ -136,8 +136,11 @@ export default function TemplatesPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Categories</SelectItem>
-            <SelectItem value="category1">Category 1</SelectItem>
-            <SelectItem value="category2">Category 2</SelectItem>
+            <SelectItem value="marketing">Marketing</SelectItem>
+            <SelectItem value="newsletter">Newsletter</SelectItem>
+            <SelectItem value="transactional">Transactional</SelectItem>
+            <SelectItem value="welcome">Welcome</SelectItem>
+            <SelectItem value="custom">Custom</SelectItem>
           </SelectContent>
         </Select>
         <div className="flex items-center space-x-2">
