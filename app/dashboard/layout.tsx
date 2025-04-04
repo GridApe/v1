@@ -8,7 +8,7 @@ import { usePathname } from 'next/navigation';
 
 const getPageInfo = (pathname: string) => {
   const path = pathname.split('/').filter(Boolean);
-  
+    console.log({path})
   switch (path[1]) {
     case 'templates':
       if (path[2] === 'ai') {
@@ -27,10 +27,15 @@ const getPageInfo = (pathname: string) => {
         title: 'Email Templates',
         description: 'Manage your email templates'
       };
-    case 'campaigns':
+    case 'campaign':
       return {
         title: 'Campaigns',
         description: 'Manage your email campaigns'
+      };
+    case 'audience':
+      return {
+        title: 'Audience',
+        description: 'Manage your Audience'
       };
     case 'analytics':
       return {
