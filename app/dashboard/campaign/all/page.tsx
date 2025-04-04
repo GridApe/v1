@@ -86,21 +86,30 @@ export default function CampaignsPage() {
     try {
       const response = await fetch(`/api/user/campaign/${campaignToDelete}`, {
         method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
+
+      const data = await response.json();
 
       if (!response.ok) {
-        throw new Error('Failed to delete campaign');
+        throw new Error(data.message || 'Failed to delete campaign');
       }
 
-      setCampaigns(campaigns.filter(campaign => campaign.id !== campaignToDelete));
-      toast({
-        title: 'Success',
-        description: 'Campaign deleted successfully.',
-      });
+      if (data.status === 'success') {
+        setCampaigns(campaigns.filter(campaign => campaign.id !== campaignToDelete));
+        toast({
+          title: 'Success',
+          description: 'Campaign deleted successfully.',
+        });
+      } else {
+        throw new Error(data.message || 'Failed to delete campaign');
+      }
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Failed to delete campaign. Please try again.',
+        description: error instanceof Error ? error.message : 'Failed to delete campaign. Please try again.',
         variant: 'destructive',
       });
     } finally {

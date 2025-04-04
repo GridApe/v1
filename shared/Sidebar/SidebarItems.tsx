@@ -46,6 +46,7 @@ export const SidebarItems: React.FC = () => {
     { name: 'Integration', icon: PuzzleIcon, locked: true, path: '/dashboard/integration' },
     { name: 'Audience', icon: UsersIcon, path: '/dashboard/audience/all' },
     { name: 'My files', icon: FileStack, locked: true, path: '/dashboard/templates/my-files' },
+    { name: 'Pricing', icon: DollarSign, path: '/dashboard/pricing' },
     { name: 'Settings', icon: CogIcon, path: '/dashboard/settings' },
     { name: 'Logout', icon: LogOutIcon, path: '/logout' },
   ];

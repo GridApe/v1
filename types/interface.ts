@@ -111,9 +111,15 @@ export interface DomainTypes {
 }
 
 export interface PricingPlan {
-  id: string;
-  name: string;
-  price: string;
-  features: any;
-  description: string[];
+  id: string
+  name: string
+  price: string
+  currency: string
+  description: string | string[]
+  features: string
+  is_active: number
+  created_at: string
+  updated_at: string
+  pricing_plan_id: string
 }
+

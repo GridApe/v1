@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Eye, Edit, Search, Filter } from 'lucide-react';
+import { Plus, Eye, Edit, Search, Filter, Grid, List } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
@@ -38,6 +38,7 @@ export default function TemplatesPage() {
   const [previewTemplate, setPreviewTemplate] = useState<TemplateTypes | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const iframeRefs = useRef<{ [key: string]: HTMLIFrameElement | null }>({});
 
   const {
@@ -142,10 +143,29 @@ export default function TemplatesPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Categories</SelectItem>
-            <SelectItem value="category1">Category 1</SelectItem>
-            <SelectItem value="category2">Category 2</SelectItem>
+            <SelectItem value="marketing">Marketing</SelectItem>
+            <SelectItem value="newsletter">Newsletter</SelectItem>
+            <SelectItem value="transactional">Transactional</SelectItem>
+            <SelectItem value="welcome">Welcome</SelectItem>
+            <SelectItem value="custom">Custom</SelectItem>
           </SelectContent>
         </Select>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant={viewMode === 'grid' ? 'default' : 'outline'}
+            size="icon"
+            onClick={() => setViewMode('grid')}
+          >
+            <Grid size={16} />
+          </Button>
+          <Button
+            variant={viewMode === 'list' ? 'default' : 'outline'}
+            size="icon"
+            onClick={() => setViewMode('list')}
+          >
+            <List size={16} />
+          </Button>
+        </div>
       </div>
 
       {loading ? (
@@ -161,74 +181,152 @@ export default function TemplatesPage() {
           Error: {error}
         </div>
       ) : filteredTemplates.length > 0 ? (
-        <motion.div
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
-        >
-          {filteredTemplates.map((template) => (
-            <Card key={template.id} className="group relative hover:shadow-xl transition-all duration-300">
-              {action === 'select_template' || action === 'change_template' ? (
-                <div className="absolute rounded-xl inset-0 bg-black/0 group-hover:bg-black/60 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center z-10">
-                  <Button
-                    onClick={() => handleTemplateSelect(template.id)}
-                    className="scale-0 group-hover:scale-100 transition-transform duration-300 px-10 mb-2"
-                  >
-                    Select
-                  </Button>
-                  <Button
-                    onClick={() => handlePreview(template)}
-                    className="scale-0 group-hover:scale-100 transition-transform duration-300 px-10"
-                    variant="secondary"
-                  >
-                    Preview
-                  </Button>
-                </div>
-              ) : null}
-              <CardHeader>
-                <h2 className="text-lg font-semibold truncate">{template.name}</h2>
-              </CardHeader>
-              <CardContent className="p-4">
-                <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
-                  <iframe
-                    ref={(el) => {
-                      if (el) iframeRefs.current[template.id] = el;
-                    }}
-                    srcDoc={template.html}
-                    title={`Template Preview - ${template.name}`}
-                    className="w-full h-full object-cover"
-                    sandbox="allow-same-origin allow-scripts allow-popups"
-                  />
-                </div>
-              </CardContent>
-              {action !== 'select_template' && action !== 'change_template' && (
-                <CardFooter className="flex justify-between">
-                  <Button variant="outline" size="sm" className="flex items-center space-x-2"
-                    onClick={() => {
-                      if (template.id === 'blank') {
-                        handleCreateNewTemplate();
-                      } else {
-                        handleEditTemplate(template.id);
-                      }
-                    }}
-                  >
-                    <Edit size={14} />
-                    <span>Edit</span>
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="flex items-center space-x-2"
-                    onClick={() => handlePreview(template)}
-                  >
-                    <Eye size={14} />
-                    <span>Preview</span>
-                  </Button>
-                </CardFooter>
-              )}
-            </Card>
-          ))}
-        </motion.div>
+        <AnimatePresence mode="wait">
+          {viewMode === 'grid' ? (
+            <motion.div
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+            >
+              {filteredTemplates.map((template) => (
+                <Card key={template.id} className="group relative hover:shadow-xl transition-all duration-300">
+                  {action === 'select_template' || action === 'change_template' ? (
+                    <div className="absolute rounded-xl inset-0 bg-black/0 group-hover:bg-black/60 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center z-10">
+                      <Button
+                        onClick={() => handleTemplateSelect(template.id)}
+                        className="scale-0 group-hover:scale-100 transition-transform duration-300 px-10 mb-2"
+                      >
+                        Select
+                      </Button>
+                      <Button
+                        onClick={() => handlePreview(template)}
+                        className="scale-0 group-hover:scale-100 transition-transform duration-300 px-10"
+                        variant="secondary"
+                      >
+                        Preview
+                      </Button>
+                    </div>
+                  ) : null}
+                  <CardHeader>
+                    <h2 className="text-lg font-semibold truncate">{template.name}</h2>
+                  </CardHeader>
+                  <CardContent className="p-4">
+                    <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
+                      <iframe
+                        ref={(el) => {
+                          if (el) iframeRefs.current[template.id] = el;
+                        }}
+                        srcDoc={template.html}
+                        title={`Template Preview - ${template.name}`}
+                        className="w-full h-full object-cover"
+                        sandbox="allow-same-origin allow-scripts allow-popups"
+                      />
+                    </div>
+                  </CardContent>
+                  {action !== 'select_template' && action !== 'change_template' && (
+                    <CardFooter className="flex justify-between">
+                      <Button variant="outline" size="sm" className="flex items-center space-x-2"
+                        onClick={() => {
+                          if (template.id === 'blank') {
+                            handleCreateNewTemplate();
+                          } else {
+                            handleEditTemplate(template.id);
+                          }
+                        }}
+                      >
+                        <Edit size={14} />
+                        <span>Edit</span>
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="flex items-center space-x-2"
+                        onClick={() => handlePreview(template)}
+                      >
+                        <Eye size={14} />
+                        <span>Preview</span>
+                      </Button>
+                    </CardFooter>
+                  )}
+                </Card>
+              ))}
+            </motion.div>
+          ) : (
+            <motion.div
+              className="space-y-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+            >
+              {filteredTemplates.map((template) => (
+                <Card key={template.id} className="group relative hover:shadow-xl transition-all duration-300">
+                  {action === 'select_template' || action === 'change_template' ? (
+                    <div className="absolute rounded-xl inset-0 bg-black/0 group-hover:bg-black/60 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center z-10">
+                      <Button
+                        onClick={() => handleTemplateSelect(template.id)}
+                        className="scale-0 group-hover:scale-100 transition-transform duration-300 px-10 mb-2"
+                      >
+                        Select
+                      </Button>
+                      <Button
+                        onClick={() => handlePreview(template)}
+                        className="scale-0 group-hover:scale-100 transition-transform duration-300 px-10"
+                        variant="secondary"
+                      >
+                        Preview
+                      </Button>
+                    </div>
+                  ) : null}
+                  <CardContent className="p-6">
+                    <div className="flex items-start space-x-6">
+                      <div className="w-48 aspect-video bg-gray-100 rounded-lg overflow-hidden">
+                        <iframe
+                          ref={(el) => {
+                            if (el) iframeRefs.current[template.id] = el;
+                          }}
+                          srcDoc={template.html}
+                          title={`Template Preview - ${template.name}`}
+                          className="w-full h-full object-cover"
+                          sandbox="allow-same-origin allow-scripts allow-popups"
+                        />
+                      </div>
+                      <div className="flex-1 space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h2 className="text-lg font-semibold">{template.name}</h2>
+                        </div>
+                        <div className="flex items-center space-x-4">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex items-center space-x-2"
+                            onClick={() => {
+                              if (template.id === 'blank') {
+                                handleCreateNewTemplate();
+                              } else {
+                                handleEditTemplate(template.id);
+                              }
+                            }}
+                          >
+                            <Edit size={14} />
+                            <span>Edit</span>
+                          </Button>
+                          <Button
+                            size="sm"
+                            className="flex items-center space-x-2"
+                            onClick={() => handlePreview(template)}
+                          >
+                            <Eye size={14} />
+                            <span>Preview</span>
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
       ) : (
         <div className="text-center py-12 bg-gray-50 rounded-lg">
           <p className="text-muted-foreground">No templates found matching your search.</p>
