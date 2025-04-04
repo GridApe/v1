@@ -1,25 +1,13 @@
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ChevronDownIcon, LockClosedIcon } from '@radix-ui/react-icons';
-
-import {
-  BarChartIcon,
-  CogIcon,
-  FileTextIcon,
-  LayoutTemplateIcon,
-  PuzzleIcon,
-  SendIcon,
-  UsersIcon,
-  House,
-  FileStack,
-  DollarSign,
-  LogOutIcon,
-} from 'lucide-react';
+import { BarChartIcon, CogIcon, FileTextIcon, LayoutTemplateIcon, PuzzleIcon, SendIcon, UsersIcon, HomeIcon as House, FileStack, DollarSign, LogOutIcon } from 'lucide-react';
 import React from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { toast } from '@/hooks/use-toast';
 
 interface SidebarItem {
   name: string;
@@ -65,6 +53,15 @@ export const SidebarItems: React.FC = () => {
   const isActive = (path: string) => pathname === path;
   const isSubItemActive = (subitems: { path: string }[]) =>
     subitems.some((subitem) => pathname === subitem.path);
+
+  const handleLockedItemClick = (e: React.MouseEvent, itemName: string) => {
+    e.preventDefault();
+    toast({
+      title: "Coming Soon",
+      description: `${itemName} will be available soon!`,
+      variant: "default",
+    });
+  };
 
   return (
     <nav className="space-y-1">
@@ -123,6 +120,23 @@ export const SidebarItems: React.FC = () => {
                 </motion.div>
               </CollapsibleContent>
             </Collapsible>
+          ) : item.locked ? (
+            <div 
+              className={cn(
+                'block w-full rounded-md transition-all duration-200',
+                'hover:bg-white/10 hover:text-white',
+                'cursor-pointer' 
+              )}
+              onClick={(e) => handleLockedItemClick(e, item.name)}
+            >
+              <Button variant="ghost" className="w-full justify-between text-white/80">
+                <div className="flex items-center">
+                  <item.icon className="w-5 h-5 mr-3" />
+                  <span className="opacity-50">{item.name}</span>
+                </div>
+                <LockClosedIcon className="w-4 h-4 opacity-50" />
+              </Button>
+            </div>
           ) : (
             <Link
               href={item.path || '#'}
@@ -132,16 +146,11 @@ export const SidebarItems: React.FC = () => {
                 isActive(item.path || '') && 'bg-white/10 text-white'
               )}
             >
-              <Button variant="ghost" className={'w-full justify-between text-white/80'}>
+              <Button variant="ghost" className="w-full justify-between text-white/80">
                 <div className="flex items-center">
                   <item.icon className="w-5 h-5 mr-3" />
-                  {item.locked ? (
-                    <span className="opacity-50">{item.name}</span>
-                  ) : (
-                    <span>{item.name}</span>
-                  )}
+                  <span>{item.name}</span>
                 </div>
-                {item.locked && <LockClosedIcon className="w-4 h-4 opacity-50" />}
               </Button>
             </Link>
           )}

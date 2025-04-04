@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { Eye, EyeOff, Users, Calendar, Delete } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -20,6 +20,7 @@ import DatePicker from "react-datepicker"
 import "react-datepicker/dist/react-datepicker.css"
 import { Switch } from "@/components/ui/switch"
 import { RecipientList } from "./RecipientList"
+import { useAuthStore } from "@/store/authStore"
 
 const EmailComposer: React.FC = () => {
   const router = useRouter()
@@ -55,6 +56,8 @@ const EmailComposer: React.FC = () => {
     setScheduledDateTime,
   } = useCampaignStore()
 
+  const { user } = useAuthStore();
+
   const handleAddRecipient = (email: string) => {
     if (email && !recipients.includes(email)) {
       setRecipients([...recipients, email])
@@ -76,6 +79,17 @@ const EmailComposer: React.FC = () => {
       router.push(`/dashboard/templates/edit/${selectedTemplateId}`)
     }
   }
+
+  useEffect(() => {
+    const matchingEmail = senderEmails.find(email => email.email === user?.email);
+    if (matchingEmail) {
+      setSelectedSenderEmailId(matchingEmail.id);
+      useCampaignStore.getState().setSelectedSenderEmailId(matchingEmail.id);
+    } else if (senderEmails.length > 0) {
+      setSelectedSenderEmailId(senderEmails[0].id);
+      useCampaignStore.getState().setSelectedSenderEmailId(senderEmails[0].id);
+    }
+  }, [senderEmails, setSelectedSenderEmailId, user]);
 
   return (
     <div className="min-h-screen bg-gray-50 rounded-2xl">

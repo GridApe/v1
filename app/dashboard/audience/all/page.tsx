@@ -5,7 +5,6 @@ import Cookies from 'js-cookie';
 import axios from 'axios';
 import { X } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -35,13 +34,6 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Search, Plus, FileUp, Users, Filter, MoreHorizontal, Trash2, Edit } from 'lucide-react';
 import {
@@ -56,14 +48,12 @@ import { toast } from '@/hooks/use-toast';
 import { setgroups } from 'process';
 import { Skeleton } from '@/components/ui/skeleton';
 
-// const API_BASE_URL = 'https://api.gridape.com/api/v1/user';
 
 const AudiencePage = () => {
   const [groupSuggestions, setGroupSuggestions] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
 
-  // const fileInputRef = useRef<HTMLInputElement | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -614,6 +604,20 @@ const AudiencePage = () => {
       };
     });
   };
+
+
+useEffect(() => {
+  if (activeTab === 'groups' && contacts.length > 0) {
+    const sortedContacts = [...contacts].sort((a, b) => {
+      const groupA = a.groups.length > 0 ? a.groups[0].name.toLowerCase() : '';
+      const groupB = b.groups.length > 0 ? b.groups[0].name.toLowerCase() : '';
+            return groupA.localeCompare(groupB);
+    });
+        setContacts(sortedContacts);
+  } else if (activeTab === 'all-contacts') {
+    fetchContacts();
+  }
+}, [activeTab]);
 
   return (
     <motion.div
