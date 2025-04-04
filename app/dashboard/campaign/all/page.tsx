@@ -51,7 +51,6 @@ export default function CampaignsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [campaignToDelete, setCampaignToDelete] = useState<string | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     fetchCampaigns();
@@ -84,7 +83,6 @@ export default function CampaignsPage() {
   const handleDeleteCampaign = async () => {
     if (!campaignToDelete) return;
 
-    setIsDeleting(true);
     try {
       const response = await fetch(`/api/user/campaign/${campaignToDelete}`, {
         method: 'DELETE',
@@ -115,7 +113,6 @@ export default function CampaignsPage() {
         variant: 'destructive',
       });
     } finally {
-      setIsDeleting(false);
       setIsDeleteModalOpen(false);
       setCampaignToDelete(null);
     }
@@ -280,18 +277,11 @@ export default function CampaignsPage() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteModalOpen(false)} disabled={isDeleting}>
+            <Button variant="outline" onClick={() => setIsDeleteModalOpen(false)}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleDeleteCampaign} disabled={isDeleting}>
-              {isDeleting ? (
-                <>
-                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-                  Deleting...
-                </>
-              ) : (
-                'Delete'
-              )}
+            <Button variant="destructive" onClick={handleDeleteCampaign}>
+              Delete
             </Button>
           </DialogFooter>
         </DialogContent>
