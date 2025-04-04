@@ -28,8 +28,9 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { withAuth } from '@/shared/withAuth';
 
-export default function EmailTemplateEditor() {
+function CreateTemplatePage() {
   const router = useRouter();
   const emailEditorRef = useRef<EditorRef | null>(null);
   const [templateName, setTemplateName] = useState<string>('');
@@ -582,6 +583,8 @@ export default function EmailTemplateEditor() {
     </motion.div>
   );
 }
+
+export default CreateTemplatePage;
 
 // import React from 'react';
 

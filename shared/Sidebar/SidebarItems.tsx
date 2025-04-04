@@ -13,6 +13,7 @@ import {
   House,
   FileStack,
   DollarSign,
+  LogOutIcon,
 } from 'lucide-react';
 import React from 'react';
 import { motion } from 'framer-motion';
@@ -58,12 +59,12 @@ export const SidebarItems: React.FC = () => {
     { name: 'Audience', icon: UsersIcon, path: '/dashboard/audience/all' },
     { name: 'My files', icon: FileStack, locked: true, path: '/dashboard/templates/my-files' },
     { name: 'Settings', icon: CogIcon, path: '/dashboard/settings' },
-    { name: 'Pricing', icon: DollarSign, path: '/dashboard/pricing' },
+    { name: 'Logout', icon: LogOutIcon, path: '/logout' },
   ];
 
   const isActive = (path: string) => pathname === path;
-  const isSubItemActive = (subitems: { path: string }[]) => 
-    subitems.some(subitem => pathname === subitem.path);
+  const isSubItemActive = (subitems: { path: string }[]) =>
+    subitems.some((subitem) => pathname === subitem.path);
 
   return (
     <nav className="space-y-1">
@@ -80,44 +81,41 @@ export const SidebarItems: React.FC = () => {
                 <Button
                   variant="ghost"
                   className={cn(
-                    "w-full justify-between text-white/80 hover:text-white hover:bg-white/10 transition-all duration-200",
-                    isSubItemActive(item.subitems || []) && "bg-white/10 text-white"
+                    'w-full justify-between text-white/80 hover:text-white hover:bg-white/10 transition-all duration-200',
+                    isSubItemActive(item.subitems || []) && 'bg-white/10 text-white'
                   )}
                 >
                   <div className="flex items-center">
                     <item.icon className="w-5 h-5 mr-3" />
                     <span>{item.name}</span>
                   </div>
-                  <ChevronDownIcon 
+                  <ChevronDownIcon
                     className={cn(
-                      "w-4 h-4 transition-transform duration-200",
-                      isSubItemActive(item.subitems || []) && "transform rotate-180"
-                    )} 
+                      'w-4 h-4 transition-transform duration-200',
+                      isSubItemActive(item.subitems || []) && 'transform rotate-180'
+                    )}
                   />
                 </Button>
               </CollapsibleTrigger>
               <CollapsibleContent>
-                <motion.div 
+                <motion.div
                   className="ml-8 mt-2 space-y-1"
                   initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
+                  animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.2 }}
                 >
                   {item.subitems?.map((subitem) => (
-                    <Link 
-                      key={subitem.name} 
-                      href={subitem.path} 
+                    <Link
+                      key={subitem.name}
+                      href={subitem.path}
                       className={cn(
-                        "block w-full rounded-md transition-all duration-200",
-                        "hover:bg-white/10 hover:text-white",
-                        isActive(subitem.path) && "bg-white/10 text-white"
+                        'block w-full rounded-md transition-all duration-200',
+                        'hover:bg-white/10 hover:text-white',
+                        isActive(subitem.path) && 'bg-white/10 text-white'
                       )}
                     >
-                      <Button
-                        variant="ghost"
-                        className="w-full justify-start text-white/80"
-                      >
+                      <Button variant="ghost" className="w-full justify-start text-white/80">
                         <span className="truncate">{subitem.name}</span>
                       </Button>
                     </Link>
@@ -126,18 +124,15 @@ export const SidebarItems: React.FC = () => {
               </CollapsibleContent>
             </Collapsible>
           ) : (
-            <Link 
-              href={item.path || '#'} 
+            <Link
+              href={item.path || '#'}
               className={cn(
-                "block w-full rounded-md transition-all duration-200",
-                "hover:bg-white/10 hover:text-white",
-                isActive(item.path || '') && "bg-white/10 text-white"
+                'block w-full rounded-md transition-all duration-200',
+                'hover:bg-white/10 hover:text-white',
+                isActive(item.path || '') && 'bg-white/10 text-white'
               )}
             >
-              <Button
-                variant="ghost"
-                className="w-full justify-between text-white/80"
-              >
+              <Button variant="ghost" className={'w-full justify-between text-white/80'}>
                 <div className="flex items-center">
                   <item.icon className="w-5 h-5 mr-3" />
                   {item.locked ? (

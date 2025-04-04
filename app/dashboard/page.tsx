@@ -23,6 +23,7 @@ import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { ChartConfig, ChartContainer } from '@/components/ui/chart';
+import TopBar from '../components/shared/TopBar';
 
 interface DashboardResponse {
   data: DashboardTypes;
@@ -161,20 +162,21 @@ const Dashboard = () => {
 
   return (
     <motion.div 
-      className="p-4 md:p-6 lg:p-8 min-h-screen bg-gradient-to-b from-[#fafaff] to-[#f0f2f8]"
+      className="p-4 md:p-6 lg:p-8 min-h-screen"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
     >
-      {/* Decorative background elements */}
+      {/* Decorative background elements
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -left-40 w-80 h-80 bg-blue-100 rounded-full blur-3xl opacity-50"></div>
         <div className="absolute -bottom-40 -right-40 w-80 h-80 bg-blue-900 rounded-full blur-3xl opacity-50"></div>
-      </div>
+      </div> */}
 
-      <div className="relative z-10 space-y-8">
+      <div className="relative z-10 space-y-8 pt-3">
         {/* Search Bar */}
-        <motion.div 
+
+        {/* <motion.div 
           className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm"
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -185,7 +187,7 @@ const Dashboard = () => {
             avatarSrc={user?.avatar}
             avatarFallback={user?.first_name}
           />
-        </motion.div>
+        </motion.div> */}
 
         {/* Quick Actions */}
         <motion.div 
