@@ -80,26 +80,66 @@ interface UnlayerDesign {
   schemaVersion: number;
 }
 
+interface EmailFormData {
+  emailAbout: string;
+  businessType: string;
+  targetAudience: string;
+  emailStyle: string;
+}
+
 export async function POST(request: Request) {
   try {
-    const { prompt } = await request.json();
+    const formData: EmailFormData = await request.json();
     
-    if (!prompt) {
+    if (!formData.emailAbout || !formData.businessType || !formData.targetAudience || !formData.emailStyle) {
       return NextResponse.json(
-        { message: 'Prompt is required' },
+        { message: 'All form fields are required' },
         { status: 400 }
       );
     }
 
-    const systemPrompt = `You are an expert email template designer for the Unlayer email editor. Create a professional, responsive email template following these rules:
+    const systemPrompt = `You are an expert email template designer for the Unlayer email editor. Create a professional, responsive email template based on the following specifications:
 
-1. Template Structure:
-- Every email must have a header, main content, and footer
-- Use consistent spacing and padding throughout
-- Ensure all colors are in hex format
-- Include proper content hierarchy with headings and text blocks
+1. Email Content:
+- Topic: ${formData.emailAbout}
+- Business Type: ${formData.businessType}
+- Target Audience: ${formData.targetAudience}
+- Tone/Style: ${formData.emailStyle}
 
-2. Required Sections:
+2. Style Guidelines based on Tone (${formData.emailStyle}):
+${formData.emailStyle === 'Inspirational' ? `
+- Use motivational and uplifting language
+- Include inspiring quotes or statistics
+- Focus on possibilities and positive outcomes
+- Use warm, vibrant colors
+` : formData.emailStyle === 'Informative' ? `
+- Present clear, factual information
+- Include relevant data and statistics
+- Use a structured, logical layout
+- Maintain professional, neutral colors
+` : formData.emailStyle === 'Assertive' ? `
+- Use confident, direct language
+- Include clear calls-to-action
+- Focus on benefits and value propositions
+- Use bold, strong colors
+` : formData.emailStyle === 'Formal' ? `
+- Maintain professional, respectful tone
+- Use proper business language
+- Include formal greetings and closings
+- Use conservative color scheme
+` : formData.emailStyle === 'Neutral' ? `
+- Balance professional and approachable tone
+- Use clear, straightforward language
+- Maintain moderate formatting
+- Use balanced color scheme
+` : `
+- Use casual, friendly language
+- Include conversational elements
+- Keep formatting relaxed
+- Use friendly, approachable colors
+`}
+
+3. Template Structure:
 {
   "counters": {
     "u_column": 3,
@@ -181,9 +221,23 @@ export async function POST(request: Request) {
                   "textAlign": "center",
                   "buttonColors": {
                     "color": "#ffffff",
-                    "backgroundColor": "#2C7BE5",
+                    "backgroundColor": "${
+                      formData.emailStyle === 'Inspirational' ? '#FF6B6B' :
+                      formData.emailStyle === 'Informative' ? '#4A90E2' :
+                      formData.emailStyle === 'Assertive' ? '#E74C3C' :
+                      formData.emailStyle === 'Formal' ? '#34495E' :
+                      formData.emailStyle === 'Neutral' ? '#2C7BE5' :
+                      '#27AE60'
+                    }",
                     "hoverColor": "#ffffff",
-                    "hoverBackgroundColor": "#1A68D1"
+                    "hoverBackgroundColor": "${
+                      formData.emailStyle === 'Inspirational' ? '#FF5252' :
+                      formData.emailStyle === 'Informative' ? '#357ABD' :
+                      formData.emailStyle === 'Assertive' ? '#C0392B' :
+                      formData.emailStyle === 'Formal' ? '#2C3E50' :
+                      formData.emailStyle === 'Neutral' ? '#1A68D1' :
+                      '#219A52'
+                    }"
                   },
                   "href": {
                     "name": "web",
@@ -246,40 +300,29 @@ export async function POST(request: Request) {
   "schemaVersion": 12
 }
 
-3. Design Guidelines:
-- Use a white (#ffffff) background for main content
-- Use a light gray (#f8f9fa) background for the footer
-- Set button colors with proper hover states
-- Maintain consistent font families throughout
-- Use proper heading hierarchy
-- Ensure all text is legible with appropriate line height
-- Add proper padding and spacing between elements
+4. Content Guidelines:
+- Create a compelling subject line
+- Write content that resonates with ${formData.targetAudience}
+- Include industry-specific terminology for ${formData.businessType}
+- Maintain the selected ${formData.emailStyle} tone throughout
+- Ensure all content is relevant to ${formData.emailAbout}
+- Include appropriate call-to-action buttons
+- Add a professional footer with necessary disclaimers
 
-4. Content Rules:
-- Keep headings concise and clear
-- Include meaningful button text
-- Ensure all links are properly formatted
-- Keep footer text professional and include necessary legal information
-- Use appropriate text alignment for different content types
-
-Generate a complete template replacing placeholder content with relevant content based on the user's prompt. Return ONLY the JSON, no explanation or markdown.`;
+Generate a complete template replacing placeholder content with relevant content based on these specifications. Return ONLY the JSON, no explanation or markdown.`;
 
     const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer `,
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4',
+        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
             content: systemPrompt
-          },
-          {
-            role: 'user',
-            content: `Generate an Unlayer email template for: ${prompt}`
           }
         ],
         max_tokens: 2500,
@@ -289,9 +332,8 @@ Generate a complete template replacing placeholder content with relevant content
 
     if (!openaiResponse.ok) {
       const errorData = await openaiResponse.json();
-      console.error('OpenAI API error:', errorData);
       return NextResponse.json(
-        { success: false, message: 'OpenAI API request failed' },
+        { success: false, message: errorData },
         { status: openaiResponse.status }
       );
     }
@@ -313,6 +355,7 @@ Generate a complete template replacing placeholder content with relevant content
         throw new Error('Missing required top-level properties');
       }
 
+      // Validate template structure
       parsedJson.body.rows.forEach((row, index) => {
         if (!row.id || !Array.isArray(row.cells) || !Array.isArray(row.columns)) {
           throw new Error(`Invalid structure in row ${index}`);
@@ -337,8 +380,6 @@ Generate a complete template replacing placeholder content with relevant content
       });
 
     } catch (parseError) {
-      console.error('JSON parsing error:', parseError);
-      
       const jsonMatch = generatedJson.match(/```(?:json)?([\s\S]*?)```/);
       if (jsonMatch) {
         try {
@@ -348,7 +389,7 @@ Generate a complete template replacing placeholder content with relevant content
             template: extractedJson 
           });
         } catch (extractError) {
-          console.error('Extracted JSON parsing error:', extractError);
+          // console.error('Extracted JSON parsing error:', extractError);
         }
       }
 
@@ -359,7 +400,6 @@ Generate a complete template replacing placeholder content with relevant content
     }
 
   } catch (error) {
-    console.error('General error:', error);
     return NextResponse.json(
       { success: false, message: 'Failed to generate email template' },
       { status: 500 }
