@@ -3,7 +3,6 @@ import axios, { AxiosError, AxiosInstance } from 'axios';
 import Cookies from 'js-cookie';
 
 const BASE_URL = 'http://localhost:8000/api/v1';
-// const BASE_URL = "https:api.gridape.com/api/v1";
 
 class ApiService {
   private api: AxiosInstance;
@@ -103,9 +102,10 @@ class ApiService {
 
   // Generic method to handle repeated API call pattern
   private async executeApiCall<T>(
-    method: 'get' | 'post' | 'put' | 'delete',
+    method: 'get' | 'post' | 'put' | 'delete' | 'patch',
     endpoint: string,
-    data?: any
+    data?: any,
+    config?: any
   ): Promise<T> {
     try {
       const response =
@@ -199,29 +199,21 @@ class ApiService {
   async saveEmailTemplate(data: TemplateTypes) {
     return this.executeApiCall<any>('post', '/user/email-templates', data);
   }
+  async updateProfile(userId: string, data: ProfileUpdateData) {
+    return this.executeApiCall<any>("put", `/user/profile/${userId}`, data)
+  }
+  async updateProfileImage(userId: string, imageFile: File) {
+    const formData = new FormData()
+    formData.append("avatar", imageFile)
 
-  // // Notifications
-  // async listNotifications() {
-  //   return this.executeApiCall<any>("get", "/user/notifications/");
-  // }
+    const config = {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
 
-  // async markNotificationAsRead(notificationId: string) {
-  //   return this.executeApiCall<any>(
-  //     "post",
-  //     `/user/notifications/${notificationId}/read`
-  //   );
-  // }
-
-  // async markAllNotificationsAsRead() {
-  //   return this.executeApiCall<any>("post", "/user/notifications/mark-all-read");
-  // }
-
-  // async deleteNotification(notificationId: string) {
-  //   return this.executeApiCall<any>(
-  //     "delete",
-  //     `/user/notifications/${notificationId}`
-  //   );
-  // }
+    return this.executeApiCall<any>("patch", `/user/profile/avatar/${userId}`, formData, config)
+  }
 }
 // Error class remains the same
 class ApiError extends Error {
@@ -283,4 +275,12 @@ export interface BusinessInfoData {
   businessEmail: string;
   businessPhone: string;
   businessAddress: string;
+}
+
+export interface ProfileUpdateData {
+  first_name: string
+  last_name: string
+  email: string
+  phone_number?: string
+  address?: string
 }
