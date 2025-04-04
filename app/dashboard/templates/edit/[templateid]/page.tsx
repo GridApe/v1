@@ -23,10 +23,11 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Toast } from '@/components/ui/toast';
-import { Loader2, Save, Eye, Upload, Download, Undo, Redo, Variable } from 'lucide-react';
+import { Loader2, Save, Eye, Upload, Download, Undo, Redo, Variable, ChevronLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { useCampaignStore } from '@/store/useCampaignStore';
+import { Badge } from '@/components/ui/badge';
 
 interface TemplateData {
   id: string;
@@ -62,6 +63,8 @@ export default function EmailTemplateEditor({
   const [variableName, setVariableName] = useState<string>('');
   const [variableDescription, setVariableDescription] = useState<string>('');
   const [variables, setVariables] = useState<{ name: string; description: string }[]>([]);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+
   const router = useRouter();
   const { toast } = useToast();
 
@@ -410,197 +413,213 @@ export default function EmailTemplateEditor({
       exit={{ opacity: 0, y: -20 }}
       className="space-y-6 p-4 md:p-6 lg:p-8"
     >
-      <h1 className="text-2xl md:text-3xl font-bold">Email Template Editor { }</h1>
-      <Card className="w-full">
-        <CardHeader>
-          <CardTitle>Template Editor</CardTitle>
-          <CardDescription>Create your email template using drag and drop</CardDescription>
-        </CardHeader>
-        <CardContent className="relative min-h-[500px]">
-          <AnimatePresence>
-            {isLoading && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-10"
+      <div className="flex items-center justify-between">
+        <div className="space-y-1">
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => router.back()}
+              className="hover:bg-gray-100"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <h1 className="text-2xl md:text-3xl font-bold">Edit Email Template</h1>
+          </div>
+          <p className="text-muted-foreground">Edit your existing email template</p>
+        </div>
+        <div className="flex items-center space-x-2">
+          <Badge variant="outline" className="text-xs">
+            {lastSaved ? `Last saved: ${lastSaved.toLocaleTimeString()}` : 'Auto-save enabled'}
+          </Badge>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Main Editor */}
+        <div className="lg:col-span-3">
+          <Card className="w-full">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <div>
+                <CardTitle>Template Editor</CardTitle>
+                <CardDescription>Edit your email template using drag and drop</CardDescription>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={undoAction}
+                  disabled={!canUndo}
+                >
+                  <Undo className="h-4 w-4 mr-2" />
+                  Undo
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={redoAction}
+                  disabled={!canRedo}
+                >
+                  <Redo className="h-4 w-4 mr-2" />
+                  Redo
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="relative min-h-[600px]">
+              <AnimatePresence>
+                {isLoading && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-10"
+                  >
+                    <div className="text-center space-y-4">
+                      <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+                      <p className="text-sm text-muted-foreground">Loading editor...</p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              <EmailEditor
+                ref={emailEditorRef}
+                onReady={onReady}
+                minHeight={600}
+                style={{ width: '100%' }}
+                options={{
+                  appearance: {
+                    theme: 'light',
+                    panels: {
+                      tools: {
+                        dock: 'left'
+                      }
+                    }
+                  },
+                  displayMode: 'email',
+                  designMode: 'edit',
+                  features: {
+                    stockImages: true,
+                    sendTestEmail: true
+                  },
+                  tools: {
+                    button: {
+                      enabled: true,
+                    },
+                    text: {
+                      enabled: true,
+                    },
+                    variable: {
+                      enabled: true,
+                    },
+                  },
+                  customJS: [
+                    `https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/all.min.js`,
+                  ],
+                }}
+                projectId={1}
+                onLoad={() => {
+                  emailEditorRef.current?.editor?.addEventListener(
+                    'image:added',
+                    (file: File, done: (arg0: { progress: number; url: string }) => void) => {
+                      if (file) {
+                        handleImageUpload(file, (url) => {
+                          done({ progress: 100, url });
+                        });
+                      }
+                    }
+                  );
+                }}
+              />
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Sidebar */}
+        <div className="lg:col-span-1 space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Template Actions</CardTitle>
+              <CardDescription>Save, preview, or export your template</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button className="w-full" variant="outline">
+                    <Save className="mr-2 h-4 w-4" />
+                    Save Template
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Save Template</DialogTitle>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="name" className="text-right">
+                        Name
+                      </Label>
+                      <Input
+                        id="name"
+                        value={templateName}
+                        onChange={(e) => setTemplateName(e.target.value)}
+                        className="col-span-3"
+                        placeholder="Enter template name"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button onClick={saveDesign}>Save Design</Button>
+                    <Button onClick={exportHtml}>Export HTML</Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+
+              <Button 
+                className="w-full" 
+                variant="outline"
+                onClick={togglePreview}
               >
-                <Loader2 className="h-8 w-8 animate-spin" />
-              </motion.div>
-            )}
-          </AnimatePresence>
-          <EmailEditor
-            ref={emailEditorRef}
-            onReady={onReady}
-            minHeight={500}
-            style={{ width: '100%' }}
-            options={{
-              appearance: {
-                theme: 'dark',
-              },
-              features: {
-                stockImages: true,
-              },
-              tools: {
-                button: {
-                  enabled: true,
-                },
-                text: {
-                  enabled: true,
-                },
-                variable: {
-                  enabled: true,
-                },
-              },
-              customJS: [
-                `https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/all.min.js`,
-              ],
-            }}
-            projectId={1} // Replace with your actual Unlayer project ID
-            onLoad={() => {
-              emailEditorRef.current?.editor?.addEventListener(
-                'image:added',
-                (file: File, done: (arg0: { progress: number; url: string }) => void) => {
-                  if (file) {
-                    handleImageUpload(file, (url) => {
-                      done({ progress: 100, url });
-                    });
-                  }
-                }
-              );
-            }}
-          />
-        </CardContent>
-        <CardFooter className="flex flex-wrap justify-between gap-2">
-          <div className="flex flex-wrap gap-2">
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="outline">
-                  <Save className="mr-2 h-4 w-4" /> Save Template
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Save Template</DialogTitle>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="name" className="text-right">
-                      Name
-                    </Label>
-                    <Input
-                      id="name"
-                      value={templateName}
-                      onChange={(e) => setTemplateName(e.target.value)}
-                      className="col-span-3"
-                    />
-                  </div>
-                </div>
-                <div className="flex justify-end gap-2">
-                  <Button onClick={saveDesign}>Save Design</Button>
-                  <Button onClick={exportHtml}>Export HTML</Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-            <Button onClick={togglePreview}>
-              <Eye className="mr-2 h-4 w-4" /> {previewMode ? 'Edit' : 'Preview'}
-            </Button>
-            <Button onClick={undoAction} disabled={!canUndo}>
-              <Undo className="mr-2 h-4 w-4" /> Undo
-            </Button>
-            <Button onClick={redoAction} disabled={!canRedo}>
-              <Redo className="mr-2 h-4 w-4" /> Redo
-            </Button>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="outline">
-                  <Upload className="mr-2 h-4 w-4" /> Load Design
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Load Design</DialogTitle>
-                </DialogHeader>
-                <Textarea
-                  value={jsonData}
-                  onChange={(e) => setJsonData(e.target.value)}
-                  placeholder="Paste your JSON design data here"
-                  className="min-h-[200px]"
-                />
-                <Button onClick={loadDesign}>Load Design</Button>
-              </DialogContent>
-            </Dialog>
-            <Button onClick={exportHtml}>
-              <Download className="mr-2 h-4 w-4" /> Export HTML
-            </Button>
-            <Dialog open={showVariableDialog} onOpenChange={setShowVariableDialog}>
-              <DialogTrigger asChild>
-                <Button variant="outline">
-                  <Variable className="mr-2 h-4 w-4" /> Add Variable
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add Variable</DialogTitle>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="variableName" className="text-right">
-                      Name
-                    </Label>
-                    <Input
-                      id="variableName"
-                      value={variableName}
-                      onChange={(e) => setVariableName(e.target.value)}
-                      className="col-span-3"
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="variableDescription" className="text-right">
-                      Description
-                    </Label>
-                    <Input
-                      id="variableDescription"
-                      value={variableDescription}
-                      onChange={(e) => setVariableDescription(e.target.value)}
-                      className="col-span-3"
-                    />
-                  </div>
-                </div>
-                <Button onClick={addVariable}>Add Variable</Button>
-              </DialogContent>
-            </Dialog>
-          </div>
-        </CardFooter>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>Variable Usage</CardTitle>
-          <CardDescription>How to use variables in your template</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p>To use variables in your template, follow these steps:</p>
-          <ol className="list-decimal list-inside space-y-2 mt-2">
-            <li>Click the "Add Variable" button to define a new variable.</li>
-            <li>In the editor, use the Variable tool to insert variables into your content.</li>
-            <li>Variables will appear in the format {'{{variableName}}'} in your template.</li>
-            <li>When sending emails, replace these variables with actual values.</li>
-          </ol>
-          <div className="mt-4">
-            <h4 className="font-semibold">Available Variables:</h4>
-            <ul className="list-disc list-inside mt-2">
-              {variables.map((variable, index) => (
-                <li key={index}>
-                  <code>{`{{${variable.name}}}`}</code> - {variable.description}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </CardContent>
-      </Card>
-      <Toast />
+                <Eye className="mr-2 h-4 w-4" />
+                {previewMode ? 'Edit' : 'Preview'}
+              </Button>
+
+              <Button 
+                className="w-full" 
+                variant="outline"
+                onClick={exportHtml}
+              >
+                <Download className="mr-2 h-4 w-4" />
+                Export HTML
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Merge Tags</CardTitle>
+              <CardDescription>Available variables for your template</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <div className="flex items-center justify-between p-2 rounded-md bg-gray-50">
+                <span className="text-sm">First Name</span>
+                <code className="text-xs bg-gray-100 px-2 py-1 rounded">{"{{first_name}}"}</code>
+              </div>
+              <div className="flex items-center justify-between p-2 rounded-md bg-gray-50">
+                <span className="text-sm">Last Name</span>
+                <code className="text-xs bg-gray-100 px-2 py-1 rounded">{"{{last_name}}"}</code>
+              </div>
+              <div className="flex items-center justify-between p-2 rounded-md bg-gray-50">
+                <span className="text-sm">Email</span>
+                <code className="text-xs bg-gray-100 px-2 py-1 rounded">{"{{email}}"}</code>
+              </div>
+              <div className="flex items-center justify-between p-2 rounded-md bg-gray-50">
+                <span className="text-sm">Phone</span>
+                <code className="text-xs bg-gray-100 px-2 py-1 rounded">{"{{phone}}"}</code>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </motion.div>
   );
 }
