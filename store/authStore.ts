@@ -189,37 +189,18 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({ user: null, loading: false });
     }
   },
-  updateUser: async (userData: Partial<UserTypes>): Promise<void> => {
-    try {
-      // set({ loading: true });
-      const { id } = userData;
-
-      if (!id) {
-        throw new Error("User ID is required to update the profile");
-      }
-
-      const response: Response = await fetch(`/api/user/profile?id=${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(userData),
-      });
-
-      if (response.status === 401) {
-        // Handle expired token
-        Cookies.remove('token');
-        set({ user: null });
-        throw new Error('Your session has expired. Please log in again.');
-      }
-
-      if (!response.ok) throw new Error('Failed to update user');
-
-      const responseData: { data: { user: UserTypes } } = await response.json();
-      set({ user: { ...useAuthStore.getState().user, ...responseData.data.user } });
-    } catch (error) {
-      // console.error('Update user error:', error);
-      throw error;
+  updateUser: (userData: UserTypes): void => {
+    // Get the current user
+    const currentUser = useAuthStore.getState().user;
+    
+    // If no current user, do nothing
+    if (!currentUser) {
+      console.warn("Cannot update user: No user is currently logged in");
+      return;
     }
+    
+    // Update the user state directly without making an API call
+    set({ user: { ...currentUser, ...userData } });
   },
   updatePassword: async (currentPassword: string, newPassword: string): Promise<void> => {
     try {

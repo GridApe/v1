@@ -13,7 +13,8 @@ import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { toast } from "@/hooks/use-toast"
-import apiService from "@/lib/api-service"
+import axios from "axios"
+// import apiService from "@/lib/api-service"
 
 // Separate schema for profile and password forms
 const profileFormSchema = z.object({
@@ -39,6 +40,7 @@ export default function ProfileSettings() {
   const { user, updateUser } = useAuthStore()
   const [isUploading, setIsUploading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isPasswordSubmitting, setIsPasswordSubmitting] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Profile form
@@ -66,11 +68,11 @@ export default function ProfileSettings() {
   // Fix the image upload handler to properly handle types
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
-    if (!file || !user) return // Add null check for user
-
+    if (!file || !user) return
+  
     const allowedTypes = ["image/jpeg", "image/png", "image/gif"]
-    const maxSize = 2 * 1024 * 1024 // 2MB (API limit)
-
+    const maxSize = 2 * 1024 * 1024
+  
     if (!allowedTypes.includes(file.type)) {
       toast({
         title: "Invalid File Type",
@@ -79,7 +81,7 @@ export default function ProfileSettings() {
       })
       return
     }
-
+  
     if (file.size > maxSize) {
       toast({
         title: "File Too Large",
@@ -88,38 +90,41 @@ export default function ProfileSettings() {
       })
       return
     }
-
+  
     try {
       setIsUploading(true)
-      const response = await apiService.updateProfileImage(user.id, file)
-
+  
+      const formData = new FormData()
+      formData.append("avatar", file)
+  
+      const response = await axios.post(`/api/user/profile/avatar/`, formData, {
+        headers: {
+          Accept: "application/json",
+        },
+      })
+  
       if (response && response.data) {
-        // Update the user in the store with the new avatar URL
-        updateUser({
-          id: user.id,
-          first_name: user.first_name,
-          last_name: user.last_name,
-          email: user.email,
-          phone_number: user.phone_number,
-          address: user.address,
-          language: user.language,
-          avatar: response.data.avatar,
-        })
-
+        const updatedUser = {
+          ...user,
+          avatar: response.data.data.avatar_url,
+        }        
+        updateUser(updatedUser)
+  
         toast({
           title: "Profile Image Updated",
           description: "Your profile image has been updated successfully.",
         })
       }
     } catch (error: any) {
+      console.error("Upload error:", error)
       toast({
         title: "Image Update Failed",
-        description: error.message || "Unable to update profile image. Please try again.",
+        description:
+          error.response?.data?.error || error.message || "Unable to update profile image. Please try again.",
         variant: "destructive",
       })
     } finally {
       setIsUploading(false)
-      // Reset the file input
       if (fileInputRef.current) {
         fileInputRef.current.value = ""
       }
@@ -129,10 +134,8 @@ export default function ProfileSettings() {
   // Fix the profile submit handler to properly handle types
   const onProfileSubmit = async (values: z.infer<typeof profileFormSchema>): Promise<void> => {
     if (!user) return // Add null check for user
-
     try {
       setIsSubmitting(true)
-
       const profileData = {
         first_name: values.firstname,
         last_name: values.lastname,
@@ -140,43 +143,63 @@ export default function ProfileSettings() {
         phone_number: values.phone_number || "",
         address: values.address || "",
       }
-
-      const response = await apiService.updateProfile(user.id, profileData)
-
-      if (response && response.data) {
-        // Update the user in the store
-        updateUser({
-          id: user.id,
-          first_name: values.firstname,
-          last_name: values.lastname,
-          email: values.email,
-          phone_number: values.phone_number || "",
-          address: values.address || "",
-          language: user.language,
-          avatar: user.avatar,
-        })
-
+      const res = await axios.put(`/api/user/profile/update/`, {
+        first_name: values.firstname,
+        last_name: values.lastname,
+        email: values.email,
+        phone_number: values.phone_number || "",
+        address: values.address || "",
+      })
+      if (!res.data) {
+        throw new Error("No data returned from the server")
         toast({
-          title: "Profile Updated",
-          description: "Your profile has been successfully updated.",
+          title: "Update Failed",
+          description: "Unable to update profile. Please try again.",
+          variant: "destructive",
         })
       }
-    } catch (error: any) {
+      updateUser({
+        id: user.id,
+        first_name: values.firstname,
+        last_name: values.lastname,
+        email: values.email,
+        phone_number: values.phone_number || "",
+        address: values.address || "",
+        language: user.language,
+        avatar: user.avatar,
+      })
+
+      toast({
+        title: "Profile Updated",
+        description: "Your profile has been successfully updated.",
+      })
+    } catch (error) {
       toast({
         title: "Update Failed",
-        description: error.message || "Unable to update profile. Please try again.",
+        description: `${error} || "Unable to update profile. Please try again."`,
         variant: "destructive",
       })
+      console.log(error)
     } finally {
       setIsSubmitting(false)
     }
   }
 
   const onPasswordSubmit = async (values: z.infer<typeof passwordFormSchema>): Promise<void> => {
+    if (!user) return
+
     try {
-      // Implement password change logic here
-      // This would typically involve calling an API to change the password
-      await new Promise((resolve) => setTimeout(resolve, 1000)) // Simulate API call
+      setIsPasswordSubmitting(true)
+
+      const response = await axios.post("/api/user/profile/update-password", {
+        old_password: values.currentPassword,
+        new_password: values.newPassword,
+        new_password_confirmation: values.confirmPassword, // Add confirmation field
+      })
+
+      if (response.data.status === false) {
+        throw new Error(response.data.message || "Password reset failed")
+      }
 
       toast({
         title: "Password Updated",
@@ -185,12 +208,27 @@ export default function ProfileSettings() {
 
       // Reset password form
       passwordForm.reset()
-    } catch (error) {
-      toast({
-        title: "Password Update Failed",
-        description: `Unable to change password. Please try again.`,
-        variant: "destructive",
-      })
+    } catch (error: any) {
+      console.error("Password reset error:", error)
+
+      // Handle validation errors specifically
+      if (error.response?.data?.errors) {
+        const errorMessages = Object.values(error.response.data.errors).flat().join(". ")
+
+        toast({
+          title: "Password Update Failed",
+          description: errorMessages || "Validation failed. Please check your input.",
+          variant: "destructive",
+        })
+      } else {
+        toast({
+          title: "Password Update Failed",
+          description: error.response?.data?.message || error.message || "Unable to change password. Please try again.",
+          variant: "destructive",
+        })
+      }
+    } finally {
+      setIsPasswordSubmitting(false)
     }
   }
 
@@ -199,9 +237,7 @@ export default function ProfileSettings() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <Card>
           <CardHeader>
-            <CardTitle className="text-center">
-              Profile Information
-            </CardTitle>
+            <CardTitle className="text-center">Profile Information</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="mb-6 flex items-center justify-center">
@@ -367,8 +403,15 @@ export default function ProfileSettings() {
                     </FormItem>
                   )}
                 />
-                <Button type="submit" className="w-full">
-                  Reset Password
+                <Button type="submit" className="w-full" disabled={isPasswordSubmitting}>
+                  {isPasswordSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Updating Password...
+                    </>
+                  ) : (
+                    "Reset Password"
+                  )}
                 </Button>
               </form>
             </Form>
