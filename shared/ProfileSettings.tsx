@@ -104,12 +104,10 @@ export default function ProfileSettings() {
       })
   
       if (response && response.data) {
-        // Create a complete user object with all required fields
         const updatedUser = {
           ...user,
           avatar: response.data.data.avatar_url,
         }        
-        // Update the user in the store
         updateUser(updatedUser)
   
         toast({
