@@ -5,8 +5,6 @@ import { BarChart, Bar, XAxis, CartesianGrid, Tooltip, ResponsiveContainer, Lege
 import { useAuthStore } from '@/store/authStore';
 import { useEffect, useState } from 'react';
 import { DashboardTypes } from '@/types/interface';
-import SearchBar from '@/shared/SearchBar';
-import { mockSearchFunction } from '@/lib/mockData';
 import PerformanceCard from '@/shared/PerformanceCard';
 import {
   Table,
@@ -158,39 +156,22 @@ const Dashboard = () => {
       color: "#ef4444",
     }
   } satisfies ChartConfig;
-  
+
 
   return (
-    <motion.div 
+    <motion.div
       className="p-4 md:p-6 lg:p-8 min-h-screen"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
     >
-      {/* Decorative background elements
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -left-40 w-80 h-80 bg-blue-100 rounded-full blur-3xl opacity-50"></div>
-        <div className="absolute -bottom-40 -right-40 w-80 h-80 bg-blue-900 rounded-full blur-3xl opacity-50"></div>
-      </div> */}
+
 
       <div className="relative z-10 space-y-8 pt-3">
-        {/* Search Bar */}
 
-        {/* <motion.div 
-          className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm"
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.1 }}
-        >
-          <SearchBar
-            searchFunction={mockSearchFunction}
-            avatarSrc={user?.avatar}
-            avatarFallback={user?.first_name}
-          />
-        </motion.div> */}
 
         {/* Quick Actions */}
-        <motion.div 
+        <motion.div
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -202,45 +183,38 @@ const Dashboard = () => {
               <Skeleton className="h-32 w-full rounded-xl bg-white/10" />
             </>
           ) : (
-            <>
-              <motion.div
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
+            <div className="flex flex-col sm:flex-row gap-4">
+              <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} className="w-full sm:w-auto">
                 <Button
-                  onClick={() => router.push('/dashboard/templates/all')}
-                  className="w-full h2 justify-start rounded-xl bg-white px-6 py-10 border  hover:bg-gray-50 transition-all shadow-sm"
+                  onClick={() => router.push("/dashboard/templates/all")}
+                  className="w-full min-w-[240px] h-auto py-4 px-6 rounded-xl bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-start gap-4 transition-colors"
+                  size="lg"
                 >
-                  <div className="flex items-center space-x-4">
-                    <div className="p-3 rounded-lg bg-blue-500/20">
-                      <MailCheck className="text-blue-500" size={24} />
-                    </div>
-                    <span className="text-lg font-semibold text-black">Design Email</span>
+                  <div className="p-2 rounded-lg bg-white/20">
+                    <MailCheck className="h-5 w-5" />
                   </div>
+                  <span className="text-lg font-medium">Design Email</span>
                 </Button>
               </motion.div>
-              <motion.div
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
+
+              <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} className="w-full sm:w-auto">
                 <Button
-                  onClick={() => router.push('/dashboard/campaign/create')}
-                  className="w-full h2 justify-start rounded-xl bg-white px-6 py-10 border  hover:bg-gray-50 transition-all shadow-sm"
+                  onClick={() => router.push("/dashboard/campaign/create")}
+                  className="w-full min-w-[240px] justify-start h-auto py-4 px-6 rounded-xl bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-4 transition-colors"
+                  size="lg"
                 >
-                  <div className="flex items-center space-x-4">
-                    <div className="p-3 rounded-lg bg-purple-500/20">
-                      <Plus className="text-purple-500" size={24} />
-                    </div>
-                    <span className="text-lg font-semibold text-black">Create Campaigns</span>
+                  <div className="p-2 rounded-lg bg-white/20">
+                    <Plus className="h-5 w-5" />
                   </div>
+                  <span className="text-lg font-medium">Create Campaign</span>
                 </Button>
               </motion.div>
-            </>
+            </div>
           )}
         </motion.div>
 
         {/* Email Performance */}
-        <motion.div 
+        <motion.div
           className="space-y-6"
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -278,17 +252,17 @@ const Dashboard = () => {
                 />
               </>
             ) : (
-              <EmptyStateCard 
-                title="No Email Performance Data" 
-                description="Start sending emails to track performance" 
-                icon={<MailOpenIcon size={48} className="text-white/60" />} 
+              <EmptyStateCard
+                title="No Email Performance Data"
+                description="Start sending emails to track performance"
+                icon={<MailOpenIcon size={48} className="text-white/60" />}
               />
             )}
           </div>
         </motion.div>
 
         {/* Detailed Performance Sections */}
-        <motion.div 
+        <motion.div
           className="grid grid-cols-1 lg:grid-cols-2 gap-6"
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -326,10 +300,10 @@ const Dashboard = () => {
                 </Table>
               </div>
             ) : (
-              <EmptyStateCard 
-                title="No Audience Data" 
-                description="Segment your audience to get insights" 
-                icon={<MousePointerClick size={48} className="" />} 
+              <EmptyStateCard
+                title="No Audience Data"
+                description="Segment your audience to get insights"
+                icon={<MousePointerClick size={48} className="" />}
               />
             )}
           </motion.div>
@@ -348,7 +322,7 @@ const Dashboard = () => {
             ) : data?.campaignStats.data ? (
               <div className="rounded-xl p-6 border bg-white shadow-sm">
                 <ChartContainer config={chartConfig} className="w-full h-full">
-                  <BarChart 
+                  <BarChart
                     data={data.campaignStats.data}
                     margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                   >
@@ -369,44 +343,44 @@ const Dashboard = () => {
                     />
                     <Tooltip content={<ChartTooltipContent />} />
                     <Legend content={<ChartLegendContent />} />
-                    <Bar 
-                      dataKey="totalCampaigns" 
+                    <Bar
+                      dataKey="totalCampaigns"
                       name="Total Campaigns"
-                      fill="#2563eb" 
+                      fill="#2563eb"
                       radius={[4, 4, 0, 0]}
                     />
-                    <Bar 
-                      dataKey="completedCampaigns" 
+                    <Bar
+                      dataKey="completedCampaigns"
                       name="Completed"
-                      fill="#10b981" 
+                      fill="#10b981"
                       radius={[4, 4, 0, 0]}
                     />
-                    <Bar 
-                      dataKey="draftCampaigns" 
+                    <Bar
+                      dataKey="draftCampaigns"
                       name="Drafts"
-                      fill="#f59e0b" 
+                      fill="#f59e0b"
                       radius={[4, 4, 0, 0]}
                     />
-                    <Bar 
-                      dataKey="totalOpens" 
+                    <Bar
+                      dataKey="totalOpens"
                       name="Total Opens"
-                      fill="#8b5cf6" 
+                      fill="#8b5cf6"
                       radius={[4, 4, 0, 0]}
                     />
-                    <Bar 
-                      dataKey="totalClicks" 
+                    <Bar
+                      dataKey="totalClicks"
                       name="Total Clicks"
-                      fill="#ef4444" 
+                      fill="#ef4444"
                       radius={[4, 4, 0, 0]}
                     />
                   </BarChart>
                 </ChartContainer>
               </div>
             ) : (
-              <EmptyStateCard 
-                title="No Campaign Data" 
-                description="Create campaigns to track performance" 
-                icon={<MousePointerClick size={48} className="" />} 
+              <EmptyStateCard
+                title="No Campaign Data"
+                description="Create campaigns to track performance"
+                icon={<MousePointerClick size={48} className="" />}
               />
             )}
           </motion.div>
