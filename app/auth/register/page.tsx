@@ -9,16 +9,23 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { AuthCard } from "../auth-card";
 import { Icons } from "@/components/icons";
-
+import { useAuth } from '@/hooks/useAuth';
+import { useAuthStore } from "@/store/authStore";
+import { useRouter } from "next/navigation";
 export default function RegisterPage() {
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  // const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    name: "",
+    first_name: "",
+    last_name: "",
     email: "",
     password: "",
     confirmPassword: "",
   });
+
+  const { loading } = useAuthStore();
+  const auth = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,24 +38,29 @@ export default function RegisterPage() {
       return;
     }
 
-    setLoading(true);
+    // setLoading(true);
     try {
-      // TODO: Implement registration logic
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulated API call
+      await auth.register(
+        formData.email,
+        formData.password,
+        formData.confirmPassword,
+        formData.first_name,
+        formData.last_name
+      );
       toast({
-        title: "Success",
-        description: "Your account has been created successfully.",
+        title: 'Success',
+        description: 'Registration successful. Please verify your email.',
       });
-      // Redirect to login page
-      window.location.href = "/auth/login";
+      router.push(`/auth/otp?email=${encodeURIComponent(formData.email)}`);
     } catch (error) {
       toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to create account. Please try again.",
+        variant: 'destructive',
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to register',
       });
+      console.log(error);
     } finally {
-      setLoading(false);
+      // setLoading(false);
     }
   };
 
@@ -60,15 +72,30 @@ export default function RegisterPage() {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Name Input */}
         <div className="space-y-2">
-          <Label htmlFor="name" className="text-sm font-medium">Full Name</Label>
+          <Label htmlFor="first_name" className="text-sm font-medium">First Name</Label>
           <div className="relative">
             <Icons.user className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
             <Input
-              id="name"
+              id="first_name"
               type="text"
-              placeholder="Enter your full name"
-              value={formData.name}
-              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+              placeholder="Enter your first name"
+              value={formData.first_name}
+              onChange={(e) => setFormData(prev => ({ ...prev, first_name: e.target.value }))}
+              required
+              className="pl-9 focus:ring-indigo-500 focus:border-indigo-500"
+            />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="last_name" className="text-sm font-medium">Last Name</Label>
+          <div className="relative">
+            <Icons.user className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+            <Input
+              id="last_name"
+              type="text"
+              placeholder="Enter your last name"
+              value={formData.last_name}
+              onChange={(e) => setFormData(prev => ({ ...prev, last_name: e.target.value }))}
               required
               className="pl-9 focus:ring-indigo-500 focus:border-indigo-500"
             />
