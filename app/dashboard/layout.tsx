@@ -74,7 +74,7 @@ function DashboardLayout({ children }: { children: ReactNode }) {
       <TopBar 
         title={title} 
         description={description} 
-        avatarSrc={getAvatarUrl()}
+        avatarSrc={user?.avatar}
         avatarFallback={getInitials()} 
       />
       <main className="">

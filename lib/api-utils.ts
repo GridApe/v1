@@ -199,7 +199,7 @@ export async function handleApiRequest<T = any>(
         credentials: "include",
         signal: controller.signal,
       })
-      console.log(BASE_URL + endpoint)
+      // console.log({endpoint: BASE_URL + endpoint})
 
       clearTimeout(timeoutId)
 
@@ -256,6 +256,7 @@ export async function handleApiRequest<T = any>(
         await sleep(retryDelay * (attempt + 1)) // Exponential backoff
         continue
       }
+      console.log({endpoint: BASE_URL + endpoint, error: error})
 
       // Handle timeout errors
       if (error.name === "AbortError") {

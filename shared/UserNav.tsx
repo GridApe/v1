@@ -54,7 +54,7 @@ export function UserNav({ avatarSrc, avatarFallback = 'U', onLogout }: UserNavPr
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Avatar className="h-10 w-10 cursor-pointer">
-          <AvatarImage src={avatarSrc} alt="User avatar" />
+          <AvatarImage src={avatarSrc} alt="User avatar" className="object-cover" />
           <AvatarFallback>{avatarFallback}</AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
