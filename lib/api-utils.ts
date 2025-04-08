@@ -221,10 +221,23 @@ export async function handleApiRequest<T = any>(
       }
 
       // For JSON responses, parse and handle as before
-      const data = await response.json()
+      // let data;
 
+      // try {
+     const   data = await response.json();
+      // } catch (parseError) {
+      //   return NextResponse.json(
+      //     {
+      //       status: false,
+      //       message: "Failed to parse server response",
+      //       errors: { parsing: ["The server response was not valid JSON"] },
+      //     },
+      //     { status: 500 },
+      //   );
+      // }
+      
       if (!response.ok) {
-        throw new Error(JSON.stringify(data))
+        throw new Error(JSON.stringify(data));
       }
 
       // Cache successful GET responses
