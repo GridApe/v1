@@ -199,6 +199,7 @@ export async function handleApiRequest<T = any>(
         credentials: "include",
         signal: controller.signal,
       })
+      console.log(BASE_URL + endpoint)
 
       clearTimeout(timeoutId)
 
