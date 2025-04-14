@@ -134,9 +134,9 @@ export default function EmailTemplateEditor({
         JSON.parse(content); // Verify we can parse it
       } catch (error) {
         // console.error('Invalid JSON content:', error);
-        return { 
-          success: false, 
-          message: 'Invalid template content format' 
+        return {
+          success: false,
+          message: 'Invalid template content format'
         };
       }
 
@@ -145,9 +145,9 @@ export default function EmailTemplateEditor({
         content,
         html,
       };
-  
+
       // console.log('Sending payload:', payload);
-  
+
       const response = await fetch(`/api/user/templates/update/${params.templateid}`, {
         method: 'PUT',
         headers: {
@@ -159,9 +159,9 @@ export default function EmailTemplateEditor({
       if (!response.ok) {
         const errorData = await response.json();
         // console.error('API error response:', errorData);
-        return { 
-          success: false, 
-          message: errorData.message || 'Failed to save template' 
+        return {
+          success: false,
+          message: errorData.message || 'Failed to save template'
         };
       }
 
@@ -172,9 +172,9 @@ export default function EmailTemplateEditor({
       return { success: true, message: 'Template saved successfully!' };
     } catch (error: any) {
       // console.error('Error saving template:', error);
-      return { 
-        success: false, 
-        message: error.message || 'Something went wrong' 
+      return {
+        success: false,
+        message: error.message || 'Something went wrong'
       };
     }
   };
@@ -255,7 +255,7 @@ export default function EmailTemplateEditor({
     emailEditorRef.current?.editor?.saveDesign((design: any) => {
       // Add debug logging
       // console.log('Raw design data:', design);
-      
+
       try {
         const designJson = JSON.stringify(design);
         // console.log('Stringified design:', designJson);
@@ -263,7 +263,7 @@ export default function EmailTemplateEditor({
 
         emailEditorRef.current?.editor?.exportHtml((data: { html: string }) => {
           // console.log('HTML data:', data);
-          
+
           saveTemplate({
             name: templateName,
             content: designJson, // Using the stringified version directly
@@ -417,7 +417,18 @@ export default function EmailTemplateEditor({
       <div className="flex items-center justify-between">
         <div className="space-y-1">
           <div className="flex items-center space-x-2">
-            <Button
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Input
+                  id="name"
+                  value={templateName}
+                  onChange={(e) => setTemplateName(e.target.value)}
+                  className="col-span-3"
+                  placeholder="Enter template name"
+                />
+              </div>
+            </div>
+            {/* <Button
               variant="ghost"
               size="icon"
               onClick={() => router.back()}
@@ -425,9 +436,9 @@ export default function EmailTemplateEditor({
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <h1 className="text-2xl md:text-3xl font-bold">Edit Email Template</h1>
+            <h1 className="text-2xl md:text-3xl font-bold">Edit Email Template</h1> */}
           </div>
-          <p className="text-muted-foreground">Edit your existing email template</p>
+          {/* <p className="text-muted-foreground">Edit your existing email template</p> */}
         </div>
         <div className="flex items-center space-x-2">
           <Badge variant="outline" className="text-xs">
@@ -543,14 +554,14 @@ export default function EmailTemplateEditor({
               <CardDescription>Save, preview, or export your template</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button className="w-full" variant="outline">
-                    <Save className="mr-2 h-4 w-4" />
-                    Save Template
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
+              {/* <Dialog> */}
+              {/* <DialogTrigger asChild> */}
+              <Button className="w-full" variant="outline" onClick={saveDesign}>
+                <Save className="mr-2 h-4 w-4" />
+                Save Template
+              </Button>
+              {/* </DialogTrigger> */}
+              {/* <DialogContent>
                   <DialogHeader>
                     <DialogTitle>Save Template</DialogTitle>
                   </DialogHeader>
@@ -572,11 +583,11 @@ export default function EmailTemplateEditor({
                     <Button onClick={saveDesign}>Save Design</Button>
                     <Button onClick={exportHtml}>Export HTML</Button>
                   </div>
-                </DialogContent>
-              </Dialog>
+                </DialogContent> */}
+              {/* </Dialog> */}
 
-              <Button 
-                className="w-full" 
+              <Button
+                className="w-full"
                 variant="outline"
                 onClick={togglePreview}
               >
@@ -584,8 +595,8 @@ export default function EmailTemplateEditor({
                 {previewMode ? 'Edit' : 'Preview'}
               </Button>
 
-              <Button 
-                className="w-full" 
+              <Button
+                className="w-full"
                 variant="outline"
                 onClick={exportHtml}
               >

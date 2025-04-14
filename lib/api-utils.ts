@@ -3,8 +3,8 @@ import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
 // Constants
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
-const CSRF_COOKIE_URL = `${process.env.NEXT_PUBLIC_CSRF_COOKIE_URL}`
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.gridape.com/api/v1"
+const CSRF_COOKIE_URL = `${process.env.NEXT_PUBLIC_CSRF_COOKIE_URL}` || "https://api.gridape.com/sanctum/csrf-cookie"
 const REQUEST_TIMEOUT = 30000 // 30 seconds
 const MAX_RETRIES = 3
 const RETRY_DELAY = 1000 // 1 second
@@ -199,6 +199,7 @@ export async function handleApiRequest<T = any>(
         credentials: "include",
         signal: controller.signal,
       })
+      // console.log({endpoint: BASE_URL + endpoint})
 
       clearTimeout(timeoutId)
 
@@ -255,6 +256,7 @@ export async function handleApiRequest<T = any>(
         await sleep(retryDelay * (attempt + 1)) // Exponential backoff
         continue
       }
+      console.log({endpoint: BASE_URL + endpoint, error: error})
 
       // Handle timeout errors
       if (error.name === "AbortError") {

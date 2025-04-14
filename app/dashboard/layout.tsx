@@ -5,6 +5,7 @@ import DashboardWrapper from '@/shared/wrapper/DashboardWrapper';
 import { withAuth } from '@/shared/withAuth';
 import TopBar from '@/app/components/shared/TopBar';
 import { usePathname } from 'next/navigation';
+import { useAuthStore } from '@/store/authStore';
 
 const getPageInfo = (pathname: string) => {
   const path = pathname.split('/').filter(Boolean);
@@ -53,13 +54,28 @@ const getPageInfo = (pathname: string) => {
 function DashboardLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { title, description } = getPageInfo(pathname);
+  const { user } = useAuthStore();
+
+  // Get user initials for avatar fallback
+  const getInitials = () => {
+    if (!user) return "U";
+    return `${user.first_name.charAt(0)}${user.last_name.charAt(0)}`;
+  };
+
+  // Get avatar URL with proper authentication
+  const getAvatarUrl = () => {
+    if (!user?.avatar) return '';
+    const filename = user.avatar.split('/').pop();
+    return `/api/user/avatar/${filename}`;
+  };
 
   return (
     <DashboardWrapper>
       <TopBar 
         title={title} 
         description={description} 
-        avatarFallback="U" 
+        avatarSrc={user?.avatar}
+        avatarFallback={getInitials()} 
       />
       <main className="">
         {children}
