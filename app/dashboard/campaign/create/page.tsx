@@ -7,10 +7,7 @@ import { motion } from "framer-motion"
 const Page = () => {
   return (
     <>
-      <DeviceWarning
-        message="This email composer works best on desktop. Some features might be limited on mobile devices."
-        persistent={false}
-      />
+      <DeviceWarning persistent={false} />
 
       <motion.div
         className="p-4 md:p-6 lg:p-8 min-h-screen"
