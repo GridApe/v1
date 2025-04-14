@@ -79,6 +79,7 @@ export default function EmailTemplateEditor({
       }
 
       const data: ApiResponse = await response.json();
+      
       if (data.status === 'success' && data.data.template) {
         const template = data.data.template;
         setTemplateName(template.name);
