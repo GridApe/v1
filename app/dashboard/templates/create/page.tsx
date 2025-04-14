@@ -67,7 +67,7 @@ function CreateTemplatePage() {
   useEffect(() => {
     const savedDraft = localStorage.getItem('template_draft');
     const savedName = localStorage.getItem('template_name');
-    
+
     if (savedDraft && savedName) {
       setJsonData(savedDraft);
       setTemplateName(savedName);
@@ -140,6 +140,9 @@ function CreateTemplatePage() {
     content: string;
     html: string;
   }): Promise<{ success: boolean; message: string }> => {
+    if (!name) {
+      return { success: false, message: 'Template name is required' };
+    }
     try {
       const payload = {
         name,
@@ -266,7 +269,14 @@ function CreateTemplatePage() {
 
   const loadDesign = useCallback(() => {
     try {
-      const design = JSON.parse(jsonData);
+      // const design = JSON.parse(jsonData);
+      let design;
+      try {
+        design = typeof jsonData === 'string' ? JSON.parse(jsonData) : jsonData;
+      } catch (err) {
+        console.error("Failed parsing JSON", err);
+      }
+
       emailEditorRef.current?.editor?.loadDesign(design);
       toast({
         title: 'Design Loaded',
@@ -335,7 +345,14 @@ function CreateTemplatePage() {
       <div className="flex items-center justify-between">
         <div className="space-y-1">
           <div className="flex items-center space-x-2">
-            <Button
+            <Input
+              id="name"
+              value={templateName}
+              onChange={(e) => setTemplateName(e.target.value)}
+              className="col-span-3"
+              placeholder="Enter template name"
+            />
+            {/* <Button
               variant="ghost"
               size="icon"
               onClick={() => router.back()}
@@ -343,9 +360,9 @@ function CreateTemplatePage() {
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <h1 className="text-2xl md:text-3xl font-bold">Create Email Template</h1>
+            <h1 className="text-2xl md:text-3xl font-bold">Create Email Template</h1> */}
           </div>
-          <p className="text-muted-foreground">Design your email template using our drag-and-drop editor</p>
+          {/* <p className="text-muted-foreground">Design your email template using our drag-and-drop editor</p> */}
         </div>
         <div className="flex items-center space-x-2">
           <Badge variant="outline" className="text-xs">
@@ -479,14 +496,14 @@ function CreateTemplatePage() {
               <CardDescription>Save, export, or load your template</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button className="w-full" variant="outline">
-                    <Save className="mr-2 h-4 w-4" />
-                    Save Template
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
+              {/* <Dialog> */}
+              {/* <DialogTrigger asChild> */}
+              <Button className="w-full" variant="outline" onClick={saveDesign}>
+                <Save className="mr-2 h-4 w-4" />
+                Save Template
+              </Button>
+              {/* </DialogTrigger> */}
+              {/* <DialogContent>
                   <DialogHeader>
                     <DialogTitle>Save Template</DialogTitle>
                   </DialogHeader>
@@ -508,11 +525,11 @@ function CreateTemplatePage() {
                     <Button onClick={saveDesign}>Save Design</Button>
                     <Button onClick={exportHtml}>Export HTML</Button>
                   </div>
-                </DialogContent>
-              </Dialog>
+                </DialogContent> */}
+              {/* </Dialog> */}
 
-              <Button 
-                className="w-full" 
+              <Button
+                className="w-full"
                 variant="outline"
                 onClick={togglePreview}
               >
@@ -541,8 +558,8 @@ function CreateTemplatePage() {
                 </DialogContent>
               </Dialog>
 
-              <Button 
-                className="w-full" 
+              <Button
+                className="w-full"
                 variant="outline"
                 onClick={exportHtml}
               >

@@ -19,6 +19,7 @@ import { useRouter } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
 
 export default function TemplatesPage() {
   const router = useRouter();
@@ -42,6 +43,7 @@ export default function TemplatesPage() {
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const iframeRefs = useRef<{ [key: string]: HTMLIFrameElement | null }>({});
+  const { toast } = useToast();
 
   useEffect(() => {
     async function fetchTemplates(): Promise<void> {
@@ -96,6 +98,49 @@ export default function TemplatesPage() {
   const item = {
     hidden: { opacity: 0, y: 20 },
     show: { opacity: 1, y: 0 }
+  };
+
+  const saveTemplate = async ({
+    name,
+    content,
+    html,
+  }: {
+    name: string;
+    content: string;
+    html: string;
+  }): Promise<{ success: boolean; message: string; id?: string }> => {
+    try {
+      const payload = {
+        name,
+        content,
+        html,
+      };
+
+      const response = await fetch('/api/user/templates/save', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        return { success: false, message: errorData.message || 'Failed to save template' };
+      }
+
+      const data = await response.json();
+
+      const id = data?.data?.template?.id;
+      if (id) {
+        return { success: true, message: 'Template saved successfully', id };
+      } else {
+        return { success: false, message: 'Template saved, but no ID returned' };
+      }
+    } catch (error: any) {
+      console.error('Error saving template:', error);
+      return { success: false, message: error.message || 'Something went wrong' };
+    }
   };
 
   return (
@@ -221,12 +266,29 @@ export default function TemplatesPage() {
                           if (template.id === 'blank') {
                             router.push('/dashboard/templates/create');
                           } else {
-                            router.push(`/dashboard/templates/edit/${template.id}`);
+                            saveTemplate({
+                              name: template.name,
+                              content: template.content,
+                              html: template.html,
+                            }).then((result) => {
+                              if (result.success && result.id) {
+                                router.push(`/dashboard/templates/edit/${result.id}`);
+                              } else {
+                                throw new Error(result.message);
+                              }
+                            })
+                              .catch((error) => {
+                                toast({
+                                  title: 'Error',
+                                  description: error.message || 'Failed to use template. Please try again later.',
+                                  variant: 'destructive',
+                                });
+                              });
                           }
                         }}
                       >
                         <Edit size={14} />
-                        <span>Edit</span>
+                        <span>Use</span>
                       </Button>
                       <Button
                         size="sm"
@@ -320,7 +382,8 @@ export default function TemplatesPage() {
             </Button>
           </CardContent>
         </Card>
-      )}
+      )
+      }
 
       <AnimatePresence>
         {previewTemplate && (
@@ -339,6 +402,6 @@ export default function TemplatesPage() {
           </Dialog>
         )}
       </AnimatePresence>
-    </div>
+    </div >
   );
 }
