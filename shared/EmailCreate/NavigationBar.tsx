@@ -192,7 +192,7 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
   }
 
   return (
-    <nav className="border-b bg-white z-50 sticky top-0">
+    <nav className="border-b bg-white z-40 sticky top-0">
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <motion.div
